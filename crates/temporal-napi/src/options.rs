@@ -222,6 +222,7 @@ impl TryFrom<RoundingOptions> for temporal_rs::options::RoundingOptions {
 }
 
 #[napi(object)]
+#[derive(Default)]
 pub struct ToStringRoundingOptions {
     pub precision: Option<u8>,
     pub is_minute: Option<bool>,
