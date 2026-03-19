@@ -19,7 +19,17 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEST262_DIR = path.join(__dirname, 'test262');
 const HARNESS_DIR = path.join(TEST262_DIR, 'harness');
-const TEMPORAL_TESTS = path.join(TEST262_DIR, 'test', 'built-ins', 'Temporal');
+const TEST_DIR = path.join(TEST262_DIR, 'test');
+
+// All directories containing tests with the Temporal feature flag
+const TEMPORAL_TEST_DIRS = [
+  path.join(TEST_DIR, 'built-ins', 'Temporal'),
+  path.join(TEST_DIR, 'intl402', 'Temporal'),
+  path.join(TEST_DIR, 'intl402', 'DateTimeFormat', 'prototype'),
+  path.join(TEST_DIR, 'intl402', 'DurationFormat', 'prototype'),
+  path.join(TEST_DIR, 'built-ins', 'Date', 'prototype'),
+  path.join(TEST_DIR, 'staging', 'Temporal'),
+];
 
 // ─── Load and cache harness files ───────────────────────────
 
@@ -109,19 +119,28 @@ function buildTemporalNamespaceSync(binding) {
 
 // ─── Collect test files ─────────────────────────────────────
 
-function collectTests(dir, filter) {
+function collectTests(dirs, filter) {
   const results = [];
-  function walk(d) {
+  function walk(d, baseDir) {
     for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
       const full = path.join(d, entry.name);
-      if (entry.isDirectory()) walk(full);
+      if (entry.isDirectory()) walk(full, baseDir);
       else if (entry.name.endsWith('.js')) {
-        const rel = path.relative(TEMPORAL_TESTS, full);
-        if (!filter || rel.includes(filter)) results.push({ path: full, rel });
+        const rel = path.relative(TEST_DIR, full);
+        if (!filter || rel.includes(filter)) {
+          // For dirs outside built-ins/Temporal, check Temporal feature flag
+          if (!full.includes('built-ins/Temporal')) {
+            const src = fs.readFileSync(full, 'utf8');
+            if (!/features:.*Temporal/.test(src)) continue;
+          }
+          results.push({ path: full, rel });
+        }
       }
     }
   }
-  walk(dir);
+  for (const dir of dirs) {
+    if (fs.existsSync(dir)) walk(dir, dir);
+  }
   return results;
 }
 
@@ -207,11 +226,11 @@ function createTestContext(Temporal) {
 // Tests that crash the vm sandbox by monkey-patching built-in prototypes
 // in ways that cause NAPI errors to escape the vm context boundary.
 const SKIP_CRASH = new Set([
-  'Instant/prototype/toZonedDateTimeISO/no-observable-array-iteration.js',
-  'PlainDate/prototype/toZonedDateTime/no-observable-array-iteration.js',
-  'PlainDateTime/prototype/toZonedDateTime/no-observable-array-iteration.js',
-  'PlainYearMonth/prototype/since/builtin-calendar-no-array-iteration.js',
-  'PlainYearMonth/prototype/subtract/builtin-calendar-no-array-iteration.js',
+  'built-ins/Temporal/Instant/prototype/toZonedDateTimeISO/no-observable-array-iteration.js',
+  'built-ins/Temporal/PlainDate/prototype/toZonedDateTime/no-observable-array-iteration.js',
+  'built-ins/Temporal/PlainDateTime/prototype/toZonedDateTime/no-observable-array-iteration.js',
+  'built-ins/Temporal/PlainYearMonth/prototype/since/builtin-calendar-no-array-iteration.js',
+  'built-ins/Temporal/PlainYearMonth/prototype/subtract/builtin-calendar-no-array-iteration.js',
 ]);
 
 // Snapshot and restore prototype/static properties to prevent cross-test pollution.
@@ -369,7 +388,7 @@ async function main() {
   const { Temporal } = await import('./lib/temporal.mjs');
 
   console.log('Collecting test files...');
-  const tests = collectTests(TEMPORAL_TESTS, filter);
+  const tests = collectTests(TEMPORAL_TEST_DIRS, filter);
   console.log(`Found ${tests.length} tests${filter ? ` (filter: "${filter}")` : ''}\n`);
 
   let pass = 0, fail = 0, skip = 0, xfail = 0, xpass = 0;
