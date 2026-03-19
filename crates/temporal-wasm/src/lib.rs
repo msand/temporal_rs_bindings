@@ -1,5 +1,3 @@
-use wasm_bindgen::prelude::*;
-
 mod options;
 mod calendar;
 mod time_zone;
