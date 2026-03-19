@@ -1,6 +1,10 @@
 {
   "name": "temporal_rs-darwin-arm64",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/msand/temporal_rs_bindings"
+  },
   "os": ["darwin"],
   "cpu": ["arm64"],
   "main": "temporal_rs.darwin-arm64.node",
