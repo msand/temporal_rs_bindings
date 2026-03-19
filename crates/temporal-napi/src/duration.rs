@@ -1,6 +1,8 @@
 use napi_derive::napi;
+use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
 use crate::options::to_napi_error;
+use crate::options::{RoundingOptions, Unit};
 
 #[napi]
 pub struct Duration {
@@ -128,6 +130,95 @@ impl Duration {
     pub fn subtract(&self, other: &Duration) -> napi::Result<Duration> {
         let inner = self.inner.subtract(&other.inner).map_err(to_napi_error)?;
         Ok(Duration { inner })
+    }
+
+    #[napi]
+    pub fn round(
+        &self,
+        options: RoundingOptions,
+        relative_to_date: Option<&crate::plain_date::PlainDate>,
+        relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
+    ) -> napi::Result<Duration> {
+        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+            .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
+
+        let relative_to = if let Some(zdt) = relative_to_zdt {
+            Some(temporal_rs::options::RelativeTo::ZonedDateTime(
+                zdt.inner.clone(),
+            ))
+        } else if let Some(date) = relative_to_date {
+            Some(temporal_rs::options::RelativeTo::PlainDate(
+                date.inner.clone(),
+            ))
+        } else {
+            None
+        };
+
+        let opts: temporal_rs::options::RoundingOptions = options.try_into()?;
+        let inner = self
+            .inner
+            .round_with_provider(opts, relative_to, &provider)
+            .map_err(to_napi_error)?;
+        Ok(Duration { inner })
+    }
+
+    #[napi]
+    pub fn total(
+        &self,
+        unit: Unit,
+        relative_to_date: Option<&crate::plain_date::PlainDate>,
+        relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
+    ) -> napi::Result<f64> {
+        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+            .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
+
+        let relative_to = if let Some(zdt) = relative_to_zdt {
+            Some(temporal_rs::options::RelativeTo::ZonedDateTime(
+                zdt.inner.clone(),
+            ))
+        } else if let Some(date) = relative_to_date {
+            Some(temporal_rs::options::RelativeTo::PlainDate(
+                date.inner.clone(),
+            ))
+        } else {
+            None
+        };
+
+        let unit: temporal_rs::options::Unit = unit.into();
+        let result = self
+            .inner
+            .total_with_provider(unit, relative_to, &provider)
+            .map_err(to_napi_error)?;
+        Ok(result.as_inner())
+    }
+
+    #[napi]
+    pub fn compare(
+        one: &Duration,
+        two: &Duration,
+        relative_to_date: Option<&crate::plain_date::PlainDate>,
+        relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
+    ) -> napi::Result<i32> {
+        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+            .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
+
+        let relative_to = if let Some(zdt) = relative_to_zdt {
+            Some(temporal_rs::options::RelativeTo::ZonedDateTime(
+                zdt.inner.clone(),
+            ))
+        } else if let Some(date) = relative_to_date {
+            Some(temporal_rs::options::RelativeTo::PlainDate(
+                date.inner.clone(),
+            ))
+        } else {
+            None
+        };
+
+        let result = one
+            .inner
+            .compare_with_provider(&two.inner, relative_to, &provider)
+            .map_err(to_napi_error)?;
+        Ok(result as i32)
     }
 
     #[napi]
