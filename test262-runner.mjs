@@ -214,6 +214,44 @@ const SKIP_CRASH = new Set([
   'PlainYearMonth/prototype/subtract/builtin-calendar-no-array-iteration.js',
 ]);
 
+// Snapshot and restore prototype/static properties to prevent cross-test pollution.
+// Only snapshots prototype methods and constructor statics (from, compare, etc.)
+function snapshotTemporal(Temporal) {
+  const snapshots = [];
+  const classes = [
+    Temporal.Duration, Temporal.PlainDate, Temporal.PlainTime,
+    Temporal.PlainDateTime, Temporal.ZonedDateTime, Temporal.Instant,
+    Temporal.PlainYearMonth, Temporal.PlainMonthDay,
+  ];
+  // Snapshot Temporal namespace properties
+  for (const name of Object.getOwnPropertyNames(Temporal)) {
+    snapshots.push({ obj: Temporal, name, desc: Object.getOwnPropertyDescriptor(Temporal, name) });
+  }
+  for (const cls of classes) {
+    if (!cls) continue;
+    // Snapshot prototype properties
+    if (cls.prototype) {
+      for (const name of Object.getOwnPropertyNames(cls.prototype)) {
+        snapshots.push({ obj: cls.prototype, name, desc: Object.getOwnPropertyDescriptor(cls.prototype, name) });
+      }
+    }
+    // Snapshot constructor statics (from, compare, etc.)
+    for (const name of Object.getOwnPropertyNames(cls)) {
+      if (name === 'length' || name === 'name' || name === 'prototype') continue;
+      snapshots.push({ obj: cls, name, desc: Object.getOwnPropertyDescriptor(cls, name) });
+    }
+  }
+  return snapshots;
+}
+
+function restoreTemporal(snapshots) {
+  for (const { obj, name, desc } of snapshots) {
+    try {
+      Object.defineProperty(obj, name, desc);
+    } catch {}
+  }
+}
+
 function runTest(testFile, Temporal) {
   if (SKIP_CRASH.has(testFile.rel)) {
     return { status: 'skip', reason: 'crashes vm sandbox' };
@@ -339,6 +377,9 @@ async function main() {
   const unexpectedPasses = [];
   const startTime = Date.now();
 
+  // Snapshot prototypes and statics before running tests so we can restore them.
+  const temporalSnapshot = snapshotTemporal(Temporal);
+
   // Run tests synchronously in a wrapper that prevents async exceptions from
   // breaking the loop. We use setImmediate between batches to drain the event loop.
   for (let i = 0; i < tests.length; i++) {
@@ -349,6 +390,8 @@ async function main() {
     } catch (outerErr) {
       result = { status: 'fail', reason: `CRASH: ${String(outerErr?.message || outerErr).split('\n')[0]}` };
     }
+    // Restore prototypes/statics after each test to prevent cross-test pollution
+    restoreTemporal(temporalSnapshot);
     const isExpectedFailure = expectedFailures.has(test.rel);
 
     if (result.status === 'pass') {
