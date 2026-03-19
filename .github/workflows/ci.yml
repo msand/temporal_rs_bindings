@@ -153,6 +153,9 @@ jobs:
     needs: [test, build-wasm]
     runs-on: ubuntu-latest
     name: Publish to npm
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -163,10 +166,22 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Generate JS bindings and type definitions
+        run: npx napi build --platform --release --cargo-cwd crates/temporal-napi
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: List artifacts
+        run: find artifacts -type f -name "*.node" | sort
 
       - name: Move artifacts to platform packages
         run: |
@@ -184,11 +199,11 @@ jobs:
         run: |
           for dir in npm/*/; do
             cd "$dir"
-            npm publish --access public || true
+            npm publish --access public --provenance || true
             cd ../..
           done
 
       - name: Publish root package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: npm publish --access public --provenance
