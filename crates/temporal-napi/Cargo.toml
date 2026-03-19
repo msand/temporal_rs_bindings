@@ -1,0 +1,17 @@
+[package]
+name = "temporal-napi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+temporal_rs = { workspace = true }
+timezone_provider = { workspace = true, features = ["zoneinfo64"] }
+napi = { version = "2", features = ["napi9", "serde-json"] }
+napi-derive = "2"
+
+[build-dependencies]
+napi-build = "2"

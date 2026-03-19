@@ -1,0 +1,16 @@
+[package]
+name = "temporal-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+temporal_rs = { workspace = true }
+timezone_provider = { workspace = true, features = ["zoneinfo64"] }
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"

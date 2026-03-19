@@ -1,0 +1,6 @@
+target/
+node_modules/
+*.node
+wasm-pkg/
+index.js
+index.d.ts

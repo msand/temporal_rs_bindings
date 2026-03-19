@@ -1,0 +1,23 @@
+{
+  "name": "temporal_rs",
+  "version": "0.1.0",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "name": "temporal_rs",
+    "triples": {
+      "defaults": true,
+      "additional": ["aarch64-apple-darwin"]
+    }
+  },
+  "scripts": {
+    "build": "napi build --platform --release -p temporal-napi",
+    "build:debug": "napi build --platform -p temporal-napi",
+    "build:wasm": "wasm-pack build crates/temporal-wasm --target bundler --out-dir ../../wasm-pkg",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2",
+    "vitest": "^1"
+  }
+}
