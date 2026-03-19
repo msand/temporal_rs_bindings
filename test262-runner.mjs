@@ -327,11 +327,8 @@ async function main() {
     }
   }
 
-  console.log('Loading temporal_rs NAPI binding...');
-  const { createRequire } = await import('node:module');
-  const require = createRequire(import.meta.url);
-  const binding = require('./index.js');
-  const Temporal = buildTemporalNamespaceSync(binding);
+  console.log('Loading temporal_rs conformance layer...');
+  const { Temporal } = await import('./lib/temporal.mjs');
 
   console.log('Collecting test files...');
   const tests = collectTests(TEMPORAL_TESTS, filter);

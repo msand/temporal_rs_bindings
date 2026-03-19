@@ -2,7 +2,20 @@
   "name": "temporal_rs",
   "version": "0.1.1",
   "main": "index.js",
+  "module": "lib/temporal.mjs",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/temporal.mjs",
+      "require": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./native": {
+      "import": "./index.js",
+      "require": "./index.js",
+      "types": "./index.d.ts"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/msand/temporal_rs_bindings"
@@ -23,7 +36,7 @@
     "test262:verbose": "node test262-runner.mjs -v",
     "test262:failing": "node test262-runner.mjs --failing"
   },
-  "files": ["index.js", "index.d.ts"],
+  "files": ["index.js", "index.d.ts", "lib/"],
   "devDependencies": {
     "@napi-rs/cli": "^2",
     "vitest": "^1"
