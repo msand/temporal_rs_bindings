@@ -1,0 +1,11 @@
+{
+  "name": "temporal_rs-linux-x64-musl",
+  "version": "0.1.0",
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "libc": ["musl"],
+  "main": "temporal_rs.linux-x64-musl.node",
+  "files": ["temporal_rs.linux-x64-musl.node"],
+  "description": "temporal_rs native binding for linux-x64-musl",
+  "license": "MIT"
+}

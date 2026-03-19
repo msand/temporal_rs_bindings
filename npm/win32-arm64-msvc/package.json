@@ -1,0 +1,10 @@
+{
+  "name": "temporal_rs-win32-arm64-msvc",
+  "version": "0.1.0",
+  "os": ["win32"],
+  "cpu": ["arm64"],
+  "main": "temporal_rs.win32-arm64-msvc.node",
+  "files": ["temporal_rs.win32-arm64-msvc.node"],
+  "description": "temporal_rs native binding for win32-arm64-msvc",
+  "license": "MIT"
+}

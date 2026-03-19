@@ -1,0 +1,10 @@
+{
+  "name": "temporal_rs-darwin-arm64",
+  "version": "0.1.0",
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "main": "temporal_rs.darwin-arm64.node",
+  "files": ["temporal_rs.darwin-arm64.node"],
+  "description": "temporal_rs native binding for darwin-arm64",
+  "license": "MIT"
+}

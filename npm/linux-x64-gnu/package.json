@@ -1,0 +1,11 @@
+{
+  "name": "temporal_rs-linux-x64-gnu",
+  "version": "0.1.0",
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "libc": ["glibc"],
+  "main": "temporal_rs.linux-x64-gnu.node",
+  "files": ["temporal_rs.linux-x64-gnu.node"],
+  "description": "temporal_rs native binding for linux-x64-gnu",
+  "license": "MIT"
+}

@@ -4,3 +4,4 @@ node_modules/
 wasm-pkg/
 index.js
 index.d.ts
+npm/**/*.node
