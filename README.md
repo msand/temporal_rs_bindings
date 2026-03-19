@@ -238,8 +238,21 @@ npm run build
 # Build WASM
 npm run build:wasm
 
-# Run tests
+# Run unit tests
 npm test
+
+# Run TC39 Test262 Temporal compliance tests (requires test262 submodule)
+git submodule update --init
+npm run test262
+
+# Run Test262 with filter
+npm run test262 -- PlainDate
+
+# Run Test262 verbose (show each test result)
+npm run test262:verbose
+
+# Run Test262 and write failure list
+npm run test262 -- --write-failures
 ```
 
 ### Prerequisites
@@ -247,6 +260,23 @@ npm test
 - [Rust](https://rustup.rs/) (stable)
 - [Node.js](https://nodejs.org/) >= 20
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/) (for WASM builds)
+
+## Test262 Compliance
+
+This package includes a runner for the [TC39 Test262](https://github.com/tc39/test262) Temporal test suite (4,577 tests). The runner executes tests in Node.js `vm` contexts with the NAPI binding injected as `globalThis.Temporal`.
+
+Current results (v0.1.1):
+- **59 pass** (1.3%) — basic construction, getters, string parsing for several types
+- **4,513 fail** — primarily due to API surface differences between NAPI bindings and the spec (see below)
+- **5 skip** — tests that crash the vm sandbox
+
+Most failures stem from:
+- **`instanceof` checks** — NAPI classes across vm context boundaries don't pass `instanceof`
+- **Missing `calendarId` property** — our binding uses `calendar` (returns Calendar object) instead of `calendarId` (string)
+- **Error types** — our binding throws generic `Error` where the spec expects `RangeError`/`TypeError`
+- **Missing APIs** — property bags as arguments, `with()` methods, `Temporal.Duration.compare()` as static
+
+Improving compliance is an ongoing effort. Contributions welcome.
 
 ## How It Works
 

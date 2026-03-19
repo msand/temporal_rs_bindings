@@ -4,3 +4,4 @@ node_modules/
 wasm-pkg/
 npm/**/*.node
 .idea/
+test262-failures.txt
