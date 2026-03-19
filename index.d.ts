@@ -291,6 +291,9 @@ export declare class Duration {
   abs(): Duration
   add(other: Duration): Duration
   subtract(other: Duration): Duration
+  round(options: RoundingOptions, relativeToDate?: PlainDate | undefined | null, relativeToZdt?: ZonedDateTime | undefined | null): Duration
+  total(unit: Unit, relativeToDate?: PlainDate | undefined | null, relativeToZdt?: ZonedDateTime | undefined | null): number
+  static compare(one: Duration, two: Duration, relativeToDate?: PlainDate | undefined | null, relativeToZdt?: ZonedDateTime | undefined | null): number
   toString(): string
 }
 export declare class PlainYearMonth {
