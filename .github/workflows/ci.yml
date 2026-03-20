@@ -46,7 +46,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -95,7 +95,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -111,6 +111,36 @@ jobs:
         with:
           name: wasm-pkg
           path: wasm-pkg/
+
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint & Typecheck
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Build NAPI (needed for type imports)
+        run: npx napi build --platform --release --cargo-cwd crates/temporal-napi
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
 
   test:
     needs: build
@@ -134,7 +164,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -145,12 +175,15 @@ jobs:
           name: binding-${{ matrix.target }}
           path: .
 
+      - name: Build TypeScript conformance layer
+        run: npx tsup
+
       - name: Run tests
         run: npm test
 
   publish:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true'
-    needs: [test, build-wasm]
+    needs: [test, lint, build-wasm]
     runs-on: ubuntu-latest
     name: Publish to npm
     permissions:
@@ -163,7 +196,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
@@ -172,8 +205,11 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Generate JS bindings and type definitions
+      - name: Generate NAPI bindings and type definitions
         run: npx napi build --platform --release --cargo-cwd crates/temporal-napi
+
+      - name: Build TypeScript conformance layer
+        run: npx tsup
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
