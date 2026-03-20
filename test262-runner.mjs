@@ -225,14 +225,8 @@ function createTestContext(Temporal) {
 
 // ─── Run a single test ──────────────────────────────────────
 
-// Tests that crash the vm sandbox by monkey-patching built-in prototypes
-// in ways that cause NAPI errors to escape the vm context boundary.
 const SKIP_CRASH = new Set([
-  'built-ins/Temporal/Instant/prototype/toZonedDateTimeISO/no-observable-array-iteration.js',
-  'built-ins/Temporal/PlainDate/prototype/toZonedDateTime/no-observable-array-iteration.js',
-  'built-ins/Temporal/PlainDateTime/prototype/toZonedDateTime/no-observable-array-iteration.js',
-  'built-ins/Temporal/PlainYearMonth/prototype/since/builtin-calendar-no-array-iteration.js',
-  'built-ins/Temporal/PlainYearMonth/prototype/subtract/builtin-calendar-no-array-iteration.js',
+  // No tests skipped — all previously skipped tests should now work
 ]);
 
 // Snapshot and restore prototype/static properties to prevent cross-test pollution.
