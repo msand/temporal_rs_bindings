@@ -24,7 +24,9 @@
     "name": "temporal_rs",
     "triples": {
       "defaults": true,
-      "additional": ["aarch64-apple-darwin"]
+      "additional": [
+        "aarch64-apple-darwin"
+      ]
     }
   },
   "scripts": {
@@ -34,20 +36,28 @@
     "test": "vitest run",
     "test262": "node test262-runner.mjs",
     "test262:verbose": "node test262-runner.mjs -v",
-    "test262:failing": "node test262-runner.mjs --failing"
+    "test262:failing": "node test262-runner.mjs --failing",
+    "lint": "eslint lib/",
+    "lint:fix": "eslint lib/ --fix"
   },
-  "files": ["index.js", "index.d.ts", "lib/"],
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "lib/"
+  ],
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@napi-rs/cli": "^2",
+    "eslint": "^10.1.0",
     "vitest": "^1"
   },
   "optionalDependencies": {
     "temporal_rs-darwin-arm64": "0.1.1",
     "temporal_rs-darwin-x64": "0.1.1",
+    "temporal_rs-linux-arm64-gnu": "0.1.1",
     "temporal_rs-linux-x64-gnu": "0.1.1",
     "temporal_rs-linux-x64-musl": "0.1.1",
-    "temporal_rs-linux-arm64-gnu": "0.1.1",
-    "temporal_rs-win32-x64-msvc": "0.1.1",
-    "temporal_rs-win32-arm64-msvc": "0.1.1"
+    "temporal_rs-win32-arm64-msvc": "0.1.1",
+    "temporal_rs-win32-x64-msvc": "0.1.1"
   }
 }
