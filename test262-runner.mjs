@@ -156,7 +156,6 @@ function createTestContext(Temporal) {
   // We work around this by providing the constructors directly and
   // accepting that some instanceof-based tests will fail.
   const sandbox = {
-    Temporal,
     // Provide standard built-ins that tests may need
     Object,
     Array,
@@ -216,6 +215,8 @@ function createTestContext(Temporal) {
       gc: () => {},
     },
   };
+  // Per spec: Temporal should be non-enumerable on globalThis (like other built-in namespaces)
+  Object.defineProperty(sandbox, 'Temporal', { value: Temporal, writable: true, enumerable: false, configurable: true });
   sandbox.globalThis = sandbox;
   sandbox.self = sandbox;
 
