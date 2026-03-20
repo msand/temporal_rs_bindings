@@ -15,6 +15,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -83,7 +84,7 @@ jobs:
         with:
           name: binding-${{ matrix.target }}
           path: temporal_rs.*.node
-          if-no-found: error
+          if-no-files-found: error
 
   build-wasm:
     runs-on: ubuntu-latest
