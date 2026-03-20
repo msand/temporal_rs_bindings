@@ -256,8 +256,8 @@ The 2 remaining failures are caused by inconsistencies between Node.js's ICU4C a
 
 | Test | Root cause |
 |------|-----------|
-| `format/temporal-objects-resolved-time-zone` | Node.js v22 `format()` uses U+0020 before AM/PM but `formatToParts()` uses U+202F. Test compares them. |
-| `formatToParts/compare-to-temporal-lunisolar` | ICU4C and ICU4X disagree on Chinese calendar new moon for 2030/M01 by 1 day (7 minutes past midnight Beijing time). ICU4X (temporal_rs) is correct per the Purple Mountain Observatory standard. |
+| `format/temporal-objects-resolved-time-zone` | Node.js ICU4C `format()` uses U+0020 before AM/PM but `formatToParts()` uses U+202F (narrow no-break space). The test compares them. Present in Node.js v22–v25 (ICU 77–78). |
+| `formatToParts/compare-to-temporal-lunisolar` | ICU4C and ICU4X disagree on Chinese calendar 2030/M01 start date by 1 day. The new moon falls 7 minutes past midnight Beijing time — ICU4X (temporal_rs) correctly places it on Feb 3, ICU4C on Feb 2. Both are algorithmic ICU bugs that cannot be fixed via ICU data updates. |
 
 ## How It Works
 
