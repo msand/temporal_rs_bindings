@@ -273,6 +273,11 @@ export declare class Instant {
   valueOf(): void
 }
 export declare class Duration {
+  /**
+   * Constructor accepts f64 for all fields (matching JS Number type).
+   * Microseconds and nanoseconds are converted to i128 to preserve
+   * precision for values exceeding i64 range.
+   */
   constructor(years?: number | undefined | null, months?: number | undefined | null, weeks?: number | undefined | null, days?: number | undefined | null, hours?: number | undefined | null, minutes?: number | undefined | null, seconds?: number | undefined | null, milliseconds?: number | undefined | null, microseconds?: number | undefined | null, nanoseconds?: number | undefined | null)
   static from(s: string): Duration
   get years(): number

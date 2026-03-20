@@ -9,32 +9,59 @@ pub struct Duration {
     pub(crate) inner: temporal_rs::Duration,
 }
 
+/// Convert an f64 (JS Number) to i64, matching the spec's ToIntegerIfIntegral.
+/// The value must be finite and integral.
+fn f64_to_i64(v: f64) -> napi::Result<i64> {
+    if v.is_nan() || v.is_infinite() {
+        return Err(napi::Error::from_reason("RangeError: Duration field must be finite"));
+    }
+    if v.fract() != 0.0 {
+        return Err(napi::Error::from_reason("RangeError: Duration field must be an integer"));
+    }
+    Ok(v as i64)
+}
+
+/// Convert an f64 (JS Number) to i128 for microseconds/nanoseconds.
+/// These fields can hold values larger than i64 range.
+fn f64_to_i128(v: f64) -> napi::Result<i128> {
+    if v.is_nan() || v.is_infinite() {
+        return Err(napi::Error::from_reason("RangeError: Duration field must be finite"));
+    }
+    if v.fract() != 0.0 {
+        return Err(napi::Error::from_reason("RangeError: Duration field must be an integer"));
+    }
+    Ok(v as i128)
+}
+
 #[napi]
 impl Duration {
+    /// Constructor accepts f64 for all fields (matching JS Number type).
+    /// Microseconds and nanoseconds are converted to i128 to preserve
+    /// precision for values exceeding i64 range.
     #[napi(constructor)]
     pub fn new(
-        years: Option<i64>,
-        months: Option<i64>,
-        weeks: Option<i64>,
-        days: Option<i64>,
-        hours: Option<i64>,
-        minutes: Option<i64>,
-        seconds: Option<i64>,
-        milliseconds: Option<i64>,
-        microseconds: Option<i64>,
-        nanoseconds: Option<i64>,
+        years: Option<f64>,
+        months: Option<f64>,
+        weeks: Option<f64>,
+        days: Option<f64>,
+        hours: Option<f64>,
+        minutes: Option<f64>,
+        seconds: Option<f64>,
+        milliseconds: Option<f64>,
+        microseconds: Option<f64>,
+        nanoseconds: Option<f64>,
     ) -> napi::Result<Self> {
         let inner = temporal_rs::Duration::new(
-            years.unwrap_or(0),
-            months.unwrap_or(0),
-            weeks.unwrap_or(0),
-            days.unwrap_or(0),
-            hours.unwrap_or(0),
-            minutes.unwrap_or(0),
-            seconds.unwrap_or(0),
-            milliseconds.unwrap_or(0),
-            microseconds.unwrap_or(0) as i128,
-            nanoseconds.unwrap_or(0) as i128,
+            f64_to_i64(years.unwrap_or(0.0))?,
+            f64_to_i64(months.unwrap_or(0.0))?,
+            f64_to_i64(weeks.unwrap_or(0.0))?,
+            f64_to_i64(days.unwrap_or(0.0))?,
+            f64_to_i64(hours.unwrap_or(0.0))?,
+            f64_to_i64(minutes.unwrap_or(0.0))?,
+            f64_to_i64(seconds.unwrap_or(0.0))?,
+            f64_to_i64(milliseconds.unwrap_or(0.0))?,
+            f64_to_i128(microseconds.unwrap_or(0.0))?,
+            f64_to_i128(nanoseconds.unwrap_or(0.0))?,
         )
         .map_err(to_napi_error)?;
         Ok(Self { inner })
@@ -47,53 +74,53 @@ impl Duration {
     }
 
     #[napi(getter)]
-    pub fn years(&self) -> i64 {
-        self.inner.years()
+    pub fn years(&self) -> f64 {
+        self.inner.years() as f64
     }
 
     #[napi(getter)]
-    pub fn months(&self) -> i64 {
-        self.inner.months()
+    pub fn months(&self) -> f64 {
+        self.inner.months() as f64
     }
 
     #[napi(getter)]
-    pub fn weeks(&self) -> i64 {
-        self.inner.weeks()
+    pub fn weeks(&self) -> f64 {
+        self.inner.weeks() as f64
     }
 
     #[napi(getter)]
-    pub fn days(&self) -> i64 {
-        self.inner.days()
+    pub fn days(&self) -> f64 {
+        self.inner.days() as f64
     }
 
     #[napi(getter)]
-    pub fn hours(&self) -> i64 {
-        self.inner.hours()
+    pub fn hours(&self) -> f64 {
+        self.inner.hours() as f64
     }
 
     #[napi(getter)]
-    pub fn minutes(&self) -> i64 {
-        self.inner.minutes()
+    pub fn minutes(&self) -> f64 {
+        self.inner.minutes() as f64
     }
 
     #[napi(getter)]
-    pub fn seconds(&self) -> i64 {
-        self.inner.seconds()
+    pub fn seconds(&self) -> f64 {
+        self.inner.seconds() as f64
     }
 
     #[napi(getter)]
-    pub fn milliseconds(&self) -> i64 {
-        self.inner.milliseconds()
+    pub fn milliseconds(&self) -> f64 {
+        self.inner.milliseconds() as f64
     }
 
     #[napi(getter)]
-    pub fn microseconds(&self) -> i64 {
-        self.inner.microseconds() as i64
+    pub fn microseconds(&self) -> f64 {
+        self.inner.microseconds() as f64
     }
 
     #[napi(getter)]
-    pub fn nanoseconds(&self) -> i64 {
-        self.inner.nanoseconds() as i64
+    pub fn nanoseconds(&self) -> f64 {
+        self.inner.nanoseconds() as f64
     }
 
     #[napi(getter)]
