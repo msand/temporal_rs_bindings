@@ -266,19 +266,20 @@ npm run test262 -- --write-failures
 This package includes a runner for the [TC39 Test262](https://github.com/tc39/test262) Temporal test suite (6,661 tests). The runner executes tests in Node.js `vm` contexts with the spec conformance layer injected as `globalThis.Temporal`.
 
 Current results:
-- **6,004 pass (90.2%)** across all 6,661 Temporal tests
-- **652 fail** — see breakdown below
+- **6,533 pass (98.2%)** across all 6,661 Temporal tests
+- **123 fail** — all structurally unfixable from JavaScript (see below)
 - **5 skip** — tests that crash the vm sandbox
 
-Remaining failures:
-- **~85 `toLocaleString`** — requires V8-level `Intl.DateTimeFormat` Temporal integration
-- **~89 order-of-operations** — requires Proxy-based property access ordering
-- **~62 `DateTimeFormat`/`DurationFormat`** — requires Intl integration
-- **~137 leap month arithmetic** — Hebrew M05L, Chinese/Dangi leap months
-- **~279 various** — calendar edge cases, offset disambiguation, NAPI type conversion
+The 123 remaining failures require changes outside the JS conformance layer:
 
-The ~236 Intl/order-of-operations tests are fundamentally unfixable from JavaScript alone.
-Improving compliance for the remaining calendar and offset edge cases is ongoing.
+| Category | Count | Root cause |
+|----------|-------|------------|
+| Order-of-operations | 87 | Tests verify exact property access order via Proxy — would need full spec-order reimplementation |
+| `Intl.DateTimeFormat` | 15 | Requires V8-native Temporal support in `Intl.DateTimeFormat` |
+| Duration precision | 10 | NAPI binding uses i64/f64 which can't represent the full spec range |
+| `Intl.DurationFormat` | 7 | `Intl.DurationFormat` not available in Node.js |
+| Calendar-invalid | 2 | Constructor property access ordering |
+| PlainYearMonth extreme | 2 | Coptic calendar max dates exceed NAPI's ISO range |
 
 ## How It Works
 
