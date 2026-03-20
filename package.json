@@ -38,7 +38,9 @@
     "test262:verbose": "node test262-runner.mjs -v",
     "test262:failing": "node test262-runner.mjs --failing",
     "lint": "eslint lib/",
-    "lint:fix": "eslint lib/ --fix"
+    "lint:fix": "eslint lib/ --fix",
+    "format": "prettier --write lib/",
+    "format:check": "prettier --check lib/"
   },
   "files": [
     "index.js",
@@ -49,6 +51,7 @@
     "@eslint/js": "^10.0.1",
     "@napi-rs/cli": "^2",
     "eslint": "^10.1.0",
+    "prettier": "^3.8.1",
     "vitest": "^1"
   },
   "optionalDependencies": {
