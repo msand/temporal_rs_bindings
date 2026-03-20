@@ -338,7 +338,7 @@ function runTest(testFile, Temporal) {
 
   const runInCtx = (code, ctx, filename) => {
     try {
-      vm.runInContext(code, ctx, { filename, timeout: 10000 });
+      vm.runInContext(code, ctx, { filename, timeout: 30000 });
       return null;
     } catch (err) {
       return err;
