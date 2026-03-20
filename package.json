@@ -32,9 +32,9 @@
     "build:debug": "napi build --platform --cargo-cwd crates/temporal-napi",
     "build:wasm": "wasm-pack build crates/temporal-wasm --target bundler --out-dir ../../wasm-pkg",
     "test": "vitest run",
-    "test262": "node test262-runner.mjs",
-    "test262:verbose": "node test262-runner.mjs -v",
-    "test262:failing": "node test262-runner.mjs --failing"
+    "test262": "node --harmony-intl-duration-format test262-runner.mjs",
+    "test262:verbose": "node --harmony-intl-duration-format test262-runner.mjs -v",
+    "test262:failing": "node --harmony-intl-duration-format test262-runner.mjs --failing"
   },
   "files": ["index.js", "index.d.ts", "lib/"],
   "devDependencies": {

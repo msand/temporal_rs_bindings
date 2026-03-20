@@ -280,6 +280,16 @@ function snapshotTemporal(Temporal) {
       snapshots.push({ obj: Temporal.Now, name: sym, desc: Object.getOwnPropertyDescriptor(Temporal.Now, sym) });
     }
   }
+  // Snapshot Intl.DurationFormat.prototype (tests may taint getters)
+  if (typeof Intl !== 'undefined' && typeof Intl.DurationFormat === 'function' && Intl.DurationFormat.prototype) {
+    for (const name of Object.getOwnPropertyNames(Intl.DurationFormat.prototype)) {
+      snapshots.push({
+        obj: Intl.DurationFormat.prototype,
+        name,
+        desc: Object.getOwnPropertyDescriptor(Intl.DurationFormat.prototype, name),
+      });
+    }
+  }
   return snapshots;
 }
 
