@@ -165,6 +165,7 @@ function createTestContext(Temporal) {
     Boolean,
     Symbol,
     BigInt,
+    Function,
     Math,
     Date,
     RegExp,
@@ -331,6 +332,39 @@ function runTest(testFile, Temporal) {
     if (err) {
       return { status: 'skip', reason: `harness error in ${h}: ${String(err?.message || err).split('\n')[0]}` };
     }
+  }
+
+  // Patch assert.throws to handle cross-realm error constructors.
+  // When NAPI bindings or V8 internals throw errors, they use the outer realm's
+  // error constructors, which differ from the ones in the vm sandbox.
+  // This shim compares constructor names as a fallback when identity check fails.
+  const shimErr = runInCtx(`
+    if (typeof assert !== 'undefined' && assert.throws) {
+      const _origThrows = assert.throws;
+      assert.throws = function(expectedErrorConstructor, func, message) {
+        if (typeof func !== "function") {
+          return _origThrows.call(this, expectedErrorConstructor, func, message);
+        }
+        if (message === undefined) message = ''; else message += ' ';
+        try {
+          func();
+        } catch (thrown) {
+          if (typeof thrown !== 'object' || thrown === null) {
+            throw new Test262Error(message + 'Thrown value was not an object!');
+          }
+          if (thrown.constructor === expectedErrorConstructor) return;
+          // Cross-realm fallback: match by constructor name
+          if (thrown.constructor && thrown.constructor.name === expectedErrorConstructor.name) return;
+          var expectedName = expectedErrorConstructor.name;
+          var actualName = thrown.constructor ? thrown.constructor.name : 'unknown';
+          throw new Test262Error(message + 'Expected a ' + expectedName + ' but got a ' + actualName);
+        }
+        throw new Test262Error(message + 'Expected a ' + expectedErrorConstructor.name + ' to be thrown but no exception was thrown at all');
+      };
+    }
+  `, context, 'assert-throws-shim');
+  if (shimErr) {
+    return { status: 'skip', reason: `assert.throws shim error: ${String(shimErr?.message || shimErr).split('\n')[0]}` };
   }
 
   // Run test
