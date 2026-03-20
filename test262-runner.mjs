@@ -11,6 +11,26 @@
 //   node test262-runner.mjs --write-failures    # Write failure list to file
 //   node test262-runner.mjs --expected-failures=file.txt
 
+// Auto-restart with --harmony-intl-duration-format if DurationFormat is not available.
+// Guard against infinite re-exec with an env variable.
+if (typeof Intl === 'undefined' || typeof Intl.DurationFormat !== 'function') {
+  if (!process.env._HARMONY_REEXEC) {
+    const { execFileSync } = await import('node:child_process');
+    const { fileURLToPath } = await import('node:url');
+    try {
+      execFileSync(process.execPath, [
+        '--harmony-intl-duration-format',
+        fileURLToPath(import.meta.url),
+        ...process.argv.slice(2),
+      ], { stdio: 'inherit', env: { ...process.env, _HARMONY_REEXEC: '1' } });
+    } catch (e) {
+      process.exit(e.status || 1);
+    }
+    process.exit(0);
+  }
+  // DurationFormat still not available after re-exec — continue without it
+}
+
 import vm from 'node:vm';
 import fs from 'node:fs';
 import path from 'node:path';
