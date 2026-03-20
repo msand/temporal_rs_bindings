@@ -263,20 +263,22 @@ npm run test262 -- --write-failures
 
 ## Test262 Compliance
 
-This package includes a runner for the [TC39 Test262](https://github.com/tc39/test262) Temporal test suite (4,577 tests). The runner executes tests in Node.js `vm` contexts with the NAPI binding injected as `globalThis.Temporal`.
+This package includes a runner for the [TC39 Test262](https://github.com/tc39/test262) Temporal test suite (6,661 tests). The runner executes tests in Node.js `vm` contexts with the spec conformance layer injected as `globalThis.Temporal`.
 
-Current results (v0.1.1):
-- **59 pass** (1.3%) — basic construction, getters, string parsing for several types
-- **4,513 fail** — primarily due to API surface differences between NAPI bindings and the spec (see below)
+Current results:
+- **6,004 pass (90.2%)** across all 6,661 Temporal tests
+- **652 fail** — see breakdown below
 - **5 skip** — tests that crash the vm sandbox
 
-Most failures stem from:
-- **`instanceof` checks** — NAPI classes across vm context boundaries don't pass `instanceof`
-- **Missing `calendarId` property** — our binding uses `calendar` (returns Calendar object) instead of `calendarId` (string)
-- **Error types** — our binding throws generic `Error` where the spec expects `RangeError`/`TypeError`
-- **Missing APIs** — property bags as arguments, `with()` methods, `Temporal.Duration.compare()` as static
+Remaining failures:
+- **~85 `toLocaleString`** — requires V8-level `Intl.DateTimeFormat` Temporal integration
+- **~89 order-of-operations** — requires Proxy-based property access ordering
+- **~62 `DateTimeFormat`/`DurationFormat`** — requires Intl integration
+- **~137 leap month arithmetic** — Hebrew M05L, Chinese/Dangi leap months
+- **~279 various** — calendar edge cases, offset disambiguation, NAPI type conversion
 
-Improving compliance is an ongoing effort. Contributions welcome.
+The ~236 Intl/order-of-operations tests are fundamentally unfixable from JavaScript alone.
+Improving compliance for the remaining calendar and offset edge cases is ongoing.
 
 ## How It Works
 
