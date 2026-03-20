@@ -1,50 +1,25 @@
-import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
 
-export default [
-  {
-    files: ['lib/**/*.ts'],
-    ...js.configs.recommended,
-    languageOptions: {
-      ecmaVersion: 2025,
-      sourceType: 'module',
-      globals: {
-        Intl: 'readonly',
-        Date: 'readonly',
-        console: 'readonly',
-        process: 'readonly',
-        BigInt: 'readonly',
-        Float64Array: 'readonly',
-        BigUint64Array: 'readonly',
-        WeakSet: 'readonly',
-        Map: 'readonly',
-        Set: 'readonly',
-        Symbol: 'readonly',
-        Proxy: 'readonly',
-        Object: 'readonly',
-        Array: 'readonly',
-        String: 'readonly',
-        Number: 'readonly',
-        Math: 'readonly',
-        Error: 'readonly',
-        TypeError: 'readonly',
-        RangeError: 'readonly',
-        ReferenceError: 'readonly',
-        parseInt: 'readonly',
-        parseFloat: 'readonly',
-        isNaN: 'readonly',
-        isFinite: 'readonly',
-        undefined: 'readonly',
-        NaN: 'readonly',
-        Infinity: 'readonly',
-      },
-    },
-    rules: {
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      'no-constant-condition': 'off',
-      'no-empty': ['error', { allowEmptyCatch: true }],
-      'no-fallthrough': 'off',
-      'no-redeclare': 'warn',
-      'no-self-assign': 'off',
+export default tseslint.config({
+  files: ['lib/**/*.ts'],
+  extends: [...tseslint.configs.recommended],
+  languageOptions: {
+    parserOptions: {
+      projectService: true,
+      tsconfigRootDir: import.meta.dirname,
     },
   },
-];
+  rules: {
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-unsafe-argument': 'off',
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-return': 'off',
+    '@typescript-eslint/no-require-imports': 'off',
+    'no-constant-condition': 'off',
+    'no-empty': ['error', { allowEmptyCatch: true }],
+    'no-fallthrough': 'off',
+  },
+});

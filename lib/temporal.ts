@@ -1,10 +1,105 @@
-// @ts-nocheck
 // TC39 Temporal spec conformance layer over temporal_rs NAPI bindings.
 // Bridges the gap between the NAPI binding API and the TC39 Temporal specification.
 
+type NapiTypes = typeof import('../index.js');
+type NapiCalendar = import('../index.js').Calendar;
+type NapiTimeZone = import('../index.js').TimeZone;
+type NapiPlainDateT = import('../index.js').PlainDate;
+type NapiPlainTimeT = import('../index.js').PlainTime;
+type NapiPlainDateTimeT = import('../index.js').PlainDateTime;
+type NapiZonedDateTimeT = import('../index.js').ZonedDateTime;
+type NapiInstantT = import('../index.js').Instant;
+type NapiDurationT = import('../index.js').Duration;
+type NapiPlainYearMonthT = import('../index.js').PlainYearMonth;
+type NapiPlainMonthDayT = import('../index.js').PlainMonthDay;
+type NapiDifferenceSettings = import('../index.js').DifferenceSettings;
+type NapiRoundingOptions = import('../index.js').RoundingOptions;
+type NapiToStringRoundingOptions = import('../index.js').ToStringRoundingOptions;
+type NapiDisplayCalendar = import('../index.js').DisplayCalendar;
+
+// Augment ImportMeta for Node.js ESM
+declare global {
+  interface ImportMeta {
+    url: string;
+  }
+  // Intl.DurationFormat is not yet in TS libs
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Intl {
+    class DurationFormat {
+      constructor(locales?: string | string[], options?: Record<string, unknown>);
+      format(duration: Record<string, unknown> | string): string;
+      formatToParts(duration: Record<string, unknown> | string): Array<{ type: string; value: string }>;
+      resolvedOptions(): Record<string, unknown>;
+    }
+  }
+}
+
+// Any-typed record for property bags passed from user code
+type AnyRecord = Record<string, any>;
+
+// Local date/time parts extracted from DateTimeFormat
+interface LocalParts {
+  year: string;
+  month: string;
+  day: string;
+  hour: string;
+  minute: string;
+  second: string;
+  fractionalSecond: string;
+  _fullYear: number;
+  [key: string]: string | number;
+}
+
+// ISO date fields
+interface ISOFields {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+// Calendar date to ISO result
+interface CalendarISOResult {
+  isoYear: number;
+  isoMonth: number;
+  isoDay: number;
+}
+
+// Calendar date difference result
+interface CalendarDateDiffResult {
+  years: number;
+  months: number;
+  weeks: number;
+  days: number;
+}
+
+// Parsed ZDT string parts
+interface ZdtStringParts {
+  isoYear: number;
+  isoMonth: number;
+  isoDay: number;
+  hour: number;
+  minute: number;
+  second: number;
+  millisecond: number;
+  microsecond: number;
+  nanosecond: number;
+  tzId: string;
+}
+
+// Range info for Intl formatting
+interface RangeInfo {
+  ms: any;
+  isoFields: ISOFields | null | undefined;
+  isTemporal: boolean;
+}
+
+// @ts-expect-error - Node.js built-in module
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const binding = require('../index.js');
+const binding: NapiTypes = require('../index.js');
 
 const NapiCalendar = binding.Calendar;
 const NapiTimeZone = binding.TimeZone;
@@ -17,9 +112,26 @@ const NapiDuration = binding.Duration;
 const NapiPlainYearMonth = binding.PlainYearMonth;
 const NapiPlainMonthDay = binding.PlainMonthDay;
 
+// Type aliases for class types (used with instanceof)
+type NapiCalendarClass = typeof NapiCalendar;
+type NapiTimeZoneClass = typeof NapiTimeZone;
+type NapiPlainDateClass = typeof NapiPlainDate;
+type NapiPlainTimeClass = typeof NapiPlainTime;
+type NapiPlainDateTimeClass = typeof NapiPlainDateTime;
+type NapiZonedDateTimeClass = typeof NapiZonedDateTime;
+type NapiInstantClass = typeof NapiInstant;
+type NapiDurationClass = typeof NapiDuration;
+type NapiPlainYearMonthClass = typeof NapiPlainYearMonth;
+type NapiPlainMonthDayClass = typeof NapiPlainMonthDay;
+
+// Helper: non-null regex match result (caller must ensure match succeeded)
+function m$(arr: RegExpMatchArray | string[], idx: number): string {
+  return arr[idx] as string;
+}
+
 // ─── Enum mapping (spec lowercase → NAPI PascalCase) ─────────
 
-const UNIT_MAP = {
+const UNIT_MAP: Record<string, string> = {
   auto: 'Auto',
   nanosecond: 'Nanosecond',
   nanoseconds: 'Nanosecond',
@@ -43,7 +155,7 @@ const UNIT_MAP = {
   years: 'Year',
 };
 
-const ROUNDING_MODE_MAP = {
+const ROUNDING_MODE_MAP: Record<string, string> = {
   ceil: 'Ceil',
   floor: 'Floor',
   expand: 'Expand',
@@ -55,38 +167,38 @@ const ROUNDING_MODE_MAP = {
   halfEven: 'HalfEven',
 };
 
-const OVERFLOW_MAP = {
+const OVERFLOW_MAP: Record<string, string> = {
   constrain: 'Constrain',
   reject: 'Reject',
 };
 
-const DISAMBIGUATION_MAP = {
+const DISAMBIGUATION_MAP: Record<string, string> = {
   compatible: 'Compatible',
   earlier: 'Earlier',
   later: 'Later',
   reject: 'Reject',
 };
 
-const OFFSET_DISAMBIGUATION_MAP = {
+const OFFSET_DISAMBIGUATION_MAP: Record<string, string> = {
   use: 'Use',
   prefer: 'Prefer',
   ignore: 'Ignore',
   reject: 'Reject',
 };
 
-const DISPLAY_CALENDAR_MAP = {
+const DISPLAY_CALENDAR_MAP: Record<string, string> = {
   auto: 'Auto',
   always: 'Always',
   never: 'Never',
   critical: 'Critical',
 };
 
-const DISPLAY_OFFSET_MAP = {
+const DISPLAY_OFFSET_MAP: Record<string, string> = {
   auto: 'Auto',
   never: 'Never',
 };
 
-const DISPLAY_TIMEZONE_MAP = {
+const DISPLAY_TIMEZONE_MAP: Record<string, string> = {
   auto: 'Auto',
   never: 'Never',
   critical: 'Critical',
@@ -94,7 +206,7 @@ const DISPLAY_TIMEZONE_MAP = {
 
 // ─── Helper: map enum with validation ─────────────────────────
 
-function mapUnit(val) {
+function mapUnit(val: any): any {
   if (val === undefined) return undefined;
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   const str = String(val);
@@ -103,7 +215,7 @@ function mapUnit(val) {
   return mapped;
 }
 
-function mapRoundingMode(val) {
+function mapRoundingMode(val: any): any {
   if (val === undefined) return undefined;
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   const str = String(val);
@@ -112,7 +224,7 @@ function mapRoundingMode(val) {
   return mapped;
 }
 
-function mapOverflow(val) {
+function mapOverflow(val: any): any {
   if (val === undefined) return undefined;
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   const str = String(val);
@@ -121,7 +233,7 @@ function mapOverflow(val) {
   return mapped;
 }
 
-function mapDisplayCalendar(val) {
+function mapDisplayCalendar(val: any): any {
   if (val === undefined) return undefined;
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   const str = String(val);
@@ -132,7 +244,7 @@ function mapDisplayCalendar(val) {
 
 // ─── Helper: BigInt epoch nanoseconds to ISO 8601 UTC string ──
 
-function bigintNsToISOString(epochNs) {
+function bigintNsToISOString(epochNs: bigint): string {
   const NS_PER_MS = 1000000n;
   // Floor division towards -Infinity
   let epochMs = epochNs / NS_PER_MS;
@@ -168,7 +280,7 @@ function bigintNsToISOString(epochNs) {
 
 // ─── Helper: compute epoch nanoseconds BigInt from NAPI inner ──
 
-function computeEpochNanoseconds(inner) {
+function computeEpochNanoseconds(inner: NapiInstantT | NapiZonedDateTimeT): bigint {
   // The NAPI epochNanoseconds is a Number which loses precision for large values.
   // Compute precise BigInt from epochMilliseconds + sub-ms components from toString.
   const str = inner.toString();
@@ -178,7 +290,7 @@ function computeEpochNanoseconds(inner) {
   if (!dotMatch) {
     return epochMs * 1000000n;
   }
-  const fracStr = (dotMatch[1] + '000000000').substring(0, 9);
+  const fracStr = (dotMatch[1]! + '000000000').substring(0, 9);
   const us = parseInt(fracStr.substring(3, 6), 10);
   const ns = parseInt(fracStr.substring(6, 9), 10);
   return epochMs * 1000000n + BigInt(us) * 1000n + BigInt(ns);
@@ -186,7 +298,7 @@ function computeEpochNanoseconds(inner) {
 
 // Helper: parse a duration argument for Instant.add/subtract, preserving BigInt precision
 // Returns { dur (for validation), totalNs (BigInt) }
-function _parseDurationForInstant(arg) {
+function _parseDurationForInstant(arg: any): { dur: NapiDurationT; totalNs: bigint } {
   // If it's a string, parse through NAPI and use the result
   if (typeof arg === 'string') {
     const dur = call(() => NapiDuration.from(arg));
@@ -280,7 +392,7 @@ function _parseDurationForInstant(arg) {
 }
 
 // Helper: compute local date/time parts from BigInt nanoseconds (for extreme values)
-function _computeLocalPartsFromBigInt(epochNs, offsetNs) {
+function _computeLocalPartsFromBigInt(epochNs: bigint, offsetNs: bigint): LocalParts {
   const localNs = epochNs + offsetNs;
   const NS_PER_DAY = 86400000000000n;
 
@@ -331,10 +443,10 @@ function _computeLocalPartsFromBigInt(epochNs, offsetNs) {
 
 // ─── Helper: compute local time in a timezone from epoch ms ────
 
-const _dtfCache = new Map();
-const _napiZdtCache = new Map();
-const _canonicalTzCache = new Map();
-function _canonicalTzId(tzId) {
+const _dtfCache = new Map<string, Intl.DateTimeFormat>();
+const _napiZdtCache = new Map<string, NapiZonedDateTimeT>();
+const _canonicalTzCache = new Map<string, string>();
+function _canonicalTzId(tzId: string): string {
   let canon = _canonicalTzCache.get(tzId);
   if (canon !== undefined) return canon;
   try {
@@ -346,7 +458,7 @@ function _canonicalTzId(tzId) {
   return canon;
 }
 
-function getLocalPartsFromEpoch(epochMs, tzId) {
+function getLocalPartsFromEpoch(epochMs: number, tzId: string): LocalParts {
   if (tzId === 'UTC') {
     const d = new Date(epochMs);
     // Use Date.getUTC* for UTC to correctly handle negative years
@@ -405,13 +517,13 @@ function getLocalPartsFromEpoch(epochMs, tzId) {
     });
     _dtfCache.set(tzId, fmt);
   }
-  const parts = {};
+  const parts: LocalParts = {} as LocalParts;
   for (const { type, value } of fmt.formatToParts(d)) {
-    parts[type] = value;
+    (parts as any)[type] = value;
   }
   // Convert era-based year to astronomical year
   const eraYear = parseInt(parts.year, 10);
-  if (parts.era && (parts.era === 'BC' || parts.era === 'B')) {
+  if (parts['era'] && (parts['era'] === 'BC' || parts['era'] === 'B')) {
     // BC year: 1 BC = year 0, 2 BC = year -1, etc.
     parts._fullYear = -(eraYear - 1);
   } else {
@@ -420,7 +532,7 @@ function getLocalPartsFromEpoch(epochMs, tzId) {
   return parts;
 }
 
-function getUtcOffsetString(epochMs, tzId) {
+function getUtcOffsetString(epochMs: number, tzId: string): string {
   if (tzId === 'UTC') return '+00:00';
   const parts = getLocalPartsFromEpoch(epochMs, tzId);
   const localYear = parts._fullYear;
@@ -450,7 +562,17 @@ function getUtcOffsetString(epochMs, tzId) {
 
 // Helper: resolve a local datetime to an epoch ms in a given timezone with disambiguation
 // Returns { epochMs, offsetStr } or throws for 'reject' mode
-function _resolveLocalToEpochMs(isoYear, isoMonth, isoDay, hour, minute, second, ms, tzId, disambiguation) {
+function _resolveLocalToEpochMs(
+  isoYear: number,
+  isoMonth: number,
+  isoDay: number,
+  hour: number,
+  minute: number,
+  second: number,
+  ms: number,
+  tzId: string,
+  disambiguation: string,
+): { epochMs: number; offsetStr: string } {
   if (tzId === 'UTC' || /^[+-]\d{2}:\d{2}$/.test(tzId)) {
     const d = new Date(0);
     d.setUTCFullYear(isoYear, isoMonth - 1, isoDay);
@@ -552,7 +674,7 @@ function _resolveLocalToEpochMs(isoYear, isoMonth, isoDay, hour, minute, second,
 
   if (candidates.length === 1) {
     // Unambiguous
-    const c = candidates[0];
+    const c = candidates[0]!;
     return { epochMs: c.epochMs, offsetStr: _formatOffsetMs(c.offset) };
   }
 
@@ -565,15 +687,15 @@ function _resolveLocalToEpochMs(isoYear, isoMonth, isoDay, hour, minute, second,
   candidates.sort((a, b) => a.epochMs - b.epochMs);
 
   if (disambiguation === 'later') {
-    const c = candidates[candidates.length - 1];
+    const c = candidates[candidates.length - 1]!;
     return { epochMs: c.epochMs, offsetStr: _formatOffsetMs(c.offset) };
   }
   // compatible/earlier: use the earlier instant
-  const c = candidates[0];
+  const c = candidates[0]!;
   return { epochMs: c.epochMs, offsetStr: _formatOffsetMs(c.offset) };
 }
 
-function _formatOffsetMs(offsetMs) {
+function _formatOffsetMs(offsetMs: number): string {
   const totalSeconds = Math.round(offsetMs / 1000);
   const sign = totalSeconds >= 0 ? '+' : '-';
   const absSeconds = Math.abs(totalSeconds);
@@ -587,7 +709,7 @@ function _formatOffsetMs(offsetMs) {
 }
 
 // Helper: get UTC offset in milliseconds for a timezone at a given epoch
-function _getOffsetMs(epochMs, tzId) {
+function _getOffsetMs(epochMs: number, tzId: string): number {
   if (tzId === 'UTC') return 0;
   const parts = getLocalPartsFromEpoch(epochMs, tzId);
   const localYear = parts._fullYear;
@@ -612,7 +734,7 @@ function _getOffsetMs(epochMs, tzId) {
 }
 
 // Helper: find the next or previous timezone transition via binary search
-function _findTimeZoneTransition(zdt, dir) {
+function _findTimeZoneTransition(zdt: any, dir: string): ZonedDateTime | null {
   const tzId = zdt.timeZoneId;
   if (tzId === 'UTC') return null; // UTC has no transitions
   // Fixed-offset timezones have no transitions
@@ -825,10 +947,10 @@ function _findTimeZoneTransition(zdt, dir) {
 }
 
 // Helper: validate a ZonedDateTime string for sub-minute offset and timezone validity
-function _validateZdtString(str) {
+function _validateZdtString(str: string): void {
   const tzMatch = str.match(/\[([^\]=]+)\]/);
   if (!tzMatch) return;
-  const tzId = tzMatch[1];
+  const tzId = tzMatch[1]!;
   // Reject sub-minute timezone identifiers (e.g. -00:44:59)
   if (/^[+-]\d{2}:\d{2}:\d{2}/.test(tzId)) {
     throw new RangeError(`"${tzId}" is not a valid time zone identifier (sub-minute offsets not allowed)`);
@@ -840,13 +962,13 @@ function _validateZdtString(str) {
   if (offsetMatch && /^[+-]\d{2}:\d{2}$/.test(tzId)) {
     // Fixed-offset timezone: the string offset must match exactly
     // The timezone is HH:MM, so the string offset must also have zero seconds
-    const oS = offsetMatch[4] ? parseInt(offsetMatch[4], 10) : 0;
-    const oFrac = offsetMatch[5] ? parseInt(offsetMatch[5], 10) : 0;
+    const oS = offsetMatch![4]! ? parseInt(offsetMatch![4]!, 10) : 0;
+    const oFrac = offsetMatch![5]! ? parseInt(offsetMatch![5]!, 10) : 0;
     if (oS !== 0 || oFrac !== 0) {
       // Check if the offset rounds to the timezone
-      const sign = offsetMatch[1] === '+' ? 1 : -1;
-      const oH = parseInt(offsetMatch[2], 10);
-      const oM = parseInt(offsetMatch[3], 10);
+      const sign = offsetMatch![1]! === '+' ? 1 : -1;
+      const oH = parseInt(offsetMatch![2]!, 10);
+      const oM = parseInt(offsetMatch![3]!, 10);
       const totalOffsetSeconds = sign * (oH * 3600 + oM * 60 + oS);
       const tzSign = tzId[0] === '+' ? 1 : -1;
       const tzH = parseInt(tzId.substring(1, 3), 10);
@@ -864,7 +986,7 @@ function _validateZdtString(str) {
     // the range that rounds to a valid offset for the timezone at that instant.
     // The NAPI handles this validation, but we need to check if the seconds
     // component of the offset is valid for this timezone.
-    const oFrac = offsetMatch[5] ? parseInt(offsetMatch[5], 10) : 0;
+    const oFrac = offsetMatch![5]! ? parseInt(offsetMatch![5]!, 10) : 0;
     if (oFrac !== 0) {
       // Sub-second offsets with non-zero fractional parts need exact match
       // The NAPI will handle this, but let's not interfere
@@ -873,20 +995,20 @@ function _validateZdtString(str) {
 }
 
 // Helper: validate that a ZDT string's date/time components are within representable range
-function _validateZdtStringLimits(str) {
+function _validateZdtStringLimits(str: string): void {
   const bracketIdx = str.indexOf('[');
   if (bracketIdx === -1) return;
   const dtOffsetStr = str.substring(0, bracketIdx);
   // Extract year
   const yearMatch = dtOffsetStr.match(/^([+-]?\d{4,6})/);
   if (yearMatch) {
-    const year = parseInt(yearMatch[1], 10);
+    const year = parseInt(yearMatch[1]!, 10);
     if (year === -271821) {
       // Check if this might be out of range
       const monthMatch = dtOffsetStr.match(/^[+-]?\d{4,6}-(\d{2})-(\d{2})/);
       if (monthMatch) {
-        const month = parseInt(monthMatch[1], 10);
-        const day = parseInt(monthMatch[2], 10);
+        const month = parseInt(monthMatch[1]!, 10);
+        const day = parseInt(monthMatch[2]!, 10);
         if (month < 4 || (month === 4 && day < 20)) {
           throw new RangeError(`"${str}" is outside the representable range for a relativeTo parameter`);
         }
@@ -894,8 +1016,8 @@ function _validateZdtStringLimits(str) {
     } else if (year === 275760) {
       const monthMatch = dtOffsetStr.match(/^[+-]?\d{4,6}-(\d{2})-(\d{2})/);
       if (monthMatch) {
-        const month = parseInt(monthMatch[1], 10);
-        const day = parseInt(monthMatch[2], 10);
+        const month = parseInt(monthMatch[1]!, 10);
+        const day = parseInt(monthMatch[2]!, 10);
         if (month > 9 || (month === 9 && day > 13)) {
           throw new RangeError(`"${str}" is outside the representable range for a relativeTo parameter`);
         }
@@ -907,15 +1029,15 @@ function _validateZdtStringLimits(str) {
 }
 
 // Helper: extract ISO date components from a NAPI PlainDateTime/PlainDate toString()
-function _extractISOFromNapiDT(inner) {
+function _extractISOFromNapiDT(inner: any): { year: number; month: number; day: number } {
   const str = inner.toString();
   const m = str.match(/^(-?\d+|\+\d+)-(\d{2})-(\d{2})/);
   if (!m) return { year: inner.year, month: inner.month, day: inner.day };
-  return { year: parseInt(m[1], 10), month: parseInt(m[2], 10), day: parseInt(m[3], 10) };
+  return { year: parseInt(m[1]!, 10), month: parseInt(m[2]!, 10), day: parseInt(m[3]!, 10) };
 }
 
 // Helper: parse a ZDT string into its component parts
-function _parseZdtStringParts(str) {
+function _parseZdtStringParts(str: string): ZdtStringParts | null {
   const tzMatch = str.match(/\[([^\]=]+)\]/);
   if (!tzMatch) return null;
   const tzId = tzMatch[1];
@@ -923,7 +1045,7 @@ function _parseZdtStringParts(str) {
   let dtStr = str.substring(0, bracketIdx);
   // Strip offset if present
   const offsetMatch = dtStr.match(/([+-])(\d{2}):?(\d{2})(?::(\d{2})(?:\.(\d+))?)?$/);
-  if (offsetMatch) dtStr = dtStr.substring(0, offsetMatch.index);
+  if (offsetMatch) dtStr = dtStr.substring(0, offsetMatch!.index);
   else if (dtStr.endsWith('Z')) dtStr = dtStr.slice(0, -1);
   // Parse ISO date-time
   const m = dtStr.match(/^([+-]?\d{4,6})-(\d{2})-(\d{2})(?:T(\d{2}):?(\d{2}):?(\d{2})?(?:\.(\d+))?)?$/);
@@ -931,39 +1053,39 @@ function _parseZdtStringParts(str) {
     // Try compact form
     const m2 = dtStr.match(/^([+-]?\d{4,6})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(?:\.(\d+))?)?$/);
     if (!m2) return null;
-    const frac = m2[7] || '';
+    const frac = m2![7]! || '';
     const fracPad = (frac + '000000000').substring(0, 9);
     return {
-      isoYear: parseInt(m2[1], 10),
-      isoMonth: parseInt(m2[2], 10),
-      isoDay: parseInt(m2[3], 10),
+      isoYear: parseInt(m2[1]!, 10),
+      isoMonth: parseInt(m2[2]!, 10),
+      isoDay: parseInt(m2[3]!, 10),
       hour: parseInt(m2[4] || '0', 10),
       minute: parseInt(m2[5] || '0', 10),
       second: parseInt(m2[6] || '0', 10),
       millisecond: parseInt(fracPad.substring(0, 3), 10),
       microsecond: parseInt(fracPad.substring(3, 6), 10),
       nanosecond: parseInt(fracPad.substring(6, 9), 10),
-      tzId,
+      tzId: tzId!,
     };
   }
-  const frac = m[7] || '';
+  const frac = m![7]! || '';
   const fracPad = (frac + '000000000').substring(0, 9);
   return {
-    isoYear: parseInt(m[1], 10),
-    isoMonth: parseInt(m[2], 10),
-    isoDay: parseInt(m[3], 10),
+    isoYear: parseInt(m[1]!, 10),
+    isoMonth: parseInt(m[2]!, 10),
+    isoDay: parseInt(m[3]!, 10),
     hour: parseInt(m[4] || '0', 10),
     minute: parseInt(m[5] || '0', 10),
     second: parseInt(m[6] || '0', 10),
     millisecond: parseInt(fracPad.substring(0, 3), 10),
     microsecond: parseInt(fracPad.substring(3, 6), 10),
     nanosecond: parseInt(fracPad.substring(6, 9), 10),
-    tzId,
+    tzId: tzId!,
   };
 }
 
 // Helper: parse a ZDT string and use the offset to compute the exact instant
-function _zdtFromStringWithOffset(str, _mode) {
+function _zdtFromStringWithOffset(str: string, _mode: string): ZonedDateTime {
   // Parse: dateT time offset [timezone] [u-ca=calendar]
   // Extract the offset and timezone
   const tzMatch = str.match(/\[([^\]=]+)\]/);
@@ -990,20 +1112,20 @@ function _zdtFromStringWithOffset(str, _mode) {
   if (isZ) {
     offsetNs = 0n;
   } else {
-    const sign = offsetMatch[1] === '+' ? 1n : -1n;
-    const oH = BigInt(offsetMatch[2]);
-    const oM = BigInt(offsetMatch[3]);
-    const oS = offsetMatch[4] ? BigInt(offsetMatch[4]) : 0n;
+    const sign = offsetMatch![1]! === '+' ? 1n : -1n;
+    const oH = BigInt(offsetMatch![2]!);
+    const oM = BigInt(offsetMatch![3]!);
+    const oS = offsetMatch![4]! ? BigInt(offsetMatch![4]!) : 0n;
     let oSubS = 0n;
-    if (offsetMatch[5]) {
-      const frac = (offsetMatch[5] + '000000000').substring(0, 9);
+    if (offsetMatch![5]!) {
+      const frac = (offsetMatch![5]! + '000000000').substring(0, 9);
       oSubS = BigInt(frac);
     }
     offsetNs = sign * (oH * 3600000000000n + oM * 60000000000n + oS * 1000000000n + oSubS);
   }
 
   // Parse the datetime portion (before the offset)
-  let dtStr = isZ ? dtOffsetStr.slice(0, -1) : dtOffsetStr.substring(0, offsetMatch.index);
+  const dtStr = isZ ? dtOffsetStr.slice(0, -1) : dtOffsetStr.substring(0, offsetMatch!.index);
 
   // Compute epoch nanoseconds from the local datetime string using pure arithmetic
   // to handle dates at the edges of the representable range (NapiInstant can't handle
@@ -1011,11 +1133,11 @@ function _zdtFromStringWithOffset(str, _mode) {
   let instantEpochNs;
   const dtMatch = dtStr.match(/^([+-]?\d{4,6})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(?:\.(\d+))?$/);
   if (dtMatch) {
-    const [, yr, mo, dy, hr, mi, se, frac] = dtMatch;
-    const epochDays = BigInt(isoDateToEpochDays(parseInt(yr, 10), parseInt(mo, 10), parseInt(dy, 10)));
+    const [, yr, mo, dy, hr, mi, se, frac] = dtMatch as string[];
+    const epochDays = BigInt(isoDateToEpochDays(parseInt(yr!, 10), parseInt(mo!, 10), parseInt(dy!, 10)));
     const dayNs =
-      BigInt(parseInt(hr, 10)) * 3600000000000n +
-      BigInt(parseInt(mi, 10)) * 60000000000n +
+      BigInt(parseInt(hr!, 10)) * 3600000000000n +
+      BigInt(parseInt(mi!, 10)) * 60000000000n +
       BigInt(parseInt(se || '0', 10)) * 1000000000n;
     let fracNs = 0n;
     if (frac) {
@@ -1041,7 +1163,7 @@ function _zdtFromStringWithOffset(str, _mode) {
   return new ZonedDateTime(epochNs, tzId, calId !== 'iso8601' ? calId : undefined);
 }
 
-function bigintNsToZdtString(epochNs, tzId, calId) {
+function bigintNsToZdtString(epochNs: bigint, tzId: string, calId?: string): string {
   const NS_PER_MS = 1000000n;
   let epochMs = epochNs / NS_PER_MS;
   let subMsNs = epochNs % NS_PER_MS;
@@ -1117,7 +1239,7 @@ function bigintNsToZdtString(epochNs, tzId, calId) {
 
 // ─── Helper: round a value to a given increment with rounding mode ──
 
-function _roundToIncrement(value, increment, mode) {
+function _roundToIncrement(value: number, increment: number, mode: string): number {
   const quotient = value / increment;
   let rounded;
   switch (mode) {
@@ -1170,7 +1292,7 @@ function _roundToIncrement(value, increment, mode) {
 
 // ─── Helper: wrap NAPI errors ─────────────────────────────────
 
-function wrapError(e) {
+function wrapError(e: any): TypeError | RangeError {
   if (e instanceof TypeError || e instanceof RangeError) return e;
   const msg = e?.message || String(e);
   // NAPI binding prefixes errors with the intended type: "RangeError: ..." or "TypeError: ..."
@@ -1187,18 +1309,18 @@ function wrapError(e) {
   return new RangeError(msg);
 }
 
-function call(fn) {
+function call<T>(fn: () => T): T {
   try {
     return fn();
-  } catch (e) {
+  } catch (e: any) {
     throw wrapError(e);
   }
 }
 
 // ─── Helper: convert to NAPI Calendar ─────────────────────────
 
-function toNapiCalendar(cal) {
-  if (cal === undefined) return undefined;
+function toNapiCalendar(cal: any): NapiCalendar {
+  if (cal === undefined) return undefined as any;
   if (
     cal === null ||
     typeof cal === 'boolean' ||
@@ -1284,18 +1406,18 @@ const VALID_CALENDAR_IDS = new Set([
 const REJECTED_CALENDAR_IDS = new Set(['islamic', 'islamic-rgsa']);
 
 // Calendar ID canonicalization per CLDR
-const CALENDAR_ALIASES = {
+const CALENDAR_ALIASES: Record<string, string> = {
   islamicc: 'islamic-civil',
   'ethiopic-amete-alem': 'ethioaa',
 };
 
-function canonicalizeCalendarId(id) {
+function canonicalizeCalendarId(id: any): string {
   const lower = typeof id === 'string' ? id.toLowerCase() : id;
   return CALENDAR_ALIASES[lower] || lower;
 }
 
 // Per spec: reject strings that are ISO date/time strings when used as constructor calendar arg
-function rejectISOStringAsCalendar(cal) {
+function rejectISOStringAsCalendar(cal: any): void {
   if (typeof cal === 'string' && cal.length > 0) {
     // Reject ISO-like strings: dates, compact dates, strings with brackets
     if (
@@ -1312,8 +1434,8 @@ function rejectISOStringAsCalendar(cal) {
 
 // ─── Helper: convert to NAPI TimeZone ─────────────────────────
 
-function toNapiTimeZone(tz) {
-  if (tz === undefined) return undefined;
+function toNapiTimeZone(tz: any): NapiTimeZone {
+  if (tz === undefined) return undefined as any;
   if (
     tz === null ||
     typeof tz === 'boolean' ||
@@ -1343,32 +1465,32 @@ const _wrapperSet = new WeakSet();
 // These use _wrapperSet (a WeakSet populated in constructors) so that property bag
 // Proxies (like test262's TemporalHelpers.propertyBagObserver) don't get spurious
 // "has _inner" / "get _inner" trap calls.
-function _isTemporalDuration(arg) {
+function _isTemporalDuration(arg: any): arg is { _inner: NapiDurationT } {
   return arg != null && typeof arg === 'object' && _wrapperSet.has(arg) && arg._inner instanceof NapiDuration;
 }
-function _isTemporalPlainDate(arg) {
+function _isTemporalPlainDate(arg: any): arg is { _inner: NapiPlainDateT; _calId?: string } {
   return arg != null && typeof arg === 'object' && _wrapperSet.has(arg) && arg._inner instanceof NapiPlainDate;
 }
-function _isTemporalPlainTime(arg) {
+function _isTemporalPlainTime(arg: any): arg is { _inner: NapiPlainTimeT } {
   return arg != null && typeof arg === 'object' && _wrapperSet.has(arg) && arg._inner instanceof NapiPlainTime;
 }
-function _isTemporalPlainDateTime(arg) {
+function _isTemporalPlainDateTime(arg: any): arg is { _inner: NapiPlainDateTimeT; _calId?: string } {
   return arg != null && typeof arg === 'object' && _wrapperSet.has(arg) && arg._inner instanceof NapiPlainDateTime;
 }
-function _isTemporalZonedDateTime(arg) {
+function _isTemporalZonedDateTime(arg: any): arg is { _inner: NapiZonedDateTimeT; _calId?: string } {
   return arg != null && typeof arg === 'object' && _wrapperSet.has(arg) && arg._inner instanceof NapiZonedDateTime;
 }
-function _isTemporalInstant(arg) {
+function _isTemporalInstant(arg: any): arg is { _inner: NapiInstantT } {
   return arg != null && typeof arg === 'object' && _wrapperSet.has(arg) && arg._inner instanceof NapiInstant;
 }
-function _isTemporalPlainYearMonth(arg) {
+function _isTemporalPlainYearMonth(arg: any): arg is { _inner: NapiPlainYearMonthT; _calId?: string } {
   return arg != null && typeof arg === 'object' && _wrapperSet.has(arg) && arg._inner instanceof NapiPlainYearMonth;
 }
-function _isTemporalPlainMonthDay(arg) {
+function _isTemporalPlainMonthDay(arg: any): arg is { _inner: NapiPlainMonthDayT; _calId?: string } {
   return arg != null && typeof arg === 'object' && _wrapperSet.has(arg) && arg._inner instanceof NapiPlainMonthDay;
 }
 
-function toNapiDuration(arg) {
+function toNapiDuration(arg: any): NapiDurationT {
   if (arg instanceof NapiDuration) return arg;
   if (_isTemporalDuration(arg)) return arg._inner;
   if (typeof arg === 'string') return call(() => NapiDuration.from(arg));
@@ -1434,7 +1556,7 @@ function toNapiDuration(arg) {
 const THIRTEEN_MONTH_CALENDARS = new Set(['hebrew', 'chinese', 'dangi', 'ethiopian', 'ethioaa', 'ethiopic', 'coptic']);
 
 // Approximate offsets: isoYear ≈ calendarYear + offset
-const CALENDAR_ISO_OFFSETS = {
+const CALENDAR_ISO_OFFSETS: Record<string, number> = {
   buddhist: -543,
   roc: 1911,
   japanese: 0,
@@ -1454,15 +1576,15 @@ const CALENDAR_ISO_OFFSETS = {
 };
 
 // Hebrew leap years follow a 19-year cycle: years 3, 6, 8, 11, 14, 17, 19
-function isHebrewLeapYear(hebrewYear) {
+function isHebrewLeapYear(hebrewYear: number): boolean {
   const mod = ((hebrewYear % 19) + 19) % 19; // ensure positive mod
   return mod === 0 || mod === 3 || mod === 6 || mod === 8 || mod === 11 || mod === 14 || mod === 17;
 }
 
 // For Chinese/Dangi: find which month code has the leap month in a given year.
 // Returns the base month number N such that M{N}L exists, or 0 if no leap month.
-const _chineseDangiLeapMonthCache = {};
-function getChineseDangiLeapMonth(calYear, calId) {
+const _chineseDangiLeapMonthCache: Record<string, number> = {};
+function getChineseDangiLeapMonth(calYear: number, calId: string): number {
   const cacheKey = calId + ':' + calYear;
   if (_chineseDangiLeapMonthCache[cacheKey] !== undefined) return _chineseDangiLeapMonthCache[cacheKey];
   try {
@@ -1498,7 +1620,7 @@ function getChineseDangiLeapMonth(calYear, calId) {
           const p = new NapiPlainDate(isoYear + off, 6, 15, cal);
           if (p.year === calYear) {
             probe = p;
-            isoYear = isoYear + off;
+            isoYear = isoYear + (off as number);
             break;
           }
         } catch {}
@@ -1535,7 +1657,7 @@ function getChineseDangiLeapMonth(calYear, calId) {
   }
 }
 
-function monthCodeToMonth(monthCode, calendarId, targetYear) {
+function monthCodeToMonth(monthCode: any, calendarId?: string, targetYear?: number): any {
   if (monthCode === undefined) return undefined;
   // Per spec, monthCode uses ToPrimitiveAndRequireString:
   // 1. If symbol or bigint, throw TypeError
@@ -1559,7 +1681,7 @@ function monthCodeToMonth(monthCode, calendarId, targetYear) {
   if (!str) throw new RangeError('Invalid monthCode: empty string');
   const m = str.match(/^M(\d{2})(L?)$/);
   if (!m) throw new RangeError(`Invalid monthCode: ${str}`);
-  const monthNum = parseInt(m[1], 10);
+  const monthNum = parseInt(m[1]!, 10);
   const isLeap = m[2] === 'L';
   // Validate month number: must be >= 1
   if (monthNum < 1) throw new RangeError(`Invalid monthCode: ${str}`);
@@ -1645,11 +1767,15 @@ function monthCodeToMonth(monthCode, calendarId, targetYear) {
 }
 
 // Helper: check if a monthCode is valid for a given calendar year (for reject mode)
-function isMonthCodeValidForYear(monthCode, calendarId, targetYear) {
+function isMonthCodeValidForYear(
+  monthCode: string | undefined,
+  calendarId: string,
+  targetYear: number | undefined,
+): boolean {
   if (!monthCode || targetYear === undefined) return true;
   const m = monthCode.match(/^M(\d{2})(L?)$/);
   if (!m) return false;
-  const monthNum = parseInt(m[1], 10);
+  const monthNum = parseInt(m[1]!, 10);
   const isLeap = m[2] === 'L';
   if (!isLeap) return true; // non-leap month codes are always valid
   if (calendarId === 'hebrew') {
@@ -1664,7 +1790,7 @@ function isMonthCodeValidForYear(monthCode, calendarId, targetYear) {
 
 // ─── Helper: resolve month from month/monthCode ───────────────
 
-function resolveMonth(bag, calendarId, targetYear) {
+function resolveMonth(bag: any, calendarId: string, targetYear?: number): any {
   let month = toInteger(bag.month);
   // Per spec: reject Infinity/-Infinity
   if (month !== undefined) rejectInfinity(month, 'month');
@@ -1684,7 +1810,7 @@ function resolveMonth(bag, calendarId, targetYear) {
 }
 
 // ─── Helper: valid era names per calendar ──────────────────────
-const VALID_ERAS = {
+const VALID_ERAS: Record<string, Set<string>> = {
   gregory: new Set(['ce', 'bce', 'ad', 'bc']),
   iso8601: new Set([]),
   buddhist: new Set(['be']),
@@ -1707,7 +1833,7 @@ const VALID_ERAS = {
 
 // ─── Helper: resolve era/eraYear to year ──────────────────────
 
-function resolveEraYear(fields, calendarId) {
+function resolveEraYear(fields: any, calendarId: string): any {
   const validEras = VALID_ERAS[calendarId];
   const calendarHasEras = validEras && validEras.size > 0;
   // For calendars without eras, silently ignore era/eraYear (per spec)
@@ -1734,7 +1860,7 @@ function resolveEraYear(fields, calendarId) {
         }
       } else if (calendarId === 'japanese') {
         // Japanese calendar eras start at specific years
-        const japaneseEraStarts = {
+        const japaneseEraStarts: Record<string, number | null> = {
           reiwa: 2019, // Reiwa 1 = 2019
           heisei: 1989, // Heisei 1 = 1989
           showa: 1926, // Showa 1 = 1926
@@ -1837,7 +1963,7 @@ function resolveEraYear(fields, calendarId) {
 
 // ─── Helper: get calendar ID from various sources ─────────────
 
-function getCalendarId(calArg) {
+function getCalendarId(calArg: any): string {
   if (calArg === undefined || calArg === null) return 'iso8601';
   if (typeof calArg === 'string') {
     const canonCal = canonicalizeCalendarId(calArg);
@@ -1880,10 +2006,19 @@ const ISO_MONTH_ALIGNED_CALENDARS = new Set(['iso8601', 'gregory', 'buddhist', '
 // calendar values, but the NAPI constructors expect ISO year/month/day.
 // This function converts (calYear, calMonth, calDay, calId) → {isoYear, isoMonth, isoDay}.
 
-function calendarDateToISO(targetCalYear, calMonth, calDay, calId) {
+function calendarDateToISO(
+  targetCalYear: number,
+  calMonth: number | undefined,
+  calDay: number | undefined,
+  calId: string,
+): CalendarISOResult {
   // ISO and Gregorian: no conversion needed
   if (calId === 'iso8601' || calId === 'gregory') {
-    return { isoYear: targetCalYear, isoMonth: calMonth, isoDay: calDay };
+    return {
+      isoYear: targetCalYear,
+      isoMonth: calMonth as number as number as number as number,
+      isoDay: calDay as number as number as number as number,
+    };
   }
 
   // The NAPI handles ethioaa years directly (no conversion needed)
@@ -1919,7 +2054,11 @@ function calendarDateToISO(targetCalYear, calMonth, calDay, calId) {
         // Fallback: return as-is
       }
     }
-    return { isoYear, isoMonth: calMonth, isoDay: calDay };
+    return {
+      isoYear,
+      isoMonth: calMonth as number as number as number as number,
+      isoDay: calDay as number as number as number as number,
+    };
   }
 
   // For all other calendars (indian, persian, coptic, ethiopic, ethioaa, hebrew,
@@ -2031,13 +2170,13 @@ function calendarDateToISO(targetCalYear, calMonth, calDay, calId) {
   }
 
   // Final fallback: return the year-only conversion (better than nothing)
-  return { isoYear: isoYear, isoMonth: calMonth, isoDay: calDay };
+  return { isoYear: isoYear, isoMonth: calMonth as number, isoDay: calDay as number };
 }
 
 // Helper: convert ISO date to epoch days (days since 1970-01-01)
 // Howard Hinnant's days_from_civil algorithm for extreme values
 // Reference: https://howardhinnant.github.io/date_algorithms.html#days_from_civil
-function isoDateToEpochDays(year, month, day) {
+function isoDateToEpochDays(year: number, month: number, day: number): number {
   // For values within JS Date range, use Date.UTC for speed
   if (year > -271000 && year < 275000) {
     const ms = Date.UTC(year, month - 1, day);
@@ -2060,7 +2199,7 @@ function isoDateToEpochDays(year, month, day) {
 
 // Helper: convert epoch days back to ISO date
 // Uses pure arithmetic to handle values beyond JavaScript Date range
-function epochDaysToISO(epochDays) {
+function epochDaysToISO(epochDays: number): { year: number; month: number; day: number } {
   // For values within JS Date range, use Date for speed
   if (epochDays > -100000000 && epochDays < 100000000) {
     const ms = epochDays * 86400000;
@@ -2069,7 +2208,7 @@ function epochDaysToISO(epochDays) {
   }
   // Pure arithmetic for extreme values (Howard Hinnant's civil_from_days algorithm)
   // Reference: https://howardhinnant.github.io/date_algorithms.html#civil_from_days
-  let z = epochDays + 719468; // days from year 0 (March 1 epoch)
+  const z = epochDays + 719468; // days from year 0 (March 1 epoch)
   const era = _trunc((z >= 0 ? z : z - 146096) / 146097);
   const doe = z - era * 146097; // day of era [0, 146096]
   const yoe = _trunc((doe - _trunc(doe / 1460) + _trunc(doe / 36524) - _trunc(doe / 146096)) / 365);
@@ -2085,8 +2224,8 @@ function epochDaysToISO(epochDays) {
 // Helper: pick the default reference calendar year for PlainMonthDay.
 // Per spec, the reference ISO year should be 1972 (or the latest ISO year ≤ 1972
 // that has the month/day). We find the calendar year that contains mid-1972.
-const _defaultRefYearCache = {};
-function _defaultCalendarRefYear(calId, _calMonth) {
+const _defaultRefYearCache: Record<string, number> = {};
+function _defaultCalendarRefYear(calId: string, _calMonth?: number): number {
   const cacheKey = calId;
   if (_defaultRefYearCache[cacheKey] !== undefined) return _defaultRefYearCache[cacheKey];
   try {
@@ -2103,14 +2242,14 @@ function _defaultCalendarRefYear(calId, _calMonth) {
 
 // Helper: get daysInMonth for a given calendar (year, month)
 // Returns daysInMonth, or undefined if the month cannot be found.
-function _isoDaysInMonth(year, month) {
+function _isoDaysInMonth(year: number, month: number): number {
   const isLeap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
   const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  return daysInMonth[month - 1] || 31;
+  return daysInMonth[month - 1]! || 31;
 }
 
 // Helper: get the maximum month number for a calendar year
-function _getMaxMonthForCalendarYear(calId, calYear) {
+function _getMaxMonthForCalendarYear(calId: string, calYear: number): number {
   if (THIRTEEN_MONTH_CALENDARS.has(calId)) {
     if (calId === 'chinese' || calId === 'dangi') {
       const leapBase = getChineseDangiLeapMonth(calYear, calId);
@@ -2125,11 +2264,11 @@ function _getMaxMonthForCalendarYear(calId, calYear) {
   return 12;
 }
 
-function calendarDaysInMonth(calYear, calMonth, calId) {
+function calendarDaysInMonth(calYear: number, calMonth: any, calId: string): any {
   if (calId === 'iso8601' || calId === 'gregory') {
     const isLeap = calYear % 4 === 0 && (calYear % 100 !== 0 || calYear % 400 === 0);
     const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    return daysInMonth[calMonth - 1];
+    return daysInMonth[calMonth - 1]!;
   }
   // Navigate to the target month in the calendar using calendarDateToISO with day=1
   try {
@@ -2146,7 +2285,7 @@ function calendarDaysInMonth(calYear, calMonth, calId) {
 }
 
 // Helper: get the monthCode for a given ordinal month in a calendar year
-function _getMonthCodeForOrdinal(calYear, ordinalMonth, calId) {
+function _getMonthCodeForOrdinal(calYear: number, ordinalMonth: number, calId: string): string {
   if (calId === 'iso8601' || calId === 'gregory' || ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
     return 'M' + String(ordinalMonth).padStart(2, '0');
   }
@@ -2182,7 +2321,7 @@ function _getMonthCodeForOrdinal(calYear, ordinalMonth, calId) {
 
 // ─── Helper: convert to NAPI PlainDate ────────────────────────
 
-function toNapiPlainDate(arg) {
+function toNapiPlainDate(arg: any): NapiPlainDateT {
   if (arg instanceof NapiPlainDate) return arg;
   if (_isTemporalPlainDate(arg)) return arg._inner;
   if (typeof arg === 'string') {
@@ -2216,7 +2355,7 @@ function toNapiPlainDate(arg) {
     let resolvedYear = yearVal;
     const _calValidEras = VALID_ERAS[calId];
     if (_calValidEras && _calValidEras.size > 0) {
-      const eraFields = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
+      const eraFields: any = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
       resolveEraYear(eraFields, calId);
       resolvedYear = eraFields.year;
     }
@@ -2239,7 +2378,7 @@ function toNapiPlainDate(arg) {
 
 // ─── Helper: convert to NAPI PlainTime ────────────────────────
 
-function toNapiPlainTime(arg) {
+function toNapiPlainTime(arg: any): NapiPlainTimeT {
   if (arg instanceof NapiPlainTime) return arg;
   if (_isTemporalPlainTime(arg)) return arg._inner;
   if (typeof arg === 'string') {
@@ -2290,7 +2429,7 @@ function toNapiPlainTime(arg) {
 
 // ─── Helper: convert to NAPI PlainDateTime ────────────────────
 
-function toNapiPlainDateTime(arg) {
+function toNapiPlainDateTime(arg: any): NapiPlainDateTimeT {
   if (arg instanceof NapiPlainDateTime) return arg;
   if (_isTemporalPlainDateTime(arg)) return arg._inner;
   if (typeof arg === 'string') {
@@ -2335,7 +2474,7 @@ function toNapiPlainDateTime(arg) {
     let resolvedYear = yearVal;
     const _calValidErasDT = VALID_ERAS[calId];
     if (_calValidErasDT && _calValidErasDT.size > 0) {
-      const eraFields = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
+      const eraFields: any = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
       resolveEraYear(eraFields, calId);
       resolvedYear = eraFields.year;
     }
@@ -2379,14 +2518,14 @@ function toNapiPlainDateTime(arg) {
 
 // ─── Helper: convert to NAPI ZonedDateTime ────────────────────
 
-function toNapiZonedDateTime(arg) {
+function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
   if (arg instanceof NapiZonedDateTime) return arg;
   if (_isTemporalZonedDateTime(arg)) return arg._inner;
   if (typeof arg === 'string') {
     rejectTooManyFractionalSeconds(arg);
     try {
       return call(() => NapiZonedDateTime.from(arg));
-    } catch (e) {
+    } catch (e: any) {
       // If parsing fails due to offset mismatch (e.g. historical timezone data differences),
       // extract the instant from the offset+local time and create ZDT from epochNs + timezone.
       // Per IXDTF spec, when both offset and timezone annotation are present, the offset
@@ -2396,19 +2535,19 @@ function toNapiZonedDateTime(arg) {
           /^([+-]?\d{4,6})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?([+-]\d{2}:?\d{2})\[([^\]]+)\](?:\[u-ca=([^\]]+)\])?$/,
         );
         if (ixdtfMatch) {
-          const [, yr, mo, dy, hr, mi, se, frac, offset, tzId, calAnnot] = ixdtfMatch;
-          const isoYear = parseInt(yr, 10);
-          const isoMonth = parseInt(mo, 10);
-          const isoDay = parseInt(dy, 10);
-          const isoHour = parseInt(hr, 10);
-          const isoMinute = parseInt(mi, 10);
-          const isoSecond = parseInt(se, 10);
+          const [, yr, mo, dy, hr, mi, se, frac, offset, tzId, calAnnot] = ixdtfMatch as string[];
+          const isoYear = parseInt(yr!, 10);
+          const isoMonth = parseInt(mo!, 10);
+          const isoDay = parseInt(dy!, 10);
+          const isoHour = parseInt(hr!, 10);
+          const isoMinute = parseInt(mi!, 10);
+          const isoSecond = parseInt(se!, 10);
           let fracNs = 0n;
           if (frac) {
             const padded = frac.padEnd(9, '0').slice(0, 9);
             fracNs = BigInt(padded);
           }
-          const offsetNs = BigInt(parseOffsetStringToNs(offset) || 0);
+          const offsetNs = BigInt(parseOffsetStringToNs(offset!) || 0);
           // Compute epoch nanoseconds from local ISO date/time using pure arithmetic
           // (Date.UTC fails for dates beyond JS Date range)
           const epochDays = BigInt(isoDateToEpochDays(isoYear, isoMonth, isoDay));
@@ -2478,7 +2617,7 @@ function toNapiZonedDateTime(arg) {
     let resolvedYear = yearVal;
     const _calValidErasZDT = VALID_ERAS[calId];
     if (_calValidErasZDT && _calValidErasZDT.size > 0) {
-      const eraFields = { year: yearVal, era: arg.era, eraYear: toIntegerIfIntegral(arg.eraYear) };
+      const eraFields: any = { year: yearVal, era: arg.era, eraYear: toIntegerIfIntegral(arg.eraYear) };
       resolveEraYear(eraFields, calId);
       resolvedYear = eraFields.year;
     }
@@ -2511,8 +2650,8 @@ function toNapiZonedDateTime(arg) {
     // Constrain values to valid ISO ranges
     month = Math.max(1, Math.min(month, 13));
     day = Math.max(1, Math.min(day, 31));
-    const pad2 = (n) => String(n).padStart(2, '0');
-    const padYear = (n) => {
+    const pad2 = (n: any) => String(n).padStart(2, '0');
+    const padYear = (n: any) => {
       if (n < 0 || n >= 10000) {
         const s = String(Math.abs(n)).padStart(6, '0');
         return (n < 0 ? '-' : '+') + s;
@@ -2543,7 +2682,7 @@ function toNapiZonedDateTime(arg) {
     }
     let str = `${padYear(year)}-${pad2(isoMonth)}-${pad2(isoDay)}T${pad2(hour)}:${pad2(minute)}:${pad2(second)}`;
     if (millisecondVal || microsecondVal || nanosecondVal) {
-      const pad3 = (n) => String(n || 0).padStart(3, '0');
+      const pad3 = (n: any) => String(n || 0).padStart(3, '0');
       const frac = pad3(millisecondVal || 0) + pad3(microsecondVal || 0) + pad3(nanosecondVal || 0);
       str += '.' + frac.replace(/0+$/, '');
     }
@@ -2589,7 +2728,7 @@ function toNapiZonedDateTime(arg) {
 
 // ─── Helper: convert to NAPI Instant ──────────────────────────
 
-function toNapiInstant(arg) {
+function toNapiInstant(arg: any): NapiInstantT {
   if (arg instanceof NapiInstant) return arg;
   if (_isTemporalInstant(arg)) return arg._inner;
   if (typeof arg === 'string') return call(() => NapiInstant.from(arg));
@@ -2609,7 +2748,7 @@ function toNapiInstant(arg) {
 
 // ─── Helper: convert to NAPI PlainYearMonth ───────────────────
 
-function toNapiPlainYearMonth(arg) {
+function toNapiPlainYearMonth(arg: any): NapiPlainYearMonthT {
   if (arg instanceof NapiPlainYearMonth) return arg;
   if (_isTemporalPlainYearMonth(arg)) return arg._inner;
   if (typeof arg === 'string') {
@@ -2633,7 +2772,7 @@ function toNapiPlainYearMonth(arg) {
     let resolvedYear = yearVal;
     const _calValidErasYM = VALID_ERAS[calId];
     if (_calValidErasYM && _calValidErasYM.size > 0) {
-      const eraFields = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
+      const eraFields: any = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
       resolveEraYear(eraFields, calId);
       resolvedYear = eraFields.year;
     }
@@ -2653,7 +2792,7 @@ function toNapiPlainYearMonth(arg) {
 
 // ─── Helper: convert to NAPI PlainMonthDay ────────────────────
 
-function toNapiPlainMonthDay(arg) {
+function toNapiPlainMonthDay(arg: any): NapiPlainMonthDayT {
   if (arg instanceof NapiPlainMonthDay) return arg;
   if (_isTemporalPlainMonthDay(arg)) return arg._inner;
   if (typeof arg === 'string') {
@@ -2670,11 +2809,11 @@ function toNapiPlainMonthDay(arg) {
 
 // ─── Helper: convert DifferenceSettings ───────────────────────
 
-function convertDifferenceSettings(options) {
+function convertDifferenceSettings(options: any): any {
   if (options === undefined) return undefined;
   validateOptions(options);
   // Per spec: read options in ALPHABETICAL order, coercing each immediately
-  const result = {};
+  const result: any = {};
   const _lu = options.largestUnit;
   if (_lu !== undefined) result.largestUnit = mapUnit(_lu);
   const _ri = options.roundingIncrement;
@@ -2688,7 +2827,7 @@ function convertDifferenceSettings(options) {
 
 // ─── Helper: coerce roundingIncrement per spec ────────────────
 
-function coerceRoundingIncrement(value) {
+function coerceRoundingIncrement(value: any): number {
   if (typeof value === 'bigint') throw new TypeError('Cannot convert a BigInt to a Number');
   if (typeof value === 'symbol') throw new TypeError('Cannot convert a Symbol to a Number');
   const n = Number(value);
@@ -2700,7 +2839,10 @@ function coerceRoundingIncrement(value) {
 
 // ─── Helper: extract relativeTo for Duration methods ──────────
 
-function extractRelativeTo(rt) {
+function extractRelativeTo(rt: any): {
+  relativeToDate: NapiPlainDateT | null;
+  relativeToZdt: NapiZonedDateTimeT | null;
+} {
   let relativeToDate = null;
   let relativeToZdt = null;
   if (rt === undefined) return { relativeToDate, relativeToZdt };
@@ -2753,7 +2895,7 @@ function extractRelativeTo(rt) {
       const pd = call(() => NapiPlainDate.from(rt));
       relativeToDate = pd;
       return { relativeToDate, relativeToZdt };
-    } catch (e) {
+    } catch (e: any) {
       throw wrapError(e);
     }
   }
@@ -2811,7 +2953,7 @@ function extractRelativeTo(rt) {
 
     if (_timeZone !== undefined) {
       // Build a ZonedDateTime from the pre-read fields
-      const bag = Object.create(null);
+      const bag: any = Object.create(null);
       bag.calendar = _calendar;
       bag.day = _dayVal;
       if (_era !== undefined) bag.era = _era;
@@ -2849,14 +2991,14 @@ function extractRelativeTo(rt) {
 
 // ─── Helper: convert RoundingOptions ──────────────────────────
 
-function convertRoundingOptions(options, { includeLargestUnit = true } = {}) {
-  if (options === undefined) return Object.assign(Object.create(null), { smallestUnit: undefined });
+function convertRoundingOptions(options: any, { includeLargestUnit = true } = {}): any {
+  if (options === undefined) return Object.assign(Object.create(null) as any, { smallestUnit: undefined });
   if (typeof options === 'string') {
-    return Object.assign(Object.create(null), { smallestUnit: mapUnit(options) });
+    return Object.assign(Object.create(null) as any, { smallestUnit: mapUnit(options) });
   }
   validateOptions(options);
   // Per spec: read options in ALPHABETICAL order, coercing each immediately
-  const result = Object.create(null);
+  const result: any = Object.create(null);
   if (includeLargestUnit) {
     const _lu = options.largestUnit;
     if (_lu !== undefined) result.largestUnit = mapUnit(_lu);
@@ -2872,7 +3014,7 @@ function convertRoundingOptions(options, { includeLargestUnit = true } = {}) {
 
 // ─── Helper: resolve fractionalSecondDigits per spec ──────────
 
-function resolveFractionalSecondDigits(fsd) {
+function resolveFractionalSecondDigits(fsd: any): any {
   // GetStringOrNumberOption: if typeof is 'number', use as number; else convert to string
   if (fsd === undefined) return undefined; // use default
   if (typeof fsd === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
@@ -2890,14 +3032,17 @@ function resolveFractionalSecondDigits(fsd) {
 
 // ─── Helper: convert ToStringRoundingOptions for PlainTime/PlainDateTime ──
 
-function convertToStringOptions(options) {
+function convertToStringOptions(options: any): {
+  roundingOptions: NapiToStringRoundingOptions | undefined;
+  displayCalendar: string | undefined;
+} {
   if (options === undefined) return { roundingOptions: undefined, displayCalendar: undefined };
   validateOptions(options);
   // Per spec: read options in ALPHABETICAL order, coercing each immediately
   // calendarName (c) comes first
   const _cn = options.calendarName;
   const displayCalendar = mapDisplayCalendar(_cn);
-  const roundingOptions = {};
+  const roundingOptions: any = {};
   // fractionalSecondDigits (f)
   const _fsd = options.fractionalSecondDigits;
   const fsd = resolveFractionalSecondDigits(_fsd);
@@ -2934,14 +3079,19 @@ function convertToStringOptions(options) {
 // so we implement it here in JavaScript.
 // Helper: convert a PlainYearMonth inner to a PlainDate at day 1
 // by extracting ISO values from its toString() output
-function _ymInnerToPlainDate(ymInner) {
+function _ymInnerToPlainDate(ymInner: NapiPlainYearMonthT): NapiPlainDateT {
   const s = ymInner.toString();
   const m = s.match(/^([+-]?\d+)-(\d{2})-(\d{2})/);
   if (!m) throw new RangeError('Failed to extract ISO date from PlainYearMonth');
-  return new NapiPlainDate(parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10), ymInner.calendar);
+  return new NapiPlainDate(parseInt(m[1]!, 10), parseInt(m[2]!, 10), parseInt(m[3]!, 10), ymInner.calendar);
 }
 
-function calendarDateDifference(startInner, endInner, largestUnit, calId) {
+function calendarDateDifference(
+  startInner: NapiPlainDateT,
+  endInner: NapiPlainDateT,
+  largestUnit: string,
+  calId: string,
+): CalendarDateDiffResult | null {
   // For ISO-aligned calendars and calendars where NAPI handles arithmetic correctly,
   // fall back to NAPI
   if (ISO_MONTH_ALIGNED_CALENDARS.has(calId) && calId !== 'japanese') {
@@ -2980,18 +3130,10 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
   // Compute epoch days for start and end
   const startStr = startInner.toString();
   const endStr = endInner.toString();
-  const startEpoch = isoDateToEpochDays(
-    ...startStr
-      .match(/^([+-]?\d+)-(\d{2})-(\d{2})/)
-      .slice(1)
-      .map(Number),
-  );
-  const endEpoch = isoDateToEpochDays(
-    ...endStr
-      .match(/^([+-]?\d+)-(\d{2})-(\d{2})/)
-      .slice(1)
-      .map(Number),
-  );
+  const startMatch = startStr.match(/^([+-]?\d+)-(\d{2})-(\d{2})/)!;
+  const startEpoch = isoDateToEpochDays(Number(startMatch[1]), Number(startMatch[2]), Number(startMatch[3]));
+  const endMatch = endStr.match(/^([+-]?\d+)-(\d{2})-(\d{2})/)!;
+  const endEpoch = isoDateToEpochDays(Number(endMatch[1]), Number(endMatch[2]), Number(endMatch[3]));
   const totalDays = endEpoch - startEpoch;
 
   if (largestUnit === 'Day' || largestUnit === 'days') {
@@ -3004,13 +3146,13 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
   }
 
   // Helper: add months to a date by converting to calendar, adjusting month, converting back
-  function addMonthsToDate(inner, months) {
+  function addMonthsToDate(inner: NapiPlainDateT, months: number): NapiPlainDateT | null {
     try {
       const dur = new NapiDuration(0, months, 0, 0, 0, 0, 0, 0, 0, 0);
       if (months >= 0) {
-        return inner.add(dur, 'Constrain');
+        return inner.add(dur, 'Constrain' as any);
       } else {
-        return inner.subtract(new NapiDuration(0, -months, 0, 0, 0, 0, 0, 0, 0, 0), 'Constrain');
+        return inner.subtract(new NapiDuration(0, -months, 0, 0, 0, 0, 0, 0, 0, 0), 'Constrain' as any);
       }
     } catch {
       return null;
@@ -3020,7 +3162,12 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
   // Check if adding N months to start overshoots end.
   // This accounts for day-constraining: if start.day doesn't fit in the result month,
   // the addition "used up" a partial month, so we should consider it an overshoot.
-  function monthAddOvershots(fromDate, addResult, endDate, forward) {
+  function monthAddOvershots(
+    fromDate: NapiPlainDateT,
+    addResult: NapiPlainDateT | null,
+    endDate: NapiPlainDateT,
+    forward: boolean,
+  ): boolean {
     if (!addResult) return true;
     if (forward) {
       // Forward: overshoot if result > end, OR result == end but day was constrained downward
@@ -3038,13 +3185,13 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
     }
   }
 
-  function addYearsToDate(inner, years) {
+  function addYearsToDate(inner: NapiPlainDateT, years: number): NapiPlainDateT | null {
     try {
       const dur = new NapiDuration(years, 0, 0, 0, 0, 0, 0, 0, 0, 0);
       if (years >= 0) {
-        return inner.add(dur, 'Constrain');
+        return inner.add(dur, 'Constrain' as any);
       } else {
-        return inner.subtract(new NapiDuration(-years, 0, 0, 0, 0, 0, 0, 0, 0, 0), 'Constrain');
+        return inner.subtract(new NapiDuration(-years, 0, 0, 0, 0, 0, 0, 0, 0, 0), 'Constrain' as any);
       }
     } catch {
       return null;
@@ -3054,14 +3201,14 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
   // Helper: add combined years+months using a single duration to match spec behavior
   // This differs from addYearsToDate then addMonthsToDate because constraining
   // happens after the combined year+month addition, not after each step
-  function addYearsMonthsToDate(inner, years, months) {
+  function addYearsMonthsToDate(inner: NapiPlainDateT, years: number, months: number): NapiPlainDateT | null {
     try {
       const absY = Math.abs(years);
       const absM = Math.abs(months);
       if (years >= 0 && months >= 0) {
-        return inner.add(new NapiDuration(absY, absM, 0, 0, 0, 0, 0, 0, 0, 0), 'Constrain');
+        return inner.add(new NapiDuration(absY, absM, 0, 0, 0, 0, 0, 0, 0, 0), 'Constrain' as any);
       } else if (years <= 0 && months <= 0) {
-        return inner.subtract(new NapiDuration(absY, absM, 0, 0, 0, 0, 0, 0, 0, 0), 'Constrain');
+        return inner.subtract(new NapiDuration(absY, absM, 0, 0, 0, 0, 0, 0, 0, 0), 'Constrain' as any);
       } else {
         // Mixed signs: add years first, then months
         const afterY = addYearsToDate(inner, years);
@@ -3073,13 +3220,13 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
     }
   }
 
-  function epochDaysOf(inner) {
+  function epochDaysOf(inner: NapiPlainDateT): number {
     const s = inner.toString();
-    const m = s.match(/^([+-]?\d+)-(\d{2})-(\d{2})/);
-    return isoDateToEpochDays(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]));
+    const m = s.match(/^([+-]?\d+)-(\d{2})-(\d{2})/)!;
+    return isoDateToEpochDays(parseInt(m[1]!), parseInt(m[2]!), parseInt(m[3]!));
   }
 
-  function dateCompare(a, b) {
+  function dateCompare(a: NapiPlainDateT, b: NapiPlainDateT): number {
     return NapiPlainDate.compare(a, b);
   }
 
@@ -3129,7 +3276,12 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
 
   // largestUnit === 'Year' or 'years'
   // Helper: check if year addition overshoots
-  function yearOvershots(from, result, end, forward) {
+  function yearOvershots(
+    from: NapiPlainDateT,
+    result: NapiPlainDateT | null,
+    end: NapiPlainDateT,
+    forward: boolean,
+  ): boolean {
     if (!result) return true;
     const cmp = dateCompare(result, end);
     if (forward) {
@@ -3202,7 +3354,7 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
 
   // Helper: check months using combined year+month addition from start
   // Per spec: if the result's day was constrained (start.day > daysInMonth), it's an overshoot
-  function ymOvershots(testMonths, forward) {
+  function ymOvershots(testMonths: number, forward: boolean): boolean {
     const result = addYearsMonthsToDate(startInner, years, testMonths);
     if (!result) return true;
     const cmp = dateCompare(result, endInner);
@@ -3265,46 +3417,46 @@ function calendarDateDifference(startInner, endInner, largestUnit, calId) {
 
 // ─── Helper: branding check for prototype methods ─────────────
 
-function requireBranding(thisObj, NapiClass, typeName) {
+function requireBranding(thisObj: any, NapiClass: any, typeName: string): void {
   if (!thisObj || typeof thisObj !== 'object' || !(thisObj._inner instanceof NapiClass)) {
     throw new TypeError(`${typeName} expected`);
   }
 }
 
-function wrapDuration(napi) {
+function wrapDuration(napi: any): Duration {
   return napi ? new Duration(napi) : napi;
 }
-function wrapPlainDate(napi, calId) {
+function wrapPlainDate(napi: any, calId?: string): PlainDate {
   if (!napi) return napi;
   const r = new PlainDate(napi);
   if (calId) r._calId = calId;
   return r;
 }
-function wrapPlainTime(napi) {
+function wrapPlainTime(napi: any): PlainTime {
   return napi ? new PlainTime(napi) : napi;
 }
-function wrapPlainDateTime(napi, calId) {
+function wrapPlainDateTime(napi: any, calId?: string): PlainDateTime {
   if (!napi) return napi;
   const r = new PlainDateTime(napi);
   if (calId) r._calId = calId;
   return r;
 }
-function wrapZonedDateTime(napi, calId) {
+function wrapZonedDateTime(napi: any, calId?: string): ZonedDateTime {
   if (!napi) return napi;
   const r = new ZonedDateTime(napi);
   if (calId) r._calId = calId;
   return r;
 }
-function wrapInstant(napi) {
+function wrapInstant(napi: any): Instant {
   return napi ? new Instant(napi) : napi;
 }
-function wrapPlainYearMonth(napi, calId) {
+function wrapPlainYearMonth(napi: any, calId?: string): PlainYearMonth {
   if (!napi) return napi;
   const r = new PlainYearMonth(napi);
   if (calId) r._calId = calId;
   return r;
 }
-function wrapPlainMonthDay(napi, calId) {
+function wrapPlainMonthDay(napi: any, calId?: string): PlainMonthDay {
   if (!napi) return napi;
   const r = new PlainMonthDay(napi);
   if (calId) r._calId = calId;
@@ -3313,7 +3465,7 @@ function wrapPlainMonthDay(napi, calId) {
 
 // ─── Helper: get the real calendar ID for a wrapper object ────
 // NAPI normalizes ethioaa to ethiopic, so we track the original calendar ID
-function getRealCalendarId(wrapper) {
+function getRealCalendarId(wrapper: any): string {
   return wrapper._calId || wrapper._inner.calendar.id;
 }
 
@@ -3323,7 +3475,14 @@ function getRealCalendarId(wrapper) {
 // Japanese era boundaries: [isoYearStart, isoYearEnd (exclusive), eraName, baseYear]
 // The spec uses only reiwa/heisei/showa/taisho + ce/bce for japanese calendar output.
 // Meiji and earlier are returned as "ce".
-function resolveEraForCalendar(calId, napiYear, napiEra, napiEraYear, isoMonth, isoDay) {
+function resolveEraForCalendar(
+  calId: string,
+  napiYear: number,
+  napiEra: any,
+  napiEraYear: any,
+  isoMonth?: number,
+  isoDay?: number,
+): { era: any; eraYear: any } {
   if (calId === 'ethioaa') {
     return { era: 'aa', eraYear: napiEraYear };
   }
@@ -3344,7 +3503,7 @@ function resolveEraForCalendar(calId, napiYear, napiEra, napiEraYear, isoMonth, 
     const m = isoMonth || 1;
     const d = isoDay || 1;
     for (const { era, start, base } of ERAS) {
-      const [sy, sm, sd] = start;
+      const [sy, sm, sd] = start as [number, number, number];
       if (isoYear > sy || (isoYear === sy && (m > sm || (m === sm && d >= sd)))) {
         return { era, eraYear: isoYear - base + 1 };
       }
@@ -3358,7 +3517,13 @@ function resolveEraForCalendar(calId, napiYear, napiEra, napiEraYear, isoMonth, 
 // The NAPI binding checks overflow at intermediate steps, but the spec
 // says to add year/month components first, then constrain/reject the day.
 // So we always use Constrain for the NAPI call, then post-validate for Reject.
-function addWithOverflow(inner, dur, overflow, op, wrapFn) {
+function addWithOverflow(
+  inner: any,
+  dur: NapiDurationT,
+  overflow: string | undefined,
+  op: string,
+  wrapFn: (n: any) => any,
+): any {
   if (overflow === 'Reject') {
     const hasYearMonth = dur.years !== 0 || dur.months !== 0;
     if (hasYearMonth) {
@@ -3369,7 +3534,7 @@ function addWithOverflow(inner, dur, overflow, op, wrapFn) {
         () => new NapiDuration(sign * dur.years, sign * dur.months, sign * dur.weeks, 0, 0, 0, 0, 0, 0, 0),
       );
       // Add date-only portion with Constrain
-      const intermediate = call(() => inner.add(dateOnlyDur, 'Constrain'));
+      const intermediate = call(() => inner.add(dateOnlyDur, 'Constrain' as any));
       // Check if the day was constrained by comparing inner.day to daysInMonth of intermediate
       if (inner.day > intermediate.daysInMonth) {
         throw new RangeError(`Day ${inner.day} out of range for resulting month with ${intermediate.daysInMonth} days`);
@@ -3384,15 +3549,15 @@ function addWithOverflow(inner, dur, overflow, op, wrapFn) {
       }
     }
     // Do the full operation with Constrain (since NAPI doesn't support Reject)
-    const result = call(() => inner[op](dur, 'Constrain'));
+    const result = call(() => (inner as any)[op](dur, 'Constrain'));
     return wrapFn(result);
   }
-  return wrapFn(call(() => inner[op](dur, overflow)));
+  return wrapFn(call(() => (inner as any)[op](dur, overflow)));
 }
 
 // ─── Helper: validate options argument per spec ───────────────
 
-function validateOptions(options) {
+function validateOptions(options: any): any {
   if (options === undefined) return undefined;
   if (options === null || (typeof options !== 'object' && typeof options !== 'function')) {
     throw new TypeError('Options must be an object or undefined');
@@ -3401,7 +3566,7 @@ function validateOptions(options) {
 }
 
 // Per spec GetOption: converts value to string, throwing TypeError for Symbol
-function toStringOption(val) {
+function toStringOption(val: any): string {
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   return String(val);
 }
@@ -3410,7 +3575,7 @@ function toStringOption(val) {
 // 1. If already a string, return it.
 // 2. If an object/function, call ToPrimitive(hint:string), then require string result.
 // 3. For other types (number, boolean, null, bigint, symbol), throw TypeError.
-function toPrimitiveAndRequireString(val, name) {
+function toPrimitiveAndRequireString(val: any, name: string): string {
   if (typeof val === 'string') return val;
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   if (typeof val === 'bigint') throw new TypeError('Cannot convert a BigInt value to a string');
@@ -3448,19 +3613,19 @@ function toPrimitiveAndRequireString(val, name) {
 }
 
 // Validate UTC offset string per spec: +/-HH:MM or +/-HH:MM:SS or +/-HH:MM:SS.fffffffff
-function isValidOffsetString(str) {
+function isValidOffsetString(str: any): boolean {
   if (typeof str !== 'string') return false;
   return /^[+-]\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?$/.test(str);
 }
 
 // Parse offset string to total nanoseconds (for sub-minute offset comparison)
-function parseOffsetStringToNs(str) {
+function parseOffsetStringToNs(str: string): any {
   const m = str.match(/^([+-])(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?$/);
   if (!m) return undefined;
   const sign = m[1] === '+' ? 1n : -1n;
-  const h = BigInt(m[2]);
-  const min = BigInt(m[3]);
-  const sec = m[4] ? BigInt(m[4]) : 0n;
+  const h = BigInt(m[2]!);
+  const min = BigInt(m[3]!);
+  const sec = m[4] ? BigInt(m[4]!) : 0n;
   let frac = 0n;
   if (m[5]) {
     const fracStr = (m[5] + '000000000').substring(0, 9);
@@ -3470,7 +3635,7 @@ function parseOffsetStringToNs(str) {
 }
 
 // Get the actual UTC offset in nanoseconds for a timezone at a given epoch ms
-function _getOffsetNsAtEpoch(epochMs, tzId) {
+function _getOffsetNsAtEpoch(epochMs: number, tzId: string): bigint {
   if (tzId === 'UTC') return 0n;
   if (/^[+-]\d{2}:\d{2}(:\d{2})?$/.test(tzId)) {
     return parseOffsetStringToNs(tzId.length <= 6 ? tzId + ':00' : tzId) || 0n;
@@ -3481,7 +3646,7 @@ function _getOffsetNsAtEpoch(epochMs, tzId) {
 
 // Validate monthCode syntax only (not calendar-specific validity)
 // Checks that the format is M01-M99 or M01L-M99L (L suffix for leap months)
-function validateMonthCodeSyntax(monthCode) {
+function validateMonthCodeSyntax(monthCode: any): void {
   if (typeof monthCode === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   if (typeof monthCode === 'bigint') throw new TypeError('Cannot convert a BigInt value to a string');
   let str;
@@ -3497,13 +3662,13 @@ function validateMonthCodeSyntax(monthCode) {
   if (!str) throw new RangeError('Invalid monthCode: empty string');
   const m = str.match(/^M(\d{2})(L?)$/);
   if (!m) throw new RangeError(`Invalid monthCode: ${str}`);
-  const monthNum = parseInt(m[1], 10);
+  const monthNum = parseInt(m[1]!, 10);
   if (monthNum < 1) throw new RangeError(`Invalid monthCode: ${str}`);
 }
 
 // ─── Helper: extract overflow from options ────────────────────
 
-function extractOverflow(options) {
+function extractOverflow(options: any): any {
   if (options === undefined) return undefined;
   validateOptions(options);
   return mapOverflow(options.overflow);
@@ -3511,14 +3676,14 @@ function extractOverflow(options) {
 
 // ─── Helper: reject Infinity values per spec ─────────────────
 
-function rejectInfinity(value, name) {
+function rejectInfinity(value: any, name: string): void {
   if (value === Infinity || value === -Infinity) {
     throw new RangeError(`${name} property cannot be Infinity`);
   }
 }
 
 // ISO date range validation for constructors (always reject mode)
-function rejectISODateRange(year, month, day) {
+function rejectISODateRange(year: number, month: number, day: number): void {
   if (month < 1 || month > 12) throw new RangeError(`Invalid month: ${month}`);
   if (day < 1) throw new RangeError(`Invalid day: ${day}`);
   // Days in each month for ISO calendar
@@ -3536,20 +3701,19 @@ function rejectISODateRange(year, month, day) {
     30,
     31,
   ];
-  if (day > daysInMonth[month - 1]) throw new RangeError(`Invalid day ${day} for month ${month}`);
+  if (day > (daysInMonth[month - 1]! ?? 31)) throw new RangeError(`Invalid day ${day} for month ${month}`);
 }
 
-function rejectPropertyBagInfinity(bag) {
-  // Use arguments + index loop to avoid Array.prototype[Symbol.iterator]
-  for (let i = 1; i < arguments.length; i++) {
-    const f = arguments[i];
+function rejectPropertyBagInfinity(bag: any, ...fields: string[]): void {
+  // Use rest params loop
+  for (const f of fields) {
     if (bag[f] !== undefined) rejectInfinity(bag[f], f);
   }
 }
 
 // ─── Helper: coerce property bag values to numbers ────────────
 
-function toInteger(val) {
+function toInteger(val: any): any {
   if (val === undefined) return undefined;
   if (typeof val === 'number') return val;
   if (typeof val === 'bigint') throw new TypeError('Cannot convert a BigInt value to a number');
@@ -3561,7 +3725,7 @@ function toInteger(val) {
 // NOTE: Use cached intrinsics to avoid test262 monkey-patching detection
 const _isFinite = Number.isFinite;
 const _trunc = Math.trunc;
-function toIntegerIfIntegral(val) {
+function toIntegerIfIntegral(val: any): any {
   if (val === undefined) return undefined;
   if (typeof val === 'bigint') throw new TypeError('Cannot convert a BigInt value to a number');
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a number');
@@ -3572,7 +3736,7 @@ function toIntegerIfIntegral(val) {
 }
 
 // ToIntegerWithTruncation per spec: converts to number and truncates
-function toIntegerWithTruncation(val) {
+function toIntegerWithTruncation(val: any): any {
   if (val === undefined) return undefined;
   if (typeof val === 'bigint') throw new TypeError('Cannot convert a BigInt value to a number');
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a number');
@@ -3584,7 +3748,7 @@ function toIntegerWithTruncation(val) {
 
 // ─── Helper: validate fields for with() methods ──────────────
 
-function validateWithFields(fields, recognizedFields, typeName) {
+function validateWithFields(fields: any, recognizedFields: string[] | null, typeName: string): void {
   if (typeof fields !== 'object' || fields === null) {
     throw new TypeError('Invalid fields argument');
   }
@@ -3627,7 +3791,7 @@ function validateWithFields(fields, recognizedFields, typeName) {
 
 // ─── Helper: validate ISO string fractional seconds ───────────
 
-function rejectTooManyFractionalSeconds(str) {
+function rejectTooManyFractionalSeconds(str: any): void {
   if (typeof str !== 'string') return;
   // Check for fractional seconds with more than 9 digits in time portion
   // Match patterns like :SS.dddddddddd or :SS,dddddddddd
@@ -3639,7 +3803,7 @@ function rejectTooManyFractionalSeconds(str) {
 
 // ─── Helper: validate property bag ranges for overflow: reject ─
 
-function validateOverflowReject(bag, overflow, cal) {
+function validateOverflowReject(bag: any, overflow: string | undefined, cal: any): void {
   if (overflow === 'Reject') {
     const month =
       bag.month !== undefined ? bag.month : bag.monthCode !== undefined ? monthCodeToMonth(bag.monthCode) : undefined;
@@ -3657,9 +3821,9 @@ function validateOverflowReject(bag, overflow, cal) {
         if (pd.day !== bag.day || pd.month !== month) {
           throw new RangeError(`date component out of range: ${bag.year}-${month}-${bag.day}`);
         }
-      } catch (e) {
+      } catch (e: any) {
         if (e instanceof RangeError) throw e;
-        throw new RangeError(`date out of range: ${e.message || e}`);
+        throw new RangeError(`date out of range: ${(e as any).message || e}`);
       }
     } else if (calId !== 'iso8601' && bag.year !== undefined && month !== undefined && bag.day !== undefined) {
       // For non-ISO calendars, check day against actual days in month
@@ -3673,7 +3837,7 @@ function validateOverflowReject(bag, overflow, cal) {
 
 // ─── Helper: format time string with fractional seconds ───────
 
-function formatFractionalSeconds(str, precision) {
+function formatFractionalSeconds(str: string, precision: number): string {
   // str is an ISO string; we need to adjust fractional seconds to `precision` digits
   // Find the time portion
   const tIdx = str.indexOf('T');
@@ -3714,7 +3878,7 @@ function formatFractionalSeconds(str, precision) {
 
 // ─── Helper: format Duration string with precision ────────────
 
-function formatDurationString(dur, precision) {
+function formatDurationString(dur: any, precision: any): string {
   const sign = dur.sign < 0 ? '-' : '';
   const years = Math.abs(dur.years);
   const months = Math.abs(dur.months);
@@ -3775,7 +3939,7 @@ function formatDurationString(dur, precision) {
 
 // ─── Helper: round duration sub-second components manually ────
 
-function roundDurationSubSeconds(dur, precision, roundingMode) {
+function roundDurationSubSeconds(dur: any, precision: number, roundingMode: string): any {
   // Get total nanoseconds in sub-second portion
   const ms = Math.abs(dur.milliseconds);
   const us = Math.abs(dur.microseconds);
@@ -3784,16 +3948,16 @@ function roundDurationSubSeconds(dur, precision, roundingMode) {
   const sign = dur.sign;
 
   // Compute the rounding increment in nanoseconds
-  const INCREMENTS = [1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10];
-  const increment = INCREMENTS[precision];
+  const INCREMENTS: number[] = [1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10];
+  const increment = INCREMENTS[precision]!;
 
   // Apply rounding
-  const remainder = totalNs % increment;
+  const remainder = totalNs % increment!;
   if (remainder === 0) {
     return dur; // no rounding needed
   }
 
-  const RM = {
+  const RM: Record<string, () => number> = {
     Trunc: () => totalNs - remainder,
     Floor: () => (sign < 0 ? totalNs - remainder + increment : totalNs - remainder),
     Ceil: () => (sign < 0 ? totalNs - remainder : totalNs - remainder + increment),
@@ -3818,9 +3982,9 @@ function roundDurationSubSeconds(dur, precision, roundingMode) {
     },
   };
 
-  totalNs = (RM[roundingMode] || RM.Trunc)();
+  totalNs = (RM[roundingMode] || RM['Trunc'])!();
   // Handle carry into seconds
-  let extraSeconds = Math.floor(totalNs / 1000000000);
+  const extraSeconds = Math.floor(totalNs / 1000000000);
   totalNs = totalNs % 1000000000;
 
   // Build result with adjusted sub-second components
@@ -3880,7 +4044,8 @@ function roundDurationSubSeconds(dur, precision, roundingMode) {
 // ═══════════════════════════════════════════════════════════════
 
 class Duration {
-  constructor(arg) {
+  _inner!: NapiDurationT;
+  constructor(arg?: any) {
     if (arg instanceof NapiDuration) {
       this._inner = arg;
     } else if (arg !== undefined && typeof arg === 'object' && arg !== null && arg instanceof Duration) {
@@ -3889,6 +4054,7 @@ class Duration {
       this._inner = call(() => new NapiDuration());
     } else {
       // Constructor signature: new Duration(years, months, weeks, days, hours, minutes, seconds, ms, us, ns)
+      // eslint-disable-next-line prefer-rest-params
       const args = Array.from(arguments);
       const y = toIntegerIfIntegral(args[0]);
       const mo = toIntegerIfIntegral(args[1]);
@@ -3911,7 +4077,7 @@ class Duration {
     _wrapperSet.add(this);
   }
 
-  static from(arg) {
+  static from(arg: any): Duration {
     if (_isTemporalDuration(arg)) return new Duration(arg._inner);
     if (arg instanceof NapiDuration) return new Duration(arg);
     if (typeof arg === 'string') return new Duration(call(() => NapiDuration.from(arg)));
@@ -3921,7 +4087,7 @@ class Duration {
     throw new TypeError('Invalid duration argument');
   }
 
-  static compare(one, two, options) {
+  static compare(one: any, two: any, options?: any): number {
     const a = toNapiDuration(one);
     const b = toNapiDuration(two);
     let relativeToDate = null;
@@ -3936,7 +4102,7 @@ class Duration {
     }
     try {
       return NapiDuration.compare(a, b, relativeToDate, relativeToZdt);
-    } catch (e) {
+    } catch (e: any) {
       throw wrapError(e);
     }
   }
@@ -3985,17 +4151,17 @@ class Duration {
     return wrapDuration(this._inner.abs());
   }
 
-  add(other, _options) {
+  add(other: any, _options?: any): Duration {
     const dur = toNapiDuration(other);
     return wrapDuration(call(() => this._inner.add(dur)));
   }
 
-  subtract(other, _options) {
+  subtract(other: any, _options?: any): Duration {
     const dur = toNapiDuration(other);
     return wrapDuration(call(() => this._inner.subtract(dur)));
   }
 
-  with(temporalDurationLike) {
+  with(temporalDurationLike: any): Duration {
     requireBranding(this, NapiDuration, 'Temporal.Duration');
     if (typeof temporalDurationLike !== 'object' || temporalDurationLike === null) {
       throw new TypeError('Invalid duration-like argument');
@@ -4055,7 +4221,7 @@ class Duration {
     );
   }
 
-  round(options) {
+  round(options: any): Duration {
     if (options === undefined) throw new TypeError('options parameter is required');
     if (typeof options === 'string') {
       const obj = Object.create(null);
@@ -4120,18 +4286,23 @@ class Duration {
       const result = new Duration(inner);
       // Workaround: NAPI has a bug with roundingIncrement > 1 for calendar/day units.
       // Verify by re-rounding with increment=1 and manually applying the increment.
-      const NAPI_CALENDAR_UNITS_MAP = { Day: 'days', Week: 'weeks', Month: 'months', Year: 'years' };
+      const NAPI_CALENDAR_UNITS_MAP: Record<string, string> = {
+        Day: 'days',
+        Week: 'weeks',
+        Month: 'months',
+        Year: 'years',
+      };
       if (_napiIncrement > 1 && _napiSmallestUnit && NAPI_CALENDAR_UNITS_MAP[_napiSmallestUnit]) {
         const fieldName = NAPI_CALENDAR_UNITS_MAP[_napiSmallestUnit];
-        const napiVal = result[fieldName];
+        const napiVal = (result as any)[fieldName];
         // Re-round with increment=1 and compute expected result
         const napiOpts1 = Object.assign({}, napiOptions);
         napiOpts1.roundingIncrement = 1;
         const inner1 = this._inner.round(napiOpts1, relativeToDate, relativeToZdt);
         const dur1 = new Duration(inner1);
-        const val = dur1[fieldName];
+        const val = (dur1 as any)[fieldName];
         // Map NAPI rounding mode back to JS mode name for _roundToIncrement
-        const MODE_MAP_REVERSE = {
+        const MODE_MAP_REVERSE: Record<string, string> = {
           Ceil: 'ceil',
           Floor: 'floor',
           Expand: 'expand',
@@ -4170,17 +4341,17 @@ class Duration {
           if (_napiSmallestUnit === 'Month') {
             resultFields.years = dur1.years;
           }
-          resultFields[fieldName] = expected;
+          (resultFields as any)[fieldName] = expected;
           return Duration.from(resultFields);
         }
       }
       return result;
-    } catch (e) {
+    } catch (e: any) {
       throw wrapError(e);
     }
   }
 
-  total(options) {
+  total(options: any): number {
     if (options === undefined) throw new TypeError('options parameter is required');
     if (typeof options === 'string') {
       const obj = Object.create(null);
@@ -4198,12 +4369,12 @@ class Duration {
     const napiUnit = mapUnit(_unitRaw);
     try {
       return this._inner.total(napiUnit, relativeToDate, relativeToZdt);
-    } catch (e) {
+    } catch (e: any) {
       throw wrapError(e);
     }
   }
 
-  toString(options) {
+  toString(options?: any): string {
     if (options === undefined) return this._inner.toString();
     validateOptions(options);
     // Per spec: read options in alphabetical order, each exactly once
@@ -4226,7 +4397,7 @@ class Duration {
         nanosecond: 'nanosecond',
         nanoseconds: 'nanosecond',
       };
-      smallestUnit = DURATION_TOSTRING_UNITS[su];
+      smallestUnit = (DURATION_TOSTRING_UNITS as any)[su];
       if (!smallestUnit) {
         throw new RangeError(`Invalid unit for Duration.toString: ${su}`);
       }
@@ -4247,11 +4418,12 @@ class Duration {
     }
 
     // If we need to round, round the sub-second components manually
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let dur = this;
     if (precision !== 'auto' && precision !== 9) {
       // Try NAPI round first (works for time-only durations)
       try {
-        const DIGIT_ROUND = [
+        const DIGIT_ROUND: Array<{ unit: string; increment: number }> = [
           { unit: 'Second', increment: 1 },
           { unit: 'Millisecond', increment: 100 },
           { unit: 'Millisecond', increment: 10 },
@@ -4262,14 +4434,16 @@ class Duration {
           { unit: 'Nanosecond', increment: 100 },
           { unit: 'Nanosecond', increment: 10 },
         ];
-        const { unit, increment } = DIGIT_ROUND[precision];
+        const entry = DIGIT_ROUND[precision as number];
+        const unit = entry!.unit;
+        const increment = entry!.increment;
         const napiOpts = Object.create(null);
         napiOpts.smallestUnit = unit;
         napiOpts.roundingMode = roundingMode;
         napiOpts.roundingIncrement = increment;
         const inner = this._inner.round(napiOpts, null, null);
-        dur = new Duration(inner);
-      } catch (roundErr) {
+        dur = new Duration(inner) as any;
+      } catch (roundErr: any) {
         // If NAPI round fails with time duration overflow, re-throw (don't fall through to manual rounding)
         const errMsg = roundErr && roundErr.message ? roundErr.message : '';
         if (errMsg.includes('maxTimeDuration') || errMsg.includes('TimeDuration exceeds')) {
@@ -4294,7 +4468,7 @@ class Duration {
       'nanoseconds',
     ];
     for (const field of DURATION_FIELDS_CHECK) {
-      const v = dur[field];
+      const v = (dur as any)[field];
       if (v > Number.MAX_SAFE_INTEGER || v < -Number.MAX_SAFE_INTEGER) {
         throw new RangeError('Rounded duration field exceeds safe integer range');
       }
@@ -4307,10 +4481,10 @@ class Duration {
     requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this.toString();
   }
-  toLocaleString(locales, options) {
+  toLocaleString(locales?: any, options?: any): string {
     requireBranding(this, NapiDuration, 'Temporal.Duration');
-    if (typeof Intl !== 'undefined' && typeof Intl.DurationFormat === 'function') {
-      return new Intl.DurationFormat(locales, options).format(this);
+    if (typeof Intl !== 'undefined' && typeof (Intl as any).DurationFormat === 'function') {
+      return new Intl.DurationFormat(locales, options).format(this as any);
     }
     return this.toString();
   }
@@ -4321,7 +4495,7 @@ class Duration {
 
   // Symbol.toStringTag defined as data property below
 
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](v: any): boolean {
     return v !== null && v !== undefined && typeof v === 'object' && '_inner' in v && v._inner instanceof NapiDuration;
   }
 }
@@ -4331,7 +4505,9 @@ class Duration {
 // ═══════════════════════════════════════════════════════════════
 
 class PlainDate {
-  constructor(year, month, day, calendar) {
+  _inner!: NapiPlainDateT;
+  _calId?: string;
+  constructor(year: any, month?: any, day?: any, calendar?: any) {
     if (year instanceof NapiPlainDate) {
       this._inner = year;
     } else {
@@ -4349,7 +4525,7 @@ class PlainDate {
     _wrapperSet.add(this);
   }
 
-  static from(arg, options) {
+  static from(arg: any, options?: any): any {
     if (typeof arg === 'string') {
       rejectTooManyFractionalSeconds(arg);
       const inner = call(() => NapiPlainDate.from(arg));
@@ -4408,7 +4584,7 @@ class PlainDate {
       let resolvedYear = yearVal;
       const calValidErasFrom = VALID_ERAS[calId];
       if (calValidErasFrom && calValidErasFrom.size > 0) {
-        const eraFields = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
+        const eraFields: any = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
         resolveEraYear(eraFields, calId);
         resolvedYear = eraFields.year;
       }
@@ -4464,7 +4640,7 @@ class PlainDate {
     throw new TypeError('Invalid argument for PlainDate.from()');
   }
 
-  static compare(one, two) {
+  static compare(one: any, two: any): number {
     const a = toNapiPlainDate(one);
     const b = toNapiPlainDate(two);
     return NapiPlainDate.compare(a, b);
@@ -4520,7 +4696,7 @@ class PlainDate {
     return resolveEraForCalendar(calId, this._inner.year, v, this._inner.eraYear, this._inner.month, this._inner.day)
       .era;
   }
-  get eraYear() {
+  get eraYear(): number | undefined {
     const calId = getRealCalendarId(this);
     const v = this._inner.eraYear;
     if (v === null) return undefined;
@@ -4534,7 +4710,7 @@ class PlainDate {
     return getRealCalendarId(this);
   }
 
-  with(fields, options) {
+  with(fields: any, options?: any): any {
     requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     validateWithFields(fields, null, 'PlainDate');
     const calId = getRealCalendarId(this);
@@ -4597,7 +4773,7 @@ class PlainDate {
     // Per spec: read overflow option AFTER basic field validation but BEFORE algorithmic validation
     const overflow = extractOverflow(options);
     // Resolve era/eraYear to year first so we know the target year for monthCode resolution
-    const merged = { year, era, eraYear };
+    const merged: any = { year, era, eraYear };
     resolveEraYear(merged, calId);
     const targetYear = merged.year;
     let month;
@@ -4659,7 +4835,7 @@ class PlainDate {
     return r;
   }
 
-  withCalendar(calendar) {
+  withCalendar(calendar: any): any {
     if (calendar === undefined) throw new TypeError('calendar argument is required');
     const newCalId = getCalendarId(calendar);
     const cal = toNapiCalendar(calendar);
@@ -4668,21 +4844,21 @@ class PlainDate {
     return r;
   }
 
-  add(durationArg, options) {
+  add(durationArg: any, options?: any): any {
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
     return addWithOverflow(this._inner, dur, overflow, 'add', (n) => wrapPlainDate(n, calId));
   }
 
-  subtract(durationArg, options) {
+  subtract(durationArg: any, options?: any): any {
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
     return addWithOverflow(this._inner, dur, overflow, 'subtract', (n) => wrapPlainDate(n, calId));
   }
 
-  until(other, options) {
+  until(other: any, options?: any): Duration {
     const otherInner = toNapiPlainDate(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -4696,7 +4872,7 @@ class PlainDate {
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
 
-  since(other, options) {
+  since(other: any, options?: any): Duration {
     const otherInner = toNapiPlainDate(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -4711,12 +4887,12 @@ class PlainDate {
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
 
-  equals(other) {
+  equals(other: any): boolean {
     const otherInner = toNapiPlainDate(other);
     return this._inner.equals(otherInner);
   }
 
-  toPlainDateTime(time) {
+  toPlainDateTime(time?: any): PlainDateTime {
     requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const calId = getRealCalendarId(this);
     // Use ISO date from toString() to avoid calendar-year confusion
@@ -4746,7 +4922,7 @@ class PlainDate {
     return wrapPlainDateTime(dt, calId);
   }
 
-  toZonedDateTime(item) {
+  toZonedDateTime(item: any): ZonedDateTime {
     requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const calId = getRealCalendarId(this);
     // Get ISO date string, stripping any calendar annotation
@@ -4772,8 +4948,8 @@ class PlainDate {
         return wrapZonedDateTime(sod, calId);
       }
       const t = toNapiPlainTime(_plainTime);
-      const pad2 = (n) => String(n).padStart(2, '0');
-      const pad3 = (n) => String(n).padStart(3, '0');
+      const pad2 = (n: any) => String(n).padStart(2, '0');
+      const pad3 = (n: any) => String(n).padStart(3, '0');
       let timeStr = `T${pad2(t.hour)}:${pad2(t.minute)}:${pad2(t.second)}`;
       if (t.millisecond || t.microsecond || t.nanosecond) {
         const frac = pad3(t.millisecond) + pad3(t.microsecond) + pad3(t.nanosecond);
@@ -4814,17 +4990,17 @@ class PlainDate {
     return wrapPlainMonthDay(call(() => new NapiPlainMonthDay(this.month, this.day, cal)));
   }
 
-  toString(options) {
+  toString(options?: any): string {
     if (options !== undefined) validateOptions(options);
     const dc = options ? mapDisplayCalendar(options.calendarName) : undefined;
-    return this._inner.toString(dc);
+    return this._inner.toString(dc as any);
   }
 
   toJSON() {
     requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this.toString();
   }
-  toLocaleString(locales, options) {
+  toLocaleString(locales?: any, options?: any): string {
     requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     // Per spec: timeStyle conflicts with PlainDate
     if (options !== undefined && options !== null && typeof options === 'object') {
@@ -4848,9 +5024,9 @@ class PlainDate {
     const m = str.match(/^(-?\d+|\+\d+)-(\d{2})-(\d{2})/);
     if (m) {
       const d = new Date(0);
-      d.setUTCFullYear(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+      d.setUTCFullYear(parseInt(m[1]!, 10), parseInt(m[2]!, 10) - 1, parseInt(m[3]!, 10));
       d.setUTCHours(12, 0, 0, 0);
-      let opts;
+      let opts: any;
       if (options !== undefined && options !== null && typeof options === 'object') {
         opts = Object.assign({}, options);
       } else {
@@ -4870,7 +5046,7 @@ class PlainDate {
       delete opts.fractionalSecondDigits;
       delete opts.dayPeriod;
       const dtf = new Intl.DateTimeFormat(locales, opts);
-      return _origFormatGetter.call(dtf)(d.getTime());
+      return _origFormatGetter!.call(dtf)(d.getTime());
     }
     return this.toString();
   }
@@ -4881,7 +5057,7 @@ class PlainDate {
 
   // Symbol.toStringTag defined as data property below
 
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](v: any): boolean {
     return v !== null && v !== undefined && typeof v === 'object' && '_inner' in v && v._inner instanceof NapiPlainDate;
   }
 }
@@ -4891,7 +5067,8 @@ class PlainDate {
 // ═══════════════════════════════════════════════════════════════
 
 class PlainTime {
-  constructor(hour, minute, second, millisecond, microsecond, nanosecond) {
+  _inner!: NapiPlainTimeT;
+  constructor(hour?: any, minute?: any, second?: any, millisecond?: any, microsecond?: any, nanosecond?: any) {
     if (hour instanceof NapiPlainTime) {
       this._inner = hour;
     } else {
@@ -4923,7 +5100,7 @@ class PlainTime {
     _wrapperSet.add(this);
   }
 
-  static from(arg, options) {
+  static from(arg: any, options?: any): any {
     if (typeof arg === 'string') {
       rejectTooManyFractionalSeconds(arg);
       const inner = call(() => NapiPlainTime.from(arg));
@@ -5023,10 +5200,10 @@ class PlainTime {
     throw new TypeError('Invalid argument for PlainTime.from()');
   }
 
-  static compare(one, two) {
+  static compare(one: any, two: any): number {
     const a = toNapiPlainTime(one);
     const b = toNapiPlainTime(two);
-    const fields = ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'];
+    const fields = ['hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'] as const;
     for (const f of fields) {
       if (a[f] < b[f]) return -1;
       if (a[f] > b[f]) return 1;
@@ -5053,7 +5230,7 @@ class PlainTime {
     return this._inner.nanosecond;
   }
 
-  with(fields, options) {
+  with(fields: any, options?: any): any {
     requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     validateWithFields(fields, null, 'PlainTime');
     // Per spec: read fields in ALPHABETICAL order, coercing each immediately
@@ -5102,45 +5279,45 @@ class PlainTime {
     return new PlainTime(call(() => new NapiPlainTime(h, mi, s, ms, us, ns)));
   }
 
-  add(durationArg) {
+  add(durationArg: any): any {
     const dur = toNapiDuration(durationArg);
     return wrapPlainTime(call(() => this._inner.add(dur)));
   }
 
-  subtract(durationArg) {
+  subtract(durationArg: any): any {
     const dur = toNapiDuration(durationArg);
     return wrapPlainTime(call(() => this._inner.subtract(dur)));
   }
 
-  until(other, options) {
+  until(other: any, options?: any): Duration {
     const otherInner = toNapiPlainTime(other);
     const settings = convertDifferenceSettings(options);
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
 
-  since(other, options) {
+  since(other: any, options?: any): Duration {
     const otherInner = toNapiPlainTime(other);
     const settings = convertDifferenceSettings(options);
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
 
-  round(options) {
+  round(options: any): any {
     if (options === undefined) throw new TypeError('options parameter is required');
     const opts = convertRoundingOptions(options, { includeLargestUnit: false });
-    return wrapPlainTime(call(() => this._inner.round(opts)));
+    return wrapPlainTime(call(() => this._inner.round(opts as any)));
   }
 
-  equals(other) {
+  equals(other: any): boolean {
     const otherInner = toNapiPlainTime(other);
     return this._inner.equals(otherInner);
   }
 
-  toString(options) {
+  toString(options?: any): string {
     if (options === undefined) return call(() => this._inner.toString());
     validateOptions(options);
     // Per spec: read options in alphabetical order (no calendarName for PlainTime)
     // fractionalSecondDigits, roundingMode, smallestUnit
-    const roundingOptions = {};
+    const roundingOptions: any = {};
     const _fsd = options.fractionalSecondDigits;
     const fsd = resolveFractionalSecondDigits(_fsd);
     if (fsd !== undefined && fsd !== 'auto') roundingOptions.precision = fsd;
@@ -5160,7 +5337,7 @@ class PlainTime {
     requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     return this.toString();
   }
-  toLocaleString(locales, options) {
+  toLocaleString(locales?: any, options?: any): string {
     requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     // Per spec: dateStyle conflicts with PlainTime
     if (options !== undefined && options !== null && typeof options === 'object') {
@@ -5173,7 +5350,7 @@ class PlainTime {
     const d = new Date(0);
     d.setUTCFullYear(1970, 0, 1);
     d.setUTCHours(inner.hour, inner.minute, inner.second, inner.millisecond);
-    let opts;
+    let opts: any;
     if (options !== undefined && options !== null && typeof options === 'object') {
       opts = Object.assign({}, options);
     } else {
@@ -5194,7 +5371,7 @@ class PlainTime {
     delete opts.era;
     delete opts.timeZoneName;
     const dtf = new Intl.DateTimeFormat(locales, opts);
-    return _origFormatGetter.call(dtf)(d.getTime());
+    return _origFormatGetter!.call(dtf)(d.getTime());
   }
 
   valueOf() {
@@ -5203,7 +5380,7 @@ class PlainTime {
 
   // Symbol.toStringTag defined as data property below
 
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](v: any): boolean {
     return v !== null && v !== undefined && typeof v === 'object' && '_inner' in v && v._inner instanceof NapiPlainTime;
   }
 }
@@ -5213,7 +5390,20 @@ class PlainTime {
 // ═══════════════════════════════════════════════════════════════
 
 class PlainDateTime {
-  constructor(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar) {
+  _inner!: NapiPlainDateTimeT;
+  _calId?: string;
+  constructor(
+    year: any,
+    month?: any,
+    day?: any,
+    hour?: any,
+    minute?: any,
+    second?: any,
+    millisecond?: any,
+    microsecond?: any,
+    nanosecond?: any,
+    calendar?: any,
+  ) {
     if (year instanceof NapiPlainDateTime) {
       this._inner = year;
     } else {
@@ -5252,7 +5442,7 @@ class PlainDateTime {
     _wrapperSet.add(this);
   }
 
-  static from(arg, options) {
+  static from(arg: any, options?: any): any {
     if (typeof arg === 'string') {
       rejectTooManyFractionalSeconds(arg);
       const inner = call(() => NapiPlainDateTime.from(arg));
@@ -5325,7 +5515,7 @@ class PlainDateTime {
       let resolvedYear = yearVal;
       const _calValidErasDTF = VALID_ERAS[calId];
       if (_calValidErasDTF && _calValidErasDTF.size > 0) {
-        const eraFields = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
+        const eraFields: any = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
         resolveEraYear(eraFields, calId);
         resolvedYear = eraFields.year;
       }
@@ -5358,10 +5548,10 @@ class PlainDateTime {
       }
       validateOverflowReject({ year: resolvedYear, month, day }, overflow, cal);
       // Handle leap second: second:60 should reject or constrain
-      let s = second || 0,
-        h = hour || 0,
+      let s = second || 0;
+      const h = hour || 0,
         mi = minute || 0;
-      let ms = millisecond || 0,
+      const ms = millisecond || 0,
         us = microsecond || 0,
         ns = nanosecond || 0;
       if (overflow === 'Reject') {
@@ -5400,7 +5590,7 @@ class PlainDateTime {
     throw new TypeError('Invalid argument for PlainDateTime.from()');
   }
 
-  static compare(one, two) {
+  static compare(one: any, two: any): number {
     const a = toNapiPlainDateTime(one);
     const b = toNapiPlainDateTime(two);
     return NapiPlainDateTime.compare(a, b);
@@ -5488,7 +5678,7 @@ class PlainDateTime {
     return getRealCalendarId(this);
   }
 
-  with(fields, options) {
+  with(fields: any, options?: any): any {
     requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     validateWithFields(fields, null, 'PlainDateTime');
     const calId = this.calendarId;
@@ -5576,7 +5766,7 @@ class PlainDateTime {
     // Per spec: read overflow option AFTER fields, BEFORE algorithmic validation
     const overflow = extractOverflow(options);
     // Resolve era/eraYear to year first
-    const merged = { year, era, eraYear };
+    const merged: any = { year, era, eraYear };
     resolveEraYear(merged, calId);
     const targetYear = merged.year;
     let month;
@@ -5647,7 +5837,7 @@ class PlainDateTime {
     return dtR;
   }
 
-  withCalendar(calendar) {
+  withCalendar(calendar: any): any {
     if (calendar === undefined) throw new TypeError('calendar argument is required');
     const newCalId = getCalendarId(calendar);
     const cal = toNapiCalendar(calendar);
@@ -5656,7 +5846,7 @@ class PlainDateTime {
     return r;
   }
 
-  withPlainTime(time) {
+  withPlainTime(time: any) {
     requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const calId = getRealCalendarId(this);
     if (time === undefined) {
@@ -5693,21 +5883,21 @@ class PlainDateTime {
     );
   }
 
-  add(durationArg, options) {
+  add(durationArg: any, options?: any): any {
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
     return addWithOverflow(this._inner, dur, overflow, 'add', (n) => wrapPlainDateTime(n, calId));
   }
 
-  subtract(durationArg, options) {
+  subtract(durationArg: any, options?: any): any {
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
     return addWithOverflow(this._inner, dur, overflow, 'subtract', (n) => wrapPlainDateTime(n, calId));
   }
 
-  until(other, options) {
+  until(other: any, options?: any): Duration {
     const otherInner = toNapiPlainDateTime(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -5748,7 +5938,7 @@ class PlainDateTime {
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
 
-  since(other, options) {
+  since(other: any, options?: any): Duration {
     const otherInner = toNapiPlainDateTime(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -5785,16 +5975,16 @@ class PlainDateTime {
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
 
-  round(options) {
+  round(options: any): any {
     if (options === undefined) throw new TypeError('options parameter is required');
     const opts = convertRoundingOptions(options, { includeLargestUnit: false });
     return wrapPlainDateTime(
-      call(() => this._inner.round(opts)),
+      call(() => this._inner.round(opts as any)),
       getRealCalendarId(this),
     );
   }
 
-  equals(other) {
+  equals(other: any): boolean {
     const otherInner = toNapiPlainDateTime(other);
     return this._inner.equals(otherInner);
   }
@@ -5807,7 +5997,7 @@ class PlainDateTime {
     return wrapPlainTime(this._inner.toPlainTime());
   }
 
-  toZonedDateTime(timeZone, options) {
+  toZonedDateTime(timeZone: any, options: any) {
     requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     if (options !== undefined) validateOptions(options);
     let tz, disambiguation;
@@ -5833,9 +6023,9 @@ class PlainDateTime {
     }
     // Use disambiguation to resolve ambiguous/gap local times
     const inner = this._inner;
-    const isoYear = inner.isoYear || inner.year;
-    const isoMonth = inner.isoMonth || inner.month;
-    const isoDay = inner.isoDay || inner.day;
+    const isoYear = (inner as any).isoYear || inner.year;
+    const isoMonth = (inner as any).isoMonth || inner.month;
+    const isoDay = (inner as any).isoDay || inner.day;
     const resolved = _resolveLocalToEpochMs(
       isoYear,
       isoMonth,
@@ -5855,16 +6045,16 @@ class PlainDateTime {
     );
   }
 
-  toString(options) {
+  toString(options?: any): string {
     const opts = convertToStringOptions(options);
-    return call(() => this._inner.toString(opts.roundingOptions, opts.displayCalendar));
+    return call(() => this._inner.toString(opts.roundingOptions as any, opts.displayCalendar as any));
   }
 
   toJSON() {
     requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this.toString();
   }
-  toLocaleString(locales, options) {
+  toLocaleString(locales?: any, options?: any): string {
     requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     // Per spec: calendar mismatch check (ISO calendar is always OK for PlainDateTime)
     const calId = this.calendarId;
@@ -5883,7 +6073,7 @@ class PlainDateTime {
     const d = new Date(0);
     d.setUTCFullYear(isoFields.year, isoFields.month - 1, isoFields.day);
     d.setUTCHours(inner.hour, inner.minute, inner.second, inner.millisecond);
-    let opts;
+    let opts: any;
     if (options !== undefined && options !== null && typeof options === 'object') {
       opts = Object.assign({}, options);
     } else {
@@ -5900,7 +6090,7 @@ class PlainDateTime {
       opts.second = 'numeric';
     }
     const dtf = new Intl.DateTimeFormat(locales, opts);
-    return _origFormatGetter.call(dtf)(d.getTime());
+    return _origFormatGetter!.call(dtf)(d.getTime());
   }
 
   valueOf() {
@@ -5909,7 +6099,7 @@ class PlainDateTime {
 
   // Symbol.toStringTag defined as data property below
 
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](v: any): boolean {
     return (
       v !== null && v !== undefined && typeof v === 'object' && '_inner' in v && v._inner instanceof NapiPlainDateTime
     );
@@ -5921,7 +6111,11 @@ class PlainDateTime {
 // ═══════════════════════════════════════════════════════════════
 
 class ZonedDateTime {
-  constructor(epochNanoseconds, timeZone, calendar) {
+  _inner!: NapiZonedDateTimeT;
+  _epochNs?: bigint;
+  _tzId?: string;
+  _calId?: string;
+  constructor(epochNanoseconds: any, timeZone?: any, calendar?: any) {
     if (epochNanoseconds instanceof NapiZonedDateTime) {
       this._inner = epochNanoseconds;
     } else {
@@ -6027,7 +6221,7 @@ class ZonedDateTime {
   // Check if the local wall clock time is within representable range
   // For extreme epoch ns with offset timezones, the local time may be out of range.
   // The start-of-day computation needs to go to midnight, which is even more extreme.
-  _checkLocalTimeInRange() {
+  _checkLocalTimeInRange(): void {
     if (this._epochNs !== undefined) {
       const tzId = this._tzId || this.timeZoneId;
       if (tzId && tzId !== 'UTC' && /^[+-]\d{2}(:\d{2})?$/.test(tzId)) {
@@ -6062,7 +6256,7 @@ class ZonedDateTime {
     }
   }
 
-  static from(arg, options) {
+  static from(arg: any, options?: any): any {
     if (typeof arg === 'string') {
       rejectTooManyFractionalSeconds(arg);
       // Per spec: parse string first, then validate options
@@ -6086,7 +6280,7 @@ class ZonedDateTime {
           const keyMatch = content.match(/^([^=]+)=/);
           if (keyMatch) {
             const key = keyMatch[1];
-            if (/[A-Z]/.test(key)) {
+            if (/[A-Z]/.test(key!)) {
               throw new RangeError(`Annotation key must be lowercase: ${ann}`);
             }
           }
@@ -6192,8 +6386,8 @@ class ZonedDateTime {
       try {
         const inner = call(() => NapiZonedDateTime.from(cleanArg));
         return wrapZonedDateTime(inner, _zdtCalId);
-      } catch (e) {
-        if (offsetMode === 'prefer' && e instanceof RangeError && e.message.includes('Offsets could not')) {
+      } catch (e: any) {
+        if (offsetMode === 'prefer' && e instanceof RangeError && (e as any).message.includes('Offsets could not')) {
           // Fall back to disambiguation-based resolution
           const parsed = _parseZdtStringParts(cleanArg);
           if (parsed) {
@@ -6243,8 +6437,8 @@ class ZonedDateTime {
           if (!OVERFLOW_MAP[os]) throw new RangeError(`Invalid overflow option: ${os}`);
         }
       }
-      const zdtCopy = new ZonedDateTime(arg._inner || arg);
-      if (arg._calId) zdtCopy._calId = arg._calId;
+      const zdtCopy = new ZonedDateTime((arg as any)._inner || arg);
+      if ((arg as any)._calId) zdtCopy._calId = (arg as any)._calId;
       return zdtCopy;
     }
     if (typeof arg === 'object' && arg !== null) {
@@ -6408,8 +6602,8 @@ class ZonedDateTime {
         nanosecond = Math.max(0, Math.min(nanosecond, 999));
       }
       // Build ISO string and parse
-      const pad2 = (n) => String(n).padStart(2, '0');
-      const padYear = (n) => {
+      const pad2 = (n: any) => String(n).padStart(2, '0');
+      const padYear = (n: any) => {
         if (n < 0 || n >= 10000) {
           const s = String(Math.abs(n)).padStart(6, '0');
           return (n < 0 ? '-' : '+') + s;
@@ -6428,17 +6622,17 @@ class ZonedDateTime {
         const pdStr = pd.toString();
         const isoMatch = pdStr.match(/^(-?\d+|\+\d+)-(\d{2})-(\d{2})/);
         if (isoMatch) {
-          const actualIsoDay = parseInt(isoMatch[3], 10);
+          const actualIsoDay = parseInt(isoMatch[3]!, 10);
           if (actualIsoDay !== isoDay) {
             if (overflow === 'Reject') {
               throw new RangeError(`Day ${day} out of range for month ${month}`);
             }
             isoDay = actualIsoDay;
-            isoMonth = parseInt(isoMatch[2], 10);
-            isoYear = parseInt(isoMatch[1], 10);
+            isoMonth = parseInt(isoMatch[2]!, 10);
+            isoYear = parseInt(isoMatch[1]!, 10);
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         if (e instanceof RangeError) throw e;
         if (overflow === 'Reject') throw wrapError(e);
         // If constrain mode and day is too large, find max valid day
@@ -6460,7 +6654,7 @@ class ZonedDateTime {
       // Use previously read disambiguation value
       const disambiguation = _pbDisambiguation;
       const calAnnotation = calId && calId !== 'iso8601' ? `[u-ca=${calId}]` : '';
-      const pad3 = (n) => String(n || 0).padStart(3, '0');
+      const pad3 = (n: any) => String(n || 0).padStart(3, '0');
       const buildFrac = () => {
         if (millisecond || microsecond || nanosecond) {
           const frac = pad3(millisecond) + pad3(microsecond) + pad3(nanosecond);
@@ -6541,7 +6735,7 @@ class ZonedDateTime {
           const zdtR = new ZonedDateTime(call(() => NapiZonedDateTime.from(str)));
           zdtR._calId = calId;
           return zdtR;
-        } catch (e) {
+        } catch (e: any) {
           if (offsetMode === 'prefer' && e instanceof RangeError) {
             // Fall back to disambiguation-based resolution
             const resolved = _resolveLocalToEpochMs(
@@ -6589,7 +6783,7 @@ class ZonedDateTime {
     throw new TypeError('Invalid argument for ZonedDateTime.from()');
   }
 
-  static compare(one, two) {
+  static compare(one: any, two: any): number {
     const a = toNapiZonedDateTime(one);
     const b = toNapiZonedDateTime(two);
     return NapiZonedDateTime.compareInstant(a, b);
@@ -6700,7 +6894,7 @@ class ZonedDateTime {
     return call(() => this._inner.hoursInDay);
   }
 
-  with(fields, options) {
+  with(fields: any, options?: any): any {
     validateWithFields(fields, null, 'ZonedDateTime');
     const calId = this.calendarId;
     const calValidEras = VALID_ERAS[calId];
@@ -6787,7 +6981,7 @@ class ZonedDateTime {
     ) {
       throw new TypeError('At least one recognized property must be provided');
     }
-    const merged = {
+    const merged: any = {
       day: dayVal,
       hour: hourVal,
       microsecond: microsecondVal,
@@ -6815,7 +7009,7 @@ class ZonedDateTime {
       } catch {
         const mcMatch = typeof monthCodeStr === 'string' ? monthCodeStr.match(/^M(\d{2})(L?)$/) : null;
         if (mcMatch) {
-          const num = parseInt(mcMatch[1], 10);
+          const num = parseInt(mcMatch[1]!, 10);
           merged.month = mcMatch[2] === 'L' ? num + 1 : num;
         } else {
           merged.month = 1;
@@ -6890,21 +7084,21 @@ class ZonedDateTime {
         merged.day = Math.min(td, dim);
       }
     }
-    const withOptions = {};
+    const withOptions: any = {};
     if (_withDisambigStr !== undefined) withOptions.disambiguation = _withDisambigStr;
     withOptions.offset = _withOffsetStr !== undefined ? _withOffsetStr : 'prefer';
     if (overflow !== undefined) withOptions.overflow = overflow === 'Reject' ? 'reject' : 'constrain';
     return ZonedDateTime.from(merged, withOptions);
   }
 
-  withCalendar(calendar) {
+  withCalendar(calendar: any): any {
     if (calendar === undefined) throw new TypeError('calendar argument is required');
     const newCalId = getCalendarId(calendar);
     const cal = toNapiCalendar(calendar);
     return wrapZonedDateTime(this._inner.withCalendar(cal), newCalId);
   }
 
-  withTimeZone(timeZone) {
+  withTimeZone(timeZone: any): any {
     const tz = toNapiTimeZone(timeZone);
     return wrapZonedDateTime(
       call(() => this._inner.withTimeZone(tz)),
@@ -6912,7 +7106,7 @@ class ZonedDateTime {
     );
   }
 
-  withPlainTime(time) {
+  withPlainTime(time: any) {
     if (time === undefined) {
       this._checkLocalTimeInRange();
       return this.startOfDay();
@@ -6947,7 +7141,7 @@ class ZonedDateTime {
         }
       }
     }
-    const merged = {
+    const merged: any = {
       year: localYear,
       month: localMonth,
       day: localDay,
@@ -6964,21 +7158,21 @@ class ZonedDateTime {
     return ZonedDateTime.from(merged, { offset: 'prefer' });
   }
 
-  add(durationArg, options) {
+  add(durationArg: any, options?: any): any {
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
     return addWithOverflow(this._inner, dur, overflow, 'add', (n) => wrapZonedDateTime(n, calId));
   }
 
-  subtract(durationArg, options) {
+  subtract(durationArg: any, options?: any): any {
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
     return addWithOverflow(this._inner, dur, overflow, 'subtract', (n) => wrapZonedDateTime(n, calId));
   }
 
-  until(other, options) {
+  until(other: any, options?: any): Duration {
     const otherInner = toNapiZonedDateTime(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -7011,7 +7205,7 @@ class ZonedDateTime {
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
 
-  since(other, options) {
+  since(other: any, options?: any): Duration {
     const otherInner = toNapiZonedDateTime(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -7044,7 +7238,7 @@ class ZonedDateTime {
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
 
-  round(options) {
+  round(options: any): any {
     if (options === undefined) throw new TypeError('options parameter is required');
     if (typeof options === 'string') {
       const obj = Object.create(null);
@@ -7062,12 +7256,12 @@ class ZonedDateTime {
     if (_su !== undefined) opts.smallestUnit = mapUnit(_su);
     this._checkLocalTimeInRange();
     return wrapZonedDateTime(
-      call(() => this._inner.round(opts)),
+      call(() => this._inner.round(opts as any)),
       getRealCalendarId(this),
     );
   }
 
-  equals(other) {
+  equals(other: any): boolean {
     const otherInner = toNapiZonedDateTime(other);
     // Per spec: ZDT.equals compares epoch nanoseconds, timezone ID (canonicalized), and calendar ID.
     // Short-circuit: if canonical timezone IDs differ, they're not equal.
@@ -7161,7 +7355,7 @@ class ZonedDateTime {
     return call(() => wrapPlainDateTime(this._inner.toPlainDateTime(), getRealCalendarId(this)));
   }
 
-  getTimeZoneTransition(directionParam) {
+  getTimeZoneTransition(directionParam: any) {
     requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     // Per spec: GetOptionsObject first, then GetDirectionOption
     // GetOptionsObject: undefined → TypeError, string → treated as shorthand,
@@ -7197,7 +7391,7 @@ class ZonedDateTime {
     return _findTimeZoneTransition(this, dir);
   }
 
-  toString(options) {
+  toString(options?: any): string {
     if (options !== undefined) validateOptions(options);
     if (options === undefined) {
       return call(() => this._inner.toString());
@@ -7244,14 +7438,14 @@ class ZonedDateTime {
         : 'Trunc';
     let smallestUnit;
     if (suStr !== undefined) {
-      const UNIT_ALIAS = {
+      const UNIT_ALIAS: Record<string, string> = {
         minutes: 'minute',
         seconds: 'second',
         milliseconds: 'millisecond',
         microseconds: 'microsecond',
         nanoseconds: 'nanosecond',
       };
-      const canonical = UNIT_ALIAS[suStr] || suStr;
+      const canonical = UNIT_ALIAS[suStr!] || suStr!;
       const VALID_UNITS = new Set(['minute', 'second', 'millisecond', 'microsecond', 'nanosecond']);
       if (!VALID_UNITS.has(canonical)) {
         throw new RangeError(`Invalid smallestUnit for ZonedDateTime.toString: ${suStr}`);
@@ -7268,7 +7462,7 @@ class ZonedDateTime {
         : undefined;
 
     // Determine precision: smallestUnit overrides fractionalSecondDigits
-    let precision = 'auto';
+    let precision: any = 'auto';
     if (smallestUnit !== undefined) {
       if (smallestUnit === 'minute') precision = 'minute';
       else if (smallestUnit === 'second') precision = 0;
@@ -7283,7 +7477,7 @@ class ZonedDateTime {
     let inner = this._inner;
     if (smallestUnit !== undefined && smallestUnit !== 'nanosecond') {
       const roundOpts = { smallestUnit: mapUnit(smallestUnit), roundingMode };
-      inner = call(() => this._inner.round(roundOpts));
+      inner = call(() => this._inner.round(roundOpts as any));
     } else if (typeof precision === 'number' && precision < 9) {
       const DIGIT_ROUND = [
         /* 0 */ { unit: 'Second', increment: 1 },
@@ -7296,9 +7490,9 @@ class ZonedDateTime {
         /* 7 */ { unit: 'Nanosecond', increment: 100 },
         /* 8 */ { unit: 'Nanosecond', increment: 10 },
       ];
-      const { unit, increment } = DIGIT_ROUND[precision];
+      const { unit, increment } = DIGIT_ROUND[precision]!;
       const roundOpts = { smallestUnit: unit, roundingMode, roundingIncrement: increment };
-      inner = call(() => this._inner.round(roundOpts));
+      inner = call(() => this._inner.round(roundOpts as any));
     }
 
     let str = call(() => inner.toString());
@@ -7309,7 +7503,7 @@ class ZonedDateTime {
       if (tIdx !== -1) {
         const offsetMatch = str.substring(tIdx).match(/[+-]\d{2}:\d{2}|Z/);
         if (offsetMatch) {
-          const offsetStart = tIdx + offsetMatch.index;
+          const offsetStart = tIdx + offsetMatch!.index!;
           const timePart = str.substring(tIdx + 1, offsetStart);
           const parts = timePart.split(':');
           if (parts.length >= 2) {
@@ -7355,7 +7549,7 @@ class ZonedDateTime {
     requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this.toString();
   }
-  toLocaleString(locales, options) {
+  toLocaleString(locales?: any, options?: any): string {
     requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     // Per spec: timeZone option must throw TypeError
     if (options !== undefined && options !== null && typeof options === 'object') {
@@ -7378,7 +7572,7 @@ class ZonedDateTime {
         }
       }
       // Build options: force timeZone to ZDT's timezone
-      let opts;
+      let opts: any;
       if (options !== undefined && options !== null && typeof options === 'object') {
         opts = Object.assign({}, options);
       } else {
@@ -7401,8 +7595,8 @@ class ZonedDateTime {
       }
       try {
         const dtf = new Intl.DateTimeFormat(locales, opts);
-        return _origFormatGetter.call(dtf)(ms);
-      } catch (e) {
+        return _origFormatGetter!.call(dtf)(ms);
+      } catch (e: any) {
         // Re-throw TypeErrors (e.g. dateStyle + component options conflict)
         if (e instanceof TypeError) throw e;
         // Fallback for unsupported offset timezones (RangeError from invalid timeZone)
@@ -7418,7 +7612,7 @@ class ZonedDateTime {
 
   // Symbol.toStringTag defined as data property below
 
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](v: any): boolean {
     return (
       v !== null && v !== undefined && typeof v === 'object' && '_inner' in v && v._inner instanceof NapiZonedDateTime
     );
@@ -7430,7 +7624,9 @@ class ZonedDateTime {
 // ═══════════════════════════════════════════════════════════════
 
 class Instant {
-  constructor(epochNanoseconds) {
+  _inner!: NapiInstantT;
+  _epochNs?: bigint;
+  constructor(epochNanoseconds: any) {
     if (epochNanoseconds instanceof NapiInstant) {
       this._inner = epochNanoseconds;
     } else {
@@ -7462,7 +7658,7 @@ class Instant {
     _wrapperSet.add(this);
   }
 
-  static from(arg) {
+  static from(arg: any) {
     if (typeof arg === 'string') {
       return new Instant(call(() => NapiInstant.from(arg)));
     }
@@ -7486,7 +7682,7 @@ class Instant {
     throw new TypeError(`Cannot convert ${arg === null ? 'null' : typeof arg} to Instant`);
   }
 
-  static fromEpochMilliseconds(ms) {
+  static fromEpochMilliseconds(ms: any) {
     if (typeof ms === 'bigint') throw new TypeError('Cannot convert a BigInt value to a number');
     if (typeof ms === 'symbol') throw new TypeError('Cannot convert a Symbol value to a number');
     const n = Number(ms);
@@ -7496,12 +7692,12 @@ class Instant {
     return new Instant(call(() => NapiInstant.fromEpochMilliseconds(n)));
   }
 
-  static fromEpochNanoseconds(ns) {
+  static fromEpochNanoseconds(ns: any) {
     if (typeof ns !== 'bigint') throw new TypeError('fromEpochNanoseconds requires a BigInt');
     return new Instant(ns);
   }
 
-  static compare(one, two) {
+  static compare(one: any, two: any): number {
     const a = toNapiInstant(one);
     const b = toNapiInstant(two);
     return NapiInstant.compare(a, b);
@@ -7515,7 +7711,7 @@ class Instant {
     return computeEpochNanoseconds(this._inner);
   }
 
-  add(durationArg) {
+  add(durationArg: any): any {
     // Parse duration and compute total nanoseconds using BigInt for precision
     const { totalNs } = _parseDurationForInstant(durationArg);
     const currentNs = this.epochNanoseconds;
@@ -7523,7 +7719,7 @@ class Instant {
     return new Instant(resultNs);
   }
 
-  subtract(durationArg) {
+  subtract(durationArg: any): any {
     // Parse duration and compute total nanoseconds using BigInt for precision
     const { totalNs } = _parseDurationForInstant(durationArg);
     const currentNs = this.epochNanoseconds;
@@ -7531,30 +7727,30 @@ class Instant {
     return new Instant(resultNs);
   }
 
-  until(other, options) {
+  until(other: any, options?: any): Duration {
     const otherInner = toNapiInstant(other);
     const settings = convertDifferenceSettings(options);
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
 
-  since(other, options) {
+  since(other: any, options?: any): Duration {
     const otherInner = toNapiInstant(other);
     const settings = convertDifferenceSettings(options);
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
 
-  round(options) {
+  round(options: any): any {
     if (options === undefined) throw new TypeError('options parameter is required');
     const opts = convertRoundingOptions(options, { includeLargestUnit: false });
-    return wrapInstant(call(() => this._inner.round(opts)));
+    return wrapInstant(call(() => this._inner.round(opts as any)));
   }
 
-  equals(other) {
+  equals(other: any): boolean {
     const otherInner = toNapiInstant(other);
     return this._inner.equals(otherInner);
   }
 
-  toZonedDateTimeISO(timeZone) {
+  toZonedDateTimeISO(timeZone: any): ZonedDateTime {
     requireBranding(this, NapiInstant, 'Temporal.Instant');
     if (timeZone === undefined) throw new TypeError('timeZone argument is required');
     const tz = toNapiTimeZone(timeZone);
@@ -7565,7 +7761,7 @@ class Instant {
     return wrapZonedDateTime(call(() => NapiZonedDateTime.from(zdtStr)));
   }
 
-  toString(options) {
+  toString(options?: any): string {
     if (options !== undefined) validateOptions(options);
     if (options === undefined) {
       return call(() => this._inner.toString());
@@ -7594,8 +7790,8 @@ class Instant {
         microseconds: 'microsecond',
         nanoseconds: 'nanosecond',
       };
-      const canonical = UNIT_ALIAS[suStr] || suStr;
-      const INSTANT_TOSTRING_UNITS = new Set(['minute', 'second', 'millisecond', 'microsecond', 'nanosecond']);
+      const canonical = (UNIT_ALIAS as any)[suStr] || suStr;
+      const INSTANT_TOSTRING_UNITS = new Set<string>(['minute', 'second', 'millisecond', 'microsecond', 'nanosecond']);
       if (!INSTANT_TOSTRING_UNITS.has(canonical)) {
         throw new RangeError(`Invalid smallestUnit for Instant.toString: ${suStr}`);
       }
@@ -7603,7 +7799,7 @@ class Instant {
     }
 
     // Determine precision: smallestUnit overrides fractionalSecondDigits
-    let precision = 'auto'; // default
+    let precision: any = 'auto'; // default
     if (smallestUnit !== undefined) {
       if (smallestUnit === 'minute') precision = 'minute';
       else if (smallestUnit === 'second') precision = 0;
@@ -7618,7 +7814,7 @@ class Instant {
     let inner = this._inner;
     if (smallestUnit !== undefined && smallestUnit !== 'nanosecond') {
       const roundOpts = { smallestUnit: mapUnit(smallestUnit), roundingMode };
-      inner = call(() => this._inner.round(roundOpts));
+      inner = call(() => this._inner.round(roundOpts as any));
     } else if (typeof precision === 'number' && precision < 9) {
       // Round to the given number of fractional second digits
       // Compute the correct unit and increment
@@ -7633,9 +7829,9 @@ class Instant {
         /* 7 */ { unit: 'Nanosecond', increment: 100 },
         /* 8 */ { unit: 'Nanosecond', increment: 10 },
       ];
-      const { unit, increment } = DIGIT_ROUND[precision];
+      const { unit, increment } = DIGIT_ROUND[precision]!;
       const roundOpts = { smallestUnit: unit, roundingMode, roundingIncrement: increment };
-      inner = call(() => this._inner.round(roundOpts));
+      inner = call(() => this._inner.round(roundOpts as any));
     }
 
     let str = call(() => inner.toString());
@@ -7678,13 +7874,13 @@ class Instant {
     requireBranding(this, NapiInstant, 'Temporal.Instant');
     return this.toString();
   }
-  toLocaleString(locales, options) {
+  toLocaleString(locales?: any, options?: any): string {
     requireBranding(this, NapiInstant, 'Temporal.Instant');
     const ms = _temporalToEpochMs(this);
     if (ms !== undefined) {
       // Per spec: if no date/time component options and no dateStyle/timeStyle,
       // add defaults for Instant: date + time (but NOT timeZoneName)
-      let opts;
+      let opts: any;
       if (options !== undefined && options !== null && typeof options === 'object') {
         opts = Object.assign({}, options);
       } else {
@@ -7699,7 +7895,7 @@ class Instant {
         opts.second = 'numeric';
       }
       const dtf = new Intl.DateTimeFormat(locales, opts);
-      return _origFormatGetter.call(dtf)(ms);
+      return _origFormatGetter!.call(dtf)(ms);
     }
     return this.toString();
   }
@@ -7710,7 +7906,7 @@ class Instant {
 
   // Symbol.toStringTag defined as data property below
 
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](v: any): boolean {
     return v !== null && v !== undefined && typeof v === 'object' && '_inner' in v && v._inner instanceof NapiInstant;
   }
 }
@@ -7720,7 +7916,9 @@ class Instant {
 // ═══════════════════════════════════════════════════════════════
 
 class PlainYearMonth {
-  constructor(year, month, calendar, referenceDay) {
+  _inner!: NapiPlainYearMonthT;
+  _calId?: string;
+  constructor(year: any, month?: any, calendar?: any, referenceDay?: any) {
     if (year instanceof NapiPlainYearMonth) {
       this._inner = year;
     } else {
@@ -7739,7 +7937,7 @@ class PlainYearMonth {
     _wrapperSet.add(this);
   }
 
-  static from(arg, options) {
+  static from(arg: any, options?: any): any {
     if (typeof arg === 'string') {
       rejectTooManyFractionalSeconds(arg);
       const inner = call(() => NapiPlainYearMonth.from(arg));
@@ -7782,7 +7980,7 @@ class PlainYearMonth {
       let resolvedYear = yearVal;
       const _calValidErasYMF = VALID_ERAS[calId];
       if (_calValidErasYMF && _calValidErasYMF.size > 0) {
-        const eraFields = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
+        const eraFields: any = { year: yearVal, era: arg.era, eraYear: toInteger(arg.eraYear) };
         resolveEraYear(eraFields, calId);
         resolvedYear = eraFields.year;
       }
@@ -7850,13 +8048,13 @@ class PlainYearMonth {
       }
       // Helper: verify that a PlainYearMonth represents a valid calendar month
       // whose first day is within the representable ISO date range.
-      function validateYearMonthRange(ymResult) {
+      function validateYearMonthRange(ymResult: any): void {
         const ymStr = ymResult.toString();
         const m = ymStr.match(/^([+-]?\d{4,6})-(\d{2})-(\d{2})/);
         if (!m) return;
-        const rY = parseInt(m[1], 10),
-          rM = parseInt(m[2], 10),
-          rD = parseInt(m[3], 10);
+        const rY = parseInt(m[1]!, 10),
+          rM = parseInt(m[2]!, 10),
+          rD = parseInt(m[3]!, 10);
         // Try to create a PlainDate at the reference ISO date
         try {
           const check = new NapiPlainDate(rY, rM, rD, cal);
@@ -7926,8 +8124,8 @@ class PlainYearMonth {
         const ymR = new PlainYearMonth(ymInner);
         ymR._calId = calId;
         return ymR;
-      } catch (e) {
-        if (e instanceof RangeError && e.message === 'PlainYearMonth outside representable range') throw e;
+      } catch (e: any) {
+        if (e instanceof RangeError && (e as any).message === 'PlainYearMonth outside representable range') throw e;
         if (!(e instanceof RangeError)) throw e;
         // At extreme date ranges, calendarDateToISO may fail or return wrong
         // coordinates. Fall back: scan valid ISO dates to find one where NAPI
@@ -7954,7 +8152,7 @@ class PlainYearMonth {
             // to the target calendar month.
             for (let id = 1; id <= 28; id++) {
               try {
-                const probe = new NapiPlainYearMonth(iy, im, cal, id);
+                const probe = new NapiPlainYearMonth(iy as number, im as number, cal, id);
                 if (probe.year === calYear && probe.month === constrainedMonth) {
                   // Verify: at the MIN boundary, check that we're at the actual
                   // start of the calendar month (day 1). If the NapiPlainYearMonth's
@@ -7963,7 +8161,7 @@ class PlainYearMonth {
                   if (iy === -271821) {
                     const probeStr = probe.toString();
                     const pmatch = probeStr.match(/^[+-]?\d{4,6}-\d{2}-(\d{2})/);
-                    if (pmatch && parseInt(pmatch[1], 10) !== id) {
+                    if (pmatch && parseInt(pmatch[1]!, 10) !== id) {
                       // The reference day in the output doesn't match what we requested,
                       // meaning it was clamped — calendar month started before ISO min
                       // Actually just check: try creating a PlainDate at the probe's reference
@@ -8006,7 +8204,7 @@ class PlainYearMonth {
     throw new TypeError('Invalid argument for PlainYearMonth.from()');
   }
 
-  static compare(one, two) {
+  static compare(one: any, two: any): number {
     const a = toNapiPlainYearMonth(one);
     const b = toNapiPlainYearMonth(two);
     return NapiPlainYearMonth.compare(a, b);
@@ -8025,15 +8223,27 @@ class PlainYearMonth {
     const calId = getRealCalendarId(this);
     const v = this._inner.era;
     if (v === null) return undefined;
-    return resolveEraForCalendar(calId, this._inner.year, v, this._inner.eraYear, this._inner.month, this._inner.day)
-      .era;
+    return resolveEraForCalendar(
+      calId,
+      this._inner.year,
+      v,
+      this._inner.eraYear,
+      this._inner.month,
+      (this._inner as any).day,
+    ).era;
   }
   get eraYear() {
     const calId = getRealCalendarId(this);
     const v = this._inner.eraYear;
     if (v === null) return undefined;
-    return resolveEraForCalendar(calId, this._inner.year, this._inner.era, v, this._inner.month, this._inner.day)
-      .eraYear;
+    return resolveEraForCalendar(
+      calId,
+      this._inner.year,
+      this._inner.era,
+      v,
+      this._inner.month,
+      (this._inner as any).day,
+    ).eraYear;
   }
   get daysInYear() {
     return this._inner.daysInYear;
@@ -8054,7 +8264,7 @@ class PlainYearMonth {
     return getRealCalendarId(this);
   }
 
-  with(fields, options) {
+  with(fields: any, options?: any): any {
     requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     validateWithFields(fields, null, 'PlainYearMonth');
     const calId = getRealCalendarId(this);
@@ -8104,7 +8314,7 @@ class PlainYearMonth {
     if (monthRaw !== undefined && _trunc(monthRaw) < 1) throw new RangeError(`month ${_trunc(monthRaw)} out of range`);
     // Per spec: read overflow option AFTER basic field validation, BEFORE algorithmic validation
     const overflow = extractOverflow(options);
-    const merged = { year, era, eraYear };
+    const merged: any = { year, era, eraYear };
     resolveEraYear(merged, calId);
     const targetYear = merged.year;
     let month;
@@ -8155,7 +8365,7 @@ class PlainYearMonth {
     return ymW;
   }
 
-  add(durationArg, options) {
+  add(durationArg: any, options?: any): any {
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -8165,7 +8375,7 @@ class PlainYearMonth {
     );
   }
 
-  subtract(durationArg, options) {
+  subtract(durationArg: any, options?: any): any {
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -8175,7 +8385,7 @@ class PlainYearMonth {
     );
   }
 
-  until(other, options) {
+  until(other: any, options?: any): Duration {
     const otherInner = toNapiPlainYearMonth(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -8197,7 +8407,7 @@ class PlainYearMonth {
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
 
-  since(other, options) {
+  since(other: any, options?: any): Duration {
     const otherInner = toNapiPlainYearMonth(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -8217,12 +8427,12 @@ class PlainYearMonth {
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
 
-  equals(other) {
+  equals(other: any): boolean {
     const otherInner = toNapiPlainYearMonth(other);
     return this._inner.equals(otherInner);
   }
 
-  toPlainDate(fields) {
+  toPlainDate(fields: any): PlainDate {
     requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     if (typeof fields !== 'object' || fields === null) {
       throw new TypeError('day is required');
@@ -8242,17 +8452,17 @@ class PlainYearMonth {
     );
   }
 
-  toString(options) {
+  toString(options?: any): string {
     if (options !== undefined) validateOptions(options);
     const dc = options ? mapDisplayCalendar(options.calendarName) : undefined;
-    return this._inner.toString(dc);
+    return this._inner.toString(dc as any);
   }
 
   toJSON() {
     requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return this.toString();
   }
-  toLocaleString(locales, options) {
+  toLocaleString(locales?: any, options?: any): string {
     requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     if (options !== undefined && options !== null && typeof options === 'object') {
       if (options.timeStyle !== undefined) {
@@ -8274,7 +8484,7 @@ class PlainYearMonth {
     }
     const ms = _temporalToEpochMs(this);
     if (ms !== undefined) {
-      let opts;
+      let opts: any;
       if (options !== undefined && options !== null && typeof options === 'object') {
         opts = Object.assign({}, options);
       } else {
@@ -8312,7 +8522,7 @@ class PlainYearMonth {
         opts.month = 'numeric';
       }
       const dtf = new Intl.DateTimeFormat(locales, opts);
-      return _origFormatGetter.call(dtf)(ms);
+      return _origFormatGetter!.call(dtf)(ms);
     }
     return this.toString();
   }
@@ -8323,7 +8533,7 @@ class PlainYearMonth {
 
   // Symbol.toStringTag defined as data property below
 
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](v: any): boolean {
     return (
       v !== null && v !== undefined && typeof v === 'object' && '_inner' in v && v._inner instanceof NapiPlainYearMonth
     );
@@ -8335,7 +8545,9 @@ class PlainYearMonth {
 // ═══════════════════════════════════════════════════════════════
 
 class PlainMonthDay {
-  constructor(month, day, calendar, referenceYear) {
+  _inner!: NapiPlainMonthDayT;
+  _calId?: string;
+  constructor(month: any, day?: any, calendar?: any, referenceYear?: any) {
     if (month instanceof NapiPlainMonthDay) {
       this._inner = month;
     } else {
@@ -8354,7 +8566,7 @@ class PlainMonthDay {
     _wrapperSet.add(this);
   }
 
-  static from(arg, options) {
+  static from(arg: any, options?: any): any {
     if (typeof arg === 'string') {
       rejectTooManyFractionalSeconds(arg);
       const inner = call(() => NapiPlainMonthDay.from(arg));
@@ -8403,7 +8615,7 @@ class PlainMonthDay {
       if (calSupportsErasForMD && arg.era !== undefined && arg.eraYear !== undefined) {
         const eraYearNum = toInteger(arg.eraYear);
         if (eraYearNum !== undefined) rejectInfinity(eraYearNum, 'eraYear');
-        const eraOnlyFields = { era: arg.era, eraYear: eraYearNum };
+        const eraOnlyFields: any = { era: arg.era, eraYear: eraYearNum };
         resolveEraYear(eraOnlyFields, mdFromCalId);
         if (yearVal !== undefined && eraOnlyFields.year !== undefined && _trunc(yearVal) !== eraOnlyFields.year) {
           throw new RangeError(
@@ -8517,7 +8729,7 @@ class PlainMonthDay {
             30,
             31,
           ];
-          if (checkDay > daysInMonth[checkMonth - 1]) checkDay = daysInMonth[checkMonth - 1];
+          if (checkDay > daysInMonth[checkMonth - 1]!) checkDay = daysInMonth[checkMonth - 1]!;
         }
         // Always use 1972 as reference year for ISO calendar
         return new PlainMonthDay(call(() => new NapiPlainMonthDay(checkMonth, checkDay, cal, 1972)));
@@ -8528,7 +8740,7 @@ class PlainMonthDay {
       if (calDay < 1) throw new RangeError(`day ${calDay} out of range`);
       if (calMonth < 1) throw new RangeError(`month ${calMonth} out of range`);
       // Use year for reference if provided
-      let refCalYear = yearVal !== undefined ? _trunc(yearVal) : undefined;
+      const refCalYear = yearVal !== undefined ? _trunc(yearVal) : undefined;
       // Per spec: if the provided year converts to an ISO year outside the representable
       // range, throw RangeError immediately (don't try to find a reference year)
       if (refCalYear !== undefined) {
@@ -8558,7 +8770,7 @@ class PlainMonthDay {
       }
       // Also check era/eraYear-resolved year for out-of-range
       if (refCalYear === undefined && calSupportsErasForMD && arg.era !== undefined && arg.eraYear !== undefined) {
-        const eraFields = { era: arg.era, eraYear: toInteger(arg.eraYear) };
+        const eraFields: any = { era: arg.era, eraYear: toInteger(arg.eraYear) };
         resolveEraYear(eraFields, mdFromCalId);
         if (eraFields.year !== undefined) {
           let estimatedIsoEra = eraFields.year;
@@ -8613,8 +8825,8 @@ class PlainMonthDay {
       if (ISO_MONTH_ALIGNED_CALENDARS.has(mdFromCalId)) {
         // For month-aligned calendars, ISO month = calendar month, use 1972 as ref
         const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        const maxDay = calMonth >= 1 && calMonth <= 12 ? daysInMonth[calMonth - 1] : 31;
-        if (overflow === 'Reject' && calDay > maxDay) {
+        const maxDay = calMonth >= 1 && calMonth <= 12 ? daysInMonth[calMonth - 1]! : 31;
+        if (overflow === 'Reject' && calDay > maxDay!) {
           throw new RangeError(`day ${calDay} out of range for month ${calMonth} (max ${maxDay})`);
         }
         calDay = Math.min(calDay, maxDay);
@@ -8691,7 +8903,7 @@ class PlainMonthDay {
         candidates.push({ tryCalYear, yearMonth, dim });
       }
       // Constrain day to max possible for this monthCode across all years
-      let constrainedDay = Math.min(calDay, maxDim || calDay);
+      const constrainedDay = Math.min(calDay, maxDim || calDay);
       // Overflow check
       if (overflow === 'Reject' && calDay > maxDim) {
         throw new RangeError(`day ${calDay} out of range for month ${calMonth} (max ${maxDim})`);
@@ -8801,7 +9013,7 @@ class PlainMonthDay {
     return getRealCalendarId(this);
   }
 
-  with(fields, options) {
+  with(fields: any, options?: any): any {
     requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     validateWithFields(fields, null, 'PlainMonthDay');
     const calId = getRealCalendarId(this);
@@ -8849,7 +9061,7 @@ class PlainMonthDay {
       effectiveMonthCode = this.monthCode;
       const code = this.monthCode;
       const m = code.match(/^M(\d{2})L?$/);
-      if (m) month = parseInt(m[1], 10);
+      if (m) month = parseInt(m[1]!, 10);
     }
     if (effectiveMonthCode === undefined) effectiveMonthCode = this.monthCode;
     // For ISO calendar, apply overflow using year (if provided) to constrain day
@@ -8875,7 +9087,7 @@ class PlainMonthDay {
           30,
           31,
         ];
-        if (constrainedDay > daysInMonth[constrainedMonth - 1]) constrainedDay = daysInMonth[constrainedMonth - 1];
+        if (constrainedDay > daysInMonth[constrainedMonth - 1]!) constrainedDay = daysInMonth[constrainedMonth - 1]!;
       }
       return new PlainMonthDay(call(() => new NapiPlainMonthDay(constrainedMonth, constrainedDay, cal, 1972)));
     }
@@ -8886,12 +9098,12 @@ class PlainMonthDay {
     );
   }
 
-  equals(other) {
+  equals(other: any): boolean {
     const otherInner = toNapiPlainMonthDay(other);
     return this._inner.equals(otherInner);
   }
 
-  toPlainDate(fields) {
+  toPlainDate(fields: any): PlainDate {
     requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     if (typeof fields !== 'object' || fields === null) {
       throw new TypeError('year is required');
@@ -8912,7 +9124,7 @@ class PlainMonthDay {
       throw new TypeError('year is required');
     }
     // Handle era/eraYear
-    const resolvedFields = { year: yearCoerced };
+    const resolvedFields: any = { year: yearCoerced };
     if (calSupportsEras) {
       resolvedFields.era = _era;
       resolvedFields.eraYear = _eraYear !== undefined ? toIntegerWithTruncation(_eraYear) : undefined;
@@ -8929,17 +9141,17 @@ class PlainMonthDay {
     return wrapPlainDate(call(() => new NapiPlainDate(iso.isoYear, iso.isoMonth, iso.isoDay, cal)));
   }
 
-  toString(options) {
+  toString(options?: any): string {
     if (options !== undefined) validateOptions(options);
     const dc = options ? mapDisplayCalendar(options.calendarName) : undefined;
-    return this._inner.toString(dc);
+    return this._inner.toString(dc as any);
   }
 
   toJSON() {
     requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     return this.toString();
   }
-  toLocaleString(locales, options) {
+  toLocaleString(locales?: any, options?: any): string {
     requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     if (options !== undefined && options !== null && typeof options === 'object') {
       if (options.timeStyle !== undefined) {
@@ -8960,7 +9172,7 @@ class PlainMonthDay {
     }
     const ms = _temporalToEpochMs(this);
     if (ms !== undefined) {
-      let opts;
+      let opts: any;
       if (options !== undefined && options !== null && typeof options === 'object') {
         opts = Object.assign({}, options);
       } else {
@@ -8998,7 +9210,7 @@ class PlainMonthDay {
         opts.day = 'numeric';
       }
       const dtf = new Intl.DateTimeFormat(locales, opts);
-      return _origFormatGetter.call(dtf)(ms);
+      return _origFormatGetter!.call(dtf)(ms);
     }
     return this.toString();
   }
@@ -9009,7 +9221,7 @@ class PlainMonthDay {
 
   // Symbol.toStringTag defined as data property below
 
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](v: any): boolean {
     return (
       v !== null && v !== undefined && typeof v === 'object' && '_inner' in v && v._inner instanceof NapiPlainMonthDay
     );
@@ -9020,7 +9232,7 @@ class PlainMonthDay {
 // The spec requires specific .length values that may differ from
 // the JS formal parameter count due to internal constructor overloading.
 
-function setLength(fn, len) {
+function setLength(fn: any, len: number): void {
   Object.defineProperty(fn, 'length', { value: len, writable: false, enumerable: false, configurable: true });
 }
 
@@ -9034,7 +9246,7 @@ for (const [cls, tag] of [
   [Instant, 'Temporal.Instant'],
   [PlainYearMonth, 'Temporal.PlainYearMonth'],
   [PlainMonthDay, 'Temporal.PlainMonthDay'],
-]) {
+] as [any, string][]) {
   Object.defineProperty(cls.prototype, Symbol.toStringTag, {
     value: tag,
     writable: false,
@@ -9190,7 +9402,7 @@ setLength(PlainMonthDay.prototype.valueOf, 0);
 //  Temporal.Now
 // ═══════════════════════════════════════════════════════════════
 
-const Now = {};
+const Now: Record<string, any> = {};
 Object.defineProperty(Now, Symbol.toStringTag, {
   value: 'Temporal.Now',
   writable: false,
@@ -9199,13 +9411,13 @@ Object.defineProperty(Now, Symbol.toStringTag, {
 });
 
 // Use a helper object to create method-definition functions (non-constructable)
-function _defineNowMethod(name, fn) {
+function _defineNowMethod(name: string, fn: any): void {
   setLength(fn, 0);
   Object.defineProperty(Now, name, { value: fn, writable: true, enumerable: false, configurable: true });
 }
 
 // Methods created via concise method syntax are non-constructable
-const _nowMethods = {
+const _nowMethods: Record<string, (...args: any[]) => any> = {
   instant() {
     return wrapInstant(binding.nowInstant());
   },
@@ -9240,9 +9452,9 @@ for (const name of ['instant', 'timeZoneId', 'zonedDateTimeISO', 'plainDateTimeI
 //  Date.prototype.toTemporalInstant
 // ═══════════════════════════════════════════════════════════════
 
-if (!Date.prototype.toTemporalInstant) {
+if (!(Date.prototype as any).toTemporalInstant) {
   const _toTemporalInstant = {
-    toTemporalInstant() {
+    toTemporalInstant(this: Date) {
       // Per spec, throw if this is not a Date object
       if (!(this instanceof Date)) {
         throw new TypeError('Date.prototype.toTemporalInstant requires a Date object');
@@ -9255,7 +9467,7 @@ if (!Date.prototype.toTemporalInstant) {
       return new Instant(BigInt(ms) * 1000000n);
     },
   };
-  Object.defineProperty(Date.prototype, 'toTemporalInstant', {
+  Object.defineProperty(Date.prototype as any, 'toTemporalInstant', {
     value: _toTemporalInstant.toTemporalInstant,
     writable: true,
     enumerable: false,
@@ -9282,7 +9494,7 @@ const _DATE_TIME_COMPONENT_OPTS = [
   'dateStyle',
   'timeStyle',
 ];
-function _hasDateTimeOptions(opts) {
+function _hasDateTimeOptions(opts: any): boolean {
   if (!opts || typeof opts !== 'object') return false;
   for (const key of _DATE_TIME_COMPONENT_OPTS) {
     if (opts[key] !== undefined) return true;
@@ -9291,7 +9503,7 @@ function _hasDateTimeOptions(opts) {
 }
 
 // Helper: extract ISO year/month/day/hour/minute/second from a Temporal object
-function _temporalToISOFields(temporalObj) {
+function _temporalToISOFields(temporalObj: any): ISOFields | undefined {
   if (!temporalObj || typeof temporalObj !== 'object') return undefined;
   const inner = temporalObj._inner;
   if (!inner) return undefined;
@@ -9300,20 +9512,20 @@ function _temporalToISOFields(temporalObj) {
     const m = str.match(/^(-?\d+|\+?\d+)-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
     if (m)
       return {
-        year: parseInt(m[1], 10),
-        month: parseInt(m[2], 10),
-        day: parseInt(m[3], 10),
-        hour: parseInt(m[4], 10),
-        minute: parseInt(m[5], 10),
-        second: parseInt(m[6], 10),
+        year: parseInt(m[1]!, 10),
+        month: parseInt(m[2]!, 10),
+        day: parseInt(m[3]!, 10),
+        hour: parseInt(m[4]!, 10),
+        minute: parseInt(m[5]!, 10),
+        second: parseInt(m[6]!, 10),
       };
     return {
       year: inner.year,
       month: inner.month,
       day: inner.day,
-      hour: inner.hour,
-      minute: inner.minute,
-      second: inner.second,
+      hour: inner.hour as any,
+      minute: inner.minute as any,
+      second: inner.second as any,
     };
   }
   if (inner instanceof NapiPlainDate) {
@@ -9321,9 +9533,9 @@ function _temporalToISOFields(temporalObj) {
     const m = str.match(/^(-?\d+|\+?\d+)-(\d{2})-(\d{2})/);
     if (m)
       return {
-        year: parseInt(m[1], 10),
-        month: parseInt(m[2], 10),
-        day: parseInt(m[3], 10),
+        year: parseInt(m[1]!, 10),
+        month: parseInt(m[2]!, 10),
+        day: parseInt(m[3]!, 10),
         hour: 12,
         minute: 0,
         second: 0,
@@ -9335,15 +9547,15 @@ function _temporalToISOFields(temporalObj) {
     const m3 = str.match(/(-?\d+|\+?\d+)-(\d{2})-(\d{2})/);
     if (m3)
       return {
-        year: parseInt(m3[1], 10),
-        month: parseInt(m3[2], 10),
-        day: parseInt(m3[3], 10),
+        year: parseInt(m3[1]!, 10),
+        month: parseInt(m3[2]!, 10),
+        day: parseInt(m3[3]!, 10),
         hour: 12,
         minute: 0,
         second: 0,
       };
     const m2 = str.match(/(-?\d+|\+?\d+)-(\d{2})/);
-    if (m2) return { year: parseInt(m2[1], 10), month: parseInt(m2[2], 10), day: 1, hour: 12, minute: 0, second: 0 };
+    if (m2) return { year: parseInt(m2[1]!, 10), month: parseInt(m2[2]!, 10), day: 1, hour: 12, minute: 0, second: 0 };
     return undefined;
   }
   if (inner instanceof NapiPlainMonthDay) {
@@ -9352,14 +9564,14 @@ function _temporalToISOFields(temporalObj) {
     if (m) {
       if (m.length === 4)
         return {
-          year: parseInt(m[1], 10),
-          month: parseInt(m[2], 10),
-          day: parseInt(m[3], 10),
+          year: parseInt(m[1]!, 10),
+          month: parseInt(m[2]!, 10),
+          day: parseInt(m[3]!, 10),
           hour: 12,
           minute: 0,
           second: 0,
         };
-      return { year: 1972, month: parseInt(m[1], 10), day: parseInt(m[2], 10), hour: 12, minute: 0, second: 0 };
+      return { year: 1972, month: parseInt(m[1]!, 10), day: parseInt(m[2]!, 10), hour: 12, minute: 0, second: 0 };
     }
     return undefined;
   }
@@ -9370,20 +9582,23 @@ function _temporalToISOFields(temporalObj) {
 }
 
 // Check if an ISO year is outside the range representable by Date
-function _isExtremeYear(year) {
+function _isExtremeYear(year: number): boolean {
   return year < -271820 || year > 275759;
 }
 
 // Tomohiko Sakamoto's algorithm for day-of-week (0=Sunday..6=Saturday)
-function _dayOfWeek(y, m, d) {
+function _dayOfWeek(y: number, m: number, d: number): number {
   const t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
   if (m < 3) y -= 1;
-  return (((y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) + t[m - 1] + d) % 7) + 7) % 7;
+  return (((y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) + t[m - 1]! + d) % 7) + 7) % 7;
 }
 
 // Format a Temporal object that is outside Date range by shifting the year
 // Returns formatted string or undefined if not applicable
-function _formatExtremeTemporalParts(dtf, isoFields) {
+function _formatExtremeTemporalParts(
+  dtf: Intl.DateTimeFormat,
+  isoFields: ISOFields,
+): Array<{ type: string; value: string }> | undefined {
   const { year, month, day, hour, minute, second } = isoFields;
   // Shift to a year within Date range preserving leap year cycle
   const shiftedYear = 2000 + (((year % 400) + 400) % 400);
@@ -9406,7 +9621,7 @@ function _formatExtremeTemporalParts(dtf, isoFields) {
     // Format all 7 days to get weekday names in the locale
     const resolved = dtf.resolvedOptions();
     if (resolved.weekday) {
-      weekdayMap = {};
+      weekdayMap = {} as Record<number, string>;
       // Find a base Monday (Jan 1, 2024 was a Monday)
       for (let i = 0; i < 7; i++) {
         const wd = new Date(Date.UTC(2024, 0, i + 1, 12)); // Jan 1=Mon, Jan 7=Sun
@@ -9447,14 +9662,14 @@ function _formatExtremeTemporalParts(dtf, isoFields) {
 }
 
 // Format extreme Temporal as string
-function _formatExtremeTemporal(dtf, isoFields) {
+function _formatExtremeTemporal(dtf: Intl.DateTimeFormat, isoFields: ISOFields): string | undefined {
   const parts = _formatExtremeTemporalParts(dtf, isoFields);
   if (!parts) return undefined;
   return parts.map((p) => p.value).join('');
 }
 
 // Helper: convert a Temporal object to epoch milliseconds for Intl formatting
-function _temporalToEpochMs(temporalObj) {
+function _temporalToEpochMs(temporalObj: any): number | undefined {
   if (!temporalObj || typeof temporalObj !== 'object') return undefined;
   const inner = temporalObj._inner;
   if (!inner) return undefined;
@@ -9467,7 +9682,11 @@ function _temporalToEpochMs(temporalObj) {
   if (inner instanceof NapiPlainDateTime) {
     // Interpret as UTC for formatting purposes (the DTF will apply its timezone)
     const d = new Date(0);
-    d.setUTCFullYear(inner.isoYear || inner.year, (inner.isoMonth || inner.month) - 1, inner.isoDay || inner.day);
+    d.setUTCFullYear(
+      (inner as any).isoYear || inner.year,
+      ((inner as any).isoMonth || inner.month) - 1,
+      (inner as any).isoDay || inner.day,
+    );
     d.setUTCHours(inner.hour, inner.minute, inner.second, inner.millisecond);
     return d.getTime();
   }
@@ -9477,7 +9696,7 @@ function _temporalToEpochMs(temporalObj) {
     const str = inner.toString();
     const m = str.match(/^(-?\d+|\+\d+)-(\d{2})-(\d{2})/);
     if (m) {
-      d.setUTCFullYear(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+      d.setUTCFullYear(parseInt(m[1]!, 10), parseInt(m[2]!, 10) - 1, parseInt(m[3]!, 10));
     } else {
       d.setUTCFullYear(inner.year, inner.month - 1, inner.day);
     }
@@ -9498,7 +9717,7 @@ function _temporalToEpochMs(temporalObj) {
     const m3 = str.match(/(-?\d+|\+\d+)-(\d{2})-(\d{2})/);
     if (m3) {
       const d = new Date(0);
-      d.setUTCFullYear(parseInt(m3[1], 10), parseInt(m3[2], 10) - 1, parseInt(m3[3], 10));
+      d.setUTCFullYear(parseInt(m3[1]!, 10), parseInt(m3[2]!, 10) - 1, parseInt(m3[3]!, 10));
       d.setUTCHours(12, 0, 0, 0);
       return d.getTime();
     }
@@ -9506,7 +9725,7 @@ function _temporalToEpochMs(temporalObj) {
     const m2 = str.match(/(-?\d+|\+\d+)-(\d{2})/);
     if (m2) {
       const d = new Date(0);
-      d.setUTCFullYear(parseInt(m2[1], 10), parseInt(m2[2], 10) - 1, 1);
+      d.setUTCFullYear(parseInt(m2[1]!, 10), parseInt(m2[2]!, 10) - 1, 1);
       d.setUTCHours(12, 0, 0, 0);
       return d.getTime();
     }
@@ -9519,9 +9738,9 @@ function _temporalToEpochMs(temporalObj) {
     if (m) {
       const d = new Date(0);
       if (m.length === 4) {
-        d.setUTCFullYear(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+        d.setUTCFullYear(parseInt(m[1]!, 10), parseInt(m[2]!, 10) - 1, parseInt(m[3]!, 10));
       } else {
-        d.setUTCFullYear(1972, parseInt(m[1], 10) - 1, parseInt(m[2], 10));
+        d.setUTCFullYear(1972, parseInt(m[1]!, 10) - 1, parseInt(m[2]!, 10));
       }
       d.setUTCHours(12, 0, 0, 0);
       return d.getTime();
@@ -9532,14 +9751,16 @@ function _temporalToEpochMs(temporalObj) {
 }
 
 // Patch Intl.DateTimeFormat to handle Temporal objects
-const _origFormatDesc = Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, 'format');
-const _origFormatGetter = _origFormatDesc && _origFormatDesc.get;
+const _origFormatDesc = Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, 'format') as
+  | PropertyDescriptor
+  | undefined;
+const _origFormatGetter = _origFormatDesc && (_origFormatDesc.get as () => (date?: number | Date) => string);
 const _origFormatToParts = Intl.DateTimeFormat.prototype.formatToParts;
 
 // Helper: check if resolved DTF options indicate user-specified component options
 // When no component options are specified, DateTimeFormat defaults to {year: "numeric", month: "numeric", day: "numeric"}
 // We detect this default pattern and treat it as "no user options"
-function _resolvedHasUserComponents(resolvedOpts) {
+function _resolvedHasUserComponents(resolvedOpts: any): boolean {
   if (resolvedOpts.dateStyle || resolvedOpts.timeStyle) return true;
   if (
     resolvedOpts.hour ||
@@ -9560,7 +9781,7 @@ function _resolvedHasUserComponents(resolvedOpts) {
 
 // Helper: create a UTC-forced DTF for "wall-clock" Temporal types (PlainDate, PlainDateTime, PlainTime)
 // Also creates a DTF with defaults for Instant/wall-clock types when needed
-function _getTemporalDtf(dtf, temporalObj) {
+function _getTemporalDtf(dtf: Intl.DateTimeFormat, temporalObj: any): Intl.DateTimeFormat {
   const inner = temporalObj._inner;
   const isWallClock =
     inner instanceof NapiPlainDate ||
@@ -9571,7 +9792,7 @@ function _getTemporalDtf(dtf, temporalObj) {
   if (isWallClock) {
     // Need a new DTF with UTC timezone to avoid timezone shifts
     const resolvedOpts = dtf.resolvedOptions();
-    const opts = {};
+    const opts: any = {};
     for (const key of [
       'locale',
       'calendar',
@@ -9592,7 +9813,7 @@ function _getTemporalDtf(dtf, temporalObj) {
       'hourCycle',
       'timeZoneName',
     ]) {
-      if (resolvedOpts[key] !== undefined) opts[key] = resolvedOpts[key];
+      if ((resolvedOpts as any)[key] !== undefined) (opts as any)[key] = (resolvedOpts as any)[key];
     }
     opts.timeZone = 'UTC';
     // Always filter out incompatible options for the Temporal type
@@ -9614,7 +9835,7 @@ function _getTemporalDtf(dtf, temporalObj) {
       delete opts.month;
       delete opts.day;
       delete opts.weekday;
-      delete opts.era;
+      delete (opts as any).era;
       if (opts.dateStyle) {
         delete opts.dateStyle;
       }
@@ -9714,22 +9935,22 @@ function _getTemporalDtf(dtf, temporalObj) {
         'era',
         'timeZoneName',
       ]) {
-        if (resolvedOpts[key] !== undefined) opts[key] = resolvedOpts[key];
+        if ((resolvedOpts as any)[key] !== undefined) (opts as any)[key] = (resolvedOpts as any)[key];
       }
-      opts.year = 'numeric';
-      opts.month = 'numeric';
-      opts.day = 'numeric';
-      opts.hour = 'numeric';
-      opts.minute = 'numeric';
-      opts.second = 'numeric';
-      return new Intl.DateTimeFormat(resolvedOpts.locale, opts);
+      (opts as any).year = 'numeric';
+      (opts as any).month = 'numeric';
+      (opts as any).day = 'numeric';
+      (opts as any).hour = 'numeric';
+      (opts as any).minute = 'numeric';
+      (opts as any).second = 'numeric';
+      return new Intl.DateTimeFormat((resolvedOpts as any).locale, opts);
     }
   }
   return dtf;
 }
 
 // Helper: format a Temporal object as string, handling extreme dates.
-function _formatTemporalAsString(dtf, temporalObj) {
+function _formatTemporalAsString(dtf: Intl.DateTimeFormat, temporalObj: any): string | undefined {
   const utcDtf = _getTemporalDtf(dtf, temporalObj);
   const isoFields = _temporalToISOFields(temporalObj);
   // Check if this is an extreme date outside Date range
@@ -9739,13 +9960,13 @@ function _formatTemporalAsString(dtf, temporalObj) {
   const ms = _temporalToEpochMs(temporalObj);
   if (ms === undefined) return undefined;
   if (utcDtf !== dtf) {
-    return _origFormatGetter.call(utcDtf)(ms);
+    return _origFormatGetter!.call(utcDtf)(ms);
   }
-  return _origFormatGetter.call(dtf)(ms);
+  return _origFormatGetter!.call(dtf)(ms);
 }
 
 // Helper: formatToParts for a Temporal object, handling extreme dates
-function _formatTemporalToParts(dtf, temporalObj) {
+function _formatTemporalToParts(dtf: Intl.DateTimeFormat, temporalObj: any): any[] | undefined {
   const utcDtf = _getTemporalDtf(dtf, temporalObj);
   const isoFields = _temporalToISOFields(temporalObj);
   if (isoFields && _isExtremeYear(isoFields.year)) {
@@ -9759,10 +9980,10 @@ function _formatTemporalToParts(dtf, temporalObj) {
 if (_origFormatGetter) {
   Object.defineProperty(Intl.DateTimeFormat.prototype, 'format', {
     get() {
-      const dtf = this;
-      const origFn = _origFormatGetter.call(dtf);
+      const dtf = this as Intl.DateTimeFormat;
+      const origFn = _origFormatGetter!.call(dtf);
       // Return a bound function that handles Temporal objects
-      const fn = function (arg) {
+      const fn = function (arg: any) {
         if (arg !== undefined && typeof arg === 'object' && arg !== null && '_inner' in arg) {
           _rejectUnsupportedTemporalDTF(arg, 'format', dtf);
           const result = _formatTemporalAsString(dtf, arg);
@@ -9778,7 +9999,7 @@ if (_origFormatGetter) {
 }
 
 if (_origFormatToParts) {
-  Intl.DateTimeFormat.prototype.formatToParts = function formatToParts(arg) {
+  Intl.DateTimeFormat.prototype.formatToParts = function formatToParts(this: Intl.DateTimeFormat, arg: any) {
     if (arg !== undefined && typeof arg === 'object' && arg !== null && '_inner' in arg) {
       _rejectUnsupportedTemporalDTF(arg, 'formatToParts', this);
       const parts = _formatTemporalToParts(this, arg);
@@ -9789,10 +10010,12 @@ if (_origFormatToParts) {
 }
 
 // Patch formatRange and formatRangeToParts
-const _origFormatRange = Intl.DateTimeFormat.prototype.formatRange;
-const _origFormatRangeToParts = Intl.DateTimeFormat.prototype.formatRangeToParts;
+const _origFormatRange = (Intl.DateTimeFormat.prototype as any).formatRange as ((...args: any[]) => string) | undefined;
+const _origFormatRangeToParts = (Intl.DateTimeFormat.prototype as any).formatRangeToParts as
+  | ((...args: any[]) => any[])
+  | undefined;
 
-function _rejectUnsupportedTemporalDTF(arg, methodName, dtf) {
+function _rejectUnsupportedTemporalDTF(arg: any, methodName: string, dtf?: Intl.DateTimeFormat): void {
   if (arg !== undefined && typeof arg === 'object' && arg !== null && '_inner' in arg) {
     if (arg._inner instanceof NapiZonedDateTime) {
       throw new TypeError(`Intl.DateTimeFormat.${methodName}() does not support Temporal.ZonedDateTime`);
@@ -9845,7 +10068,7 @@ function _rejectUnsupportedTemporalDTF(arg, methodName, dtf) {
   }
 }
 
-function _getTemporalTypeKey(obj) {
+function _getTemporalTypeKey(obj: any): string | null {
   if (!obj || typeof obj !== 'object' || !('_inner' in obj)) return null;
   const inner = obj._inner;
   if (inner instanceof NapiPlainDate) return 'PlainDate';
@@ -9860,7 +10083,7 @@ function _getTemporalTypeKey(obj) {
 }
 
 // Per spec: ToDateTimeFormattable calls ToNumber on non-Temporal objects
-function _toDateTimeFormattable(val) {
+function _toDateTimeFormattable(val: any): any {
   if (val !== undefined && typeof val === 'object' && val !== null && '_inner' in val) {
     return val; // IsTemporalObject -> return as-is
   }
@@ -9869,7 +10092,7 @@ function _toDateTimeFormattable(val) {
 
 // Helper: get epoch ms for a range argument, handling extreme dates.
 // Returns { ms, isoFields, isTemporal } where ms may be undefined for extreme dates.
-function _rangeArgToMs(arg) {
+function _rangeArgToMs(arg: any): RangeInfo {
   const isTemporal = arg !== undefined && typeof arg === 'object' && arg !== null && '_inner' in arg;
   if (!isTemporal) return { ms: arg, isoFields: null, isTemporal: false };
   const isoFields = _temporalToISOFields(arg);
@@ -9882,7 +10105,14 @@ function _rangeArgToMs(arg) {
 
 // Helper: format a range where one or both args may be extreme dates
 // Falls back to formatting each side separately with " – " separator
-function _formatExtremeRange(dtf, a, b, aInfo, bInfo, toParts) {
+function _formatExtremeRange(
+  dtf: Intl.DateTimeFormat,
+  a: any,
+  b: any,
+  aInfo: RangeInfo,
+  bInfo: RangeInfo,
+  toParts: boolean,
+): any {
   const utcDtfA = aInfo.isTemporal ? _getTemporalDtf(dtf, a) : dtf;
   const utcDtfB = bInfo.isTemporal ? _getTemporalDtf(dtf, b) : dtf;
 
@@ -9895,12 +10125,12 @@ function _formatExtremeRange(dtf, a, b, aInfo, bInfo, toParts) {
   // Format each side separately
   let partsA, partsB;
   if (aExtreme) {
-    partsA = _formatExtremeTemporalParts(utcDtfA, aInfo.isoFields);
+    partsA = _formatExtremeTemporalParts(utcDtfA, aInfo.isoFields!);
   } else {
     partsA = _origFormatToParts.call(utcDtfA, aInfo.ms);
   }
   if (bExtreme) {
-    partsB = _formatExtremeTemporalParts(utcDtfB, bInfo.isoFields);
+    partsB = _formatExtremeTemporalParts(utcDtfB, bInfo.isoFields!);
   } else {
     partsB = _origFormatToParts.call(utcDtfB, bInfo.ms);
   }
@@ -9922,7 +10152,7 @@ function _formatExtremeRange(dtf, a, b, aInfo, bInfo, toParts) {
 }
 
 if (_origFormatRange) {
-  Intl.DateTimeFormat.prototype.formatRange = function formatRange(a, b) {
+  (Intl.DateTimeFormat.prototype as any).formatRange = function formatRange(this: Intl.DateTimeFormat, a: any, b: any) {
     // Per spec: ToDateTimeFormattable is called on both args BEFORE type checking
     const aIsTemporal = a !== undefined && typeof a === 'object' && a !== null && '_inner' in a;
     const bIsTemporal = b !== undefined && typeof b === 'object' && b !== null && '_inner' in b;
@@ -9954,8 +10184,9 @@ if (_origFormatRange) {
     const extremeResult = _formatExtremeRange(this, fa, fb, aInfo, bInfo, false);
     if (extremeResult !== undefined) return extremeResult;
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let dtf = this;
-    let msA = aInfo.ms,
+    const msA = aInfo.ms,
       msB = bInfo.ms;
     if (aInfo.isTemporal) {
       dtf = _getTemporalDtf(this, fa);
@@ -9965,7 +10196,11 @@ if (_origFormatRange) {
 }
 
 if (_origFormatRangeToParts) {
-  Intl.DateTimeFormat.prototype.formatRangeToParts = function formatRangeToParts(a, b) {
+  (Intl.DateTimeFormat.prototype as any).formatRangeToParts = function formatRangeToParts(
+    this: Intl.DateTimeFormat,
+    a: any,
+    b: any,
+  ) {
     // Per spec: ToDateTimeFormattable is called on both args BEFORE type checking
     const aIsTemporal = a !== undefined && typeof a === 'object' && a !== null && '_inner' in a;
     const bIsTemporal = b !== undefined && typeof b === 'object' && b !== null && '_inner' in b;
@@ -9994,8 +10229,9 @@ if (_origFormatRangeToParts) {
     const extremeResult = _formatExtremeRange(this, fa, fb, aInfo, bInfo, true);
     if (extremeResult !== undefined) return extremeResult;
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let dtf = this;
-    let msA = aInfo.ms,
+    const msA = aInfo.ms,
       msB = bInfo.ms;
     if (aInfo.isTemporal) {
       dtf = _getTemporalDtf(this, fa);
@@ -10008,7 +10244,7 @@ if (_origFormatRangeToParts) {
 //  Temporal namespace
 // ═══════════════════════════════════════════════════════════════
 
-export const Temporal = {};
+export const Temporal: Record<string, any> = {};
 for (const [name, value] of [
   ['Duration', Duration],
   ['Instant', Instant],
@@ -10019,7 +10255,7 @@ for (const [name, value] of [
   ['PlainTime', PlainTime],
   ['PlainYearMonth', PlainYearMonth],
   ['ZonedDateTime', ZonedDateTime],
-]) {
+] as [string, any][]) {
   Object.defineProperty(Temporal, name, { value, writable: true, enumerable: false, configurable: true });
 }
 Object.defineProperty(Temporal, Symbol.toStringTag, {
@@ -10037,7 +10273,7 @@ if (typeof Intl !== 'undefined' && typeof Intl.DurationFormat === 'function') {
   // Extract duration fields from a Temporal Duration using internal slots
   // (not prototype getters), matching spec requirement that tainted getters
   // don't affect formatting.
-  function _extractDurationRecord(arg) {
+  function _extractDurationRecord(arg: any): Record<string, number> | null {
     // Check if it's a Temporal.Duration wrapper
     if (_isTemporalDuration(arg)) {
       // Read from _inner (NAPI object) directly, bypassing prototype getters
@@ -10074,7 +10310,7 @@ if (typeof Intl !== 'undefined' && typeof Intl.DurationFormat === 'function') {
   }
 
   // Parse an ISO 8601 duration string into a duration-like record
-  function _parseDurationString(str) {
+  function _parseDurationString(str: string): Record<string, number> | null {
     try {
       const d = Duration.from(str);
       return _extractDurationRecord(d);
@@ -10083,27 +10319,27 @@ if (typeof Intl !== 'undefined' && typeof Intl.DurationFormat === 'function') {
     }
   }
 
-  const _origDFFormat = Intl.DurationFormat.prototype.format;
-  const _origDFFormatToParts = Intl.DurationFormat.prototype.formatToParts;
+  const _origDFFormat = (Intl as any).DurationFormat.prototype.format as (...args: any[]) => string;
+  const _origDFFormatToParts = (Intl as any).DurationFormat.prototype.formatToParts as (...args: any[]) => any[];
 
-  Intl.DurationFormat.prototype.format = function format(duration) {
+  (Intl as any).DurationFormat.prototype.format = function format(duration: any) {
     const rec = _extractDurationRecord(duration);
-    if (rec) return _origDFFormat.call(this, rec);
+    if (rec) return _origDFFormat.call(this as any, rec);
     if (typeof duration === 'string') {
       const parsed = _parseDurationString(duration);
-      if (parsed) return _origDFFormat.call(this, parsed);
+      if (parsed) return _origDFFormat.call(this as any, parsed);
     }
-    return _origDFFormat.call(this, duration);
+    return _origDFFormat.call(this as any, duration);
   };
 
-  Intl.DurationFormat.prototype.formatToParts = function formatToParts(duration) {
+  (Intl as any).DurationFormat.prototype.formatToParts = function formatToParts(duration: any) {
     const rec = _extractDurationRecord(duration);
-    if (rec) return _origDFFormatToParts.call(this, rec);
+    if (rec) return _origDFFormatToParts.call(this as any, rec);
     if (typeof duration === 'string') {
       const parsed = _parseDurationString(duration);
-      if (parsed) return _origDFFormatToParts.call(this, parsed);
+      if (parsed) return _origDFFormatToParts.call(this as any, parsed);
     }
-    return _origDFFormatToParts.call(this, duration);
+    return _origDFFormatToParts.call(this as any, duration);
   };
 }
 
