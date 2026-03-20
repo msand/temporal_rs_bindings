@@ -554,7 +554,7 @@ dependencies = [
 
 [[package]]
 name = "temporal-napi"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "napi",
  "napi-build",
@@ -565,7 +565,7 @@ dependencies = [
 
 [[package]]
 name = "temporal-wasm"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "js-sys",
  "serde",
