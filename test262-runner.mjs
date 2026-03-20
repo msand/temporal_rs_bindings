@@ -290,6 +290,12 @@ function snapshotTemporal(Temporal) {
       });
     }
   }
+  // Snapshot built-in functions that some tests replace with throwing stubs
+  // (e.g., Duration/call-builtin.js replaces Number.isFinite and Math.sign)
+  snapshots.push({ obj: Number, name: 'isFinite', desc: Object.getOwnPropertyDescriptor(Number, 'isFinite') });
+  snapshots.push({ obj: Math, name: 'sign', desc: Object.getOwnPropertyDescriptor(Math, 'sign') });
+  snapshots.push({ obj: Math, name: 'trunc', desc: Object.getOwnPropertyDescriptor(Math, 'trunc') });
+  snapshots.push({ obj: Math, name: 'abs', desc: Object.getOwnPropertyDescriptor(Math, 'abs') });
   return snapshots;
 }
 
