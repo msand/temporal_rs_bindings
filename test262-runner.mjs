@@ -244,15 +244,15 @@ function snapshotTemporal(Temporal) {
     Temporal.PlainDateTime, Temporal.ZonedDateTime, Temporal.Instant,
     Temporal.PlainYearMonth, Temporal.PlainMonthDay,
   ];
-  // Snapshot Temporal namespace properties
-  for (const name of Object.getOwnPropertyNames(Temporal)) {
+  // Snapshot Temporal namespace properties (including symbol properties like @@toStringTag)
+  for (const name of [...Object.getOwnPropertyNames(Temporal), ...Object.getOwnPropertySymbols(Temporal)]) {
     snapshots.push({ obj: Temporal, name, desc: Object.getOwnPropertyDescriptor(Temporal, name) });
   }
   for (const cls of classes) {
     if (!cls) continue;
-    // Snapshot prototype properties
+    // Snapshot prototype properties (including symbol properties like @@toStringTag)
     if (cls.prototype) {
-      for (const name of Object.getOwnPropertyNames(cls.prototype)) {
+      for (const name of [...Object.getOwnPropertyNames(cls.prototype), ...Object.getOwnPropertySymbols(cls.prototype)]) {
         snapshots.push({ obj: cls.prototype, name, desc: Object.getOwnPropertyDescriptor(cls.prototype, name) });
       }
     }
@@ -270,11 +270,14 @@ function snapshotTemporal(Temporal) {
       desc: Object.getOwnPropertyDescriptor(Date.prototype, 'toTemporalInstant'),
     });
   }
-  // Snapshot Now methods
+  // Snapshot Now methods and symbol properties (including @@toStringTag)
   if (Temporal.Now) {
     for (const name of ['instant', 'timeZoneId', 'zonedDateTimeISO', 'plainDateTimeISO', 'plainDateISO', 'plainTimeISO']) {
       const desc = Object.getOwnPropertyDescriptor(Temporal.Now, name);
       if (desc) snapshots.push({ obj: Temporal.Now, name, desc });
+    }
+    for (const sym of Object.getOwnPropertySymbols(Temporal.Now)) {
+      snapshots.push({ obj: Temporal.Now, name: sym, desc: Object.getOwnPropertyDescriptor(Temporal.Now, sym) });
     }
   }
   return snapshots;
