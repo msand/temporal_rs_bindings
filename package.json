@@ -42,7 +42,8 @@
     "lint": "eslint lib/temporal.ts",
     "lint:fix": "eslint lib/temporal.ts --fix",
     "format": "prettier --write lib/temporal.ts",
-    "format:check": "prettier --check lib/temporal.ts"
+    "format:check": "prettier --check lib/temporal.ts",
+    "version": "./scripts/bump-version.sh"
   },
   "files": [
     "index.js",
