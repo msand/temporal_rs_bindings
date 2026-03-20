@@ -250,7 +250,7 @@ npm run test262 -- --write-failures
 
 This package includes a runner for the [TC39 Test262](https://github.com/tc39/test262) Temporal test suite (6,661 tests). The runner executes tests in Node.js `vm` contexts with the spec conformance layer injected as `globalThis.Temporal`.
 
-Current results: **6,654 / 6,661 pass (99.9%)**
+Current results: **6,659 / 6,661 pass (99.97%)** — 0 skipped.
 
 The 2 remaining failures are caused by inconsistencies between Node.js's ICU4C and temporal_rs's ICU4X implementations, not by the bindings themselves:
 
