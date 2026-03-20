@@ -261,6 +261,21 @@ function snapshotTemporal(Temporal) {
       snapshots.push({ obj: cls, name, desc: Object.getOwnPropertyDescriptor(cls, name) });
     }
   }
+  // Snapshot Date.prototype.toTemporalInstant (tests may delete/modify it)
+  if (Date.prototype.toTemporalInstant) {
+    snapshots.push({
+      obj: Date.prototype,
+      name: 'toTemporalInstant',
+      desc: Object.getOwnPropertyDescriptor(Date.prototype, 'toTemporalInstant'),
+    });
+  }
+  // Snapshot Now methods
+  if (Temporal.Now) {
+    for (const name of ['instant', 'timeZoneId', 'zonedDateTimeISO', 'plainDateTimeISO', 'plainDateISO', 'plainTimeISO']) {
+      const desc = Object.getOwnPropertyDescriptor(Temporal.Now, name);
+      if (desc) snapshots.push({ obj: Temporal.Now, name, desc });
+    }
+  }
   return snapshots;
 }
 
