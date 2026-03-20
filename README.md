@@ -191,11 +191,14 @@ import { Temporal } from 'temporal_rs'
 // ESM — individual named exports
 import { PlainDate, Duration, Instant } from 'temporal_rs'
 
-// CJS — raw NAPI bindings (no spec conformance layer)
-const { PlainDate, Duration } = require('temporal_rs')
+// CJS — spec-conforming Temporal namespace
+const { Temporal } = require('temporal_rs')
 
-// ESM — raw NAPI bindings
+// ESM — raw NAPI bindings (no spec conformance layer)
 import { PlainDate } from 'temporal_rs/native'
+
+// CJS — raw NAPI bindings
+const { PlainDate } = require('temporal_rs/native')
 ```
 
 ## WASM (Browser)
@@ -214,17 +217,22 @@ This produces a `wasm-pkg/` directory with ES module + TypeScript definitions us
 # Install dependencies
 npm install
 
-# Build native addon (debug)
-npm run build:debug
-
-# Build native addon (release)
+# Build everything (NAPI + TypeScript conformance layer)
 npm run build
 
-# Build WASM
-npm run build:wasm
+# Build individual targets
+npm run build:napi         # native addon only
+npm run build:ts           # TypeScript conformance layer only
+npm run build:wasm         # WASM target
 
 # Run unit tests
 npm test
+
+# Lint and format
+npm run lint               # ESLint (strictTypeChecked)
+npm run lint:fix           # auto-fix
+npm run format             # Prettier
+npm run format:check       # check only
 
 # Run TC39 Test262 Temporal compliance tests (requires test262 submodule)
 git submodule update --init
@@ -238,6 +246,12 @@ npm run test262:verbose
 
 # Run Test262 and write failure list
 npm run test262 -- --write-failures
+
+# Bump version across all packages and lockfiles
+./scripts/bump-version.sh patch    # 0.1.1 → 0.1.2
+./scripts/bump-version.sh minor    # 0.1.1 → 0.2.0
+./scripts/bump-version.sh major    # 0.1.1 → 1.0.0
+./scripts/bump-version.sh 2.0.0    # explicit version
 ```
 
 ### Prerequisites
@@ -266,7 +280,7 @@ This package wraps [temporal_rs](https://github.com/boa-dev/temporal) (the Rust 
 - **NAPI-RS** for native Node.js addons with auto-generated TypeScript definitions
 - **wasm-bindgen** for browser-compatible WASM builds
 
-A JavaScript spec conformance layer (`lib/temporal.mjs`) bridges the gap between the NAPI binding surface and the TC39 Temporal specification, providing:
+A TypeScript spec conformance layer (`lib/temporal.ts`) bridges the gap between the NAPI binding surface and the TC39 Temporal specification. It is compiled via [tsup](https://tsup.egoist.dev/) to both ESM (`.mjs`) and CJS (`.js`) with type declarations, providing:
 
 - `Temporal` namespace with all types and `Temporal.Now`
 - Property bag arguments for `from()`, `with()`, `add()`, `subtract()`
