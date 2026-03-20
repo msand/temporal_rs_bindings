@@ -12,10 +12,7 @@ type NapiInstantT = import('../index.js').Instant;
 type NapiDurationT = import('../index.js').Duration;
 type NapiPlainYearMonthT = import('../index.js').PlainYearMonth;
 type NapiPlainMonthDayT = import('../index.js').PlainMonthDay;
-type NapiDifferenceSettings = import('../index.js').DifferenceSettings;
-type NapiRoundingOptions = import('../index.js').RoundingOptions;
 type NapiToStringRoundingOptions = import('../index.js').ToStringRoundingOptions;
-type NapiDisplayCalendar = import('../index.js').DisplayCalendar;
 
 // Augment ImportMeta for Node.js ESM
 declare global {
@@ -33,9 +30,6 @@ declare global {
     }
   }
 }
-
-// Any-typed record for property bags passed from user code
-type AnyRecord = Record<string, any>;
 
 // Local date/time parts extracted from DateTimeFormat
 interface LocalParts {
@@ -111,23 +105,6 @@ const NapiInstant = binding.Instant;
 const NapiDuration = binding.Duration;
 const NapiPlainYearMonth = binding.PlainYearMonth;
 const NapiPlainMonthDay = binding.PlainMonthDay;
-
-// Type aliases for class types (used with instanceof)
-type NapiCalendarClass = typeof NapiCalendar;
-type NapiTimeZoneClass = typeof NapiTimeZone;
-type NapiPlainDateClass = typeof NapiPlainDate;
-type NapiPlainTimeClass = typeof NapiPlainTime;
-type NapiPlainDateTimeClass = typeof NapiPlainDateTime;
-type NapiZonedDateTimeClass = typeof NapiZonedDateTime;
-type NapiInstantClass = typeof NapiInstant;
-type NapiDurationClass = typeof NapiDuration;
-type NapiPlainYearMonthClass = typeof NapiPlainYearMonth;
-type NapiPlainMonthDayClass = typeof NapiPlainMonthDay;
-
-// Helper: non-null regex match result (caller must ensure match succeeded)
-function m$(arr: RegExpMatchArray | string[], idx: number): string {
-  return arr[idx] as string;
-}
 
 // ─── Enum mapping (spec lowercase → NAPI PascalCase) ─────────
 
