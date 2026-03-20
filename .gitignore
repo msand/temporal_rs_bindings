@@ -5,3 +5,9 @@ wasm-pkg/
 npm/**/*.node
 .idea/
 test262-failures.txt
+
+# Compiled conformance layer outputs (built from lib/temporal.ts)
+lib/temporal.js
+lib/temporal.mjs
+lib/temporal.d.ts
+lib/temporal.d.mts

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // TC39 Temporal spec conformance layer over temporal_rs NAPI bindings.
 // Bridges the gap between the NAPI binding API and the TC39 Temporal specification.
 

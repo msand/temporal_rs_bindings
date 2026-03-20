@@ -2,7 +2,7 @@ import js from '@eslint/js';
 
 export default [
   {
-    files: ['lib/**/*.mjs'],
+    files: ['lib/**/*.ts'],
     ...js.configs.recommended,
     languageOptions: {
       ecmaVersion: 2025,
