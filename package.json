@@ -39,9 +39,9 @@
     ]
   },
   "scripts": {
-    "build": "napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml && tsup",
-    "build:debug": "napi build --platform --manifest-path crates/temporal-napi/Cargo.toml && tsup",
-    "build:napi": "napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml",
+    "build": "napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml -o . && tsup",
+    "build:debug": "napi build --platform --manifest-path crates/temporal-napi/Cargo.toml -o . && tsup",
+    "build:napi": "napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml -o .",
     "build:ts": "tsup",
     "build:wasm": "wasm-pack build crates/temporal-wasm --target bundler --out-dir ../../wasm-pkg",
     "test": "vitest run",
