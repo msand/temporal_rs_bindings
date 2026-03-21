@@ -88,7 +88,7 @@ jobs:
           sudo apt-get install -y musl-tools
 
       - name: Build native addon
-        run: npx napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml -o . --target ${{ matrix.target }}
+        run: npx napi build --platform --release --cargo-cwd crates/temporal-napi --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -167,7 +167,7 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Build NAPI (needed for type imports)
-        run: npx napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml -o .
+        run: npx napi build --platform --release --cargo-cwd crates/temporal-napi
 
       - name: Typecheck
         run: npx tsc --noEmit
@@ -294,7 +294,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Generate NAPI bindings and type definitions
-        run: npx napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml -o .
+        run: npx napi build --platform --release --cargo-cwd crates/temporal-napi
 
       - name: Build TypeScript conformance layer
         run: npx tsup

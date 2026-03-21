@@ -27,21 +27,18 @@
     "url": "https://github.com/msand/temporal_rs_bindings"
   },
   "napi": {
-    "binaryName": "temporal_rs",
-    "targets": [
-      "x86_64-apple-darwin",
-      "aarch64-apple-darwin",
-      "x86_64-unknown-linux-gnu",
-      "x86_64-unknown-linux-musl",
-      "aarch64-unknown-linux-gnu",
-      "x86_64-pc-windows-msvc",
-      "aarch64-pc-windows-msvc"
-    ]
+    "name": "temporal_rs",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "aarch64-apple-darwin"
+      ]
+    }
   },
   "scripts": {
-    "build": "napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml -o . && tsup",
-    "build:debug": "napi build --platform --manifest-path crates/temporal-napi/Cargo.toml -o . && tsup",
-    "build:napi": "napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml -o .",
+    "build": "napi build --platform --release --cargo-cwd crates/temporal-napi && tsup",
+    "build:debug": "napi build --platform --cargo-cwd crates/temporal-napi && tsup",
+    "build:napi": "napi build --platform --release --cargo-cwd crates/temporal-napi",
     "build:ts": "tsup",
     "build:wasm": "wasm-pack build crates/temporal-wasm --target bundler --out-dir ../../wasm-pkg && rm -f wasm-pkg/.gitignore",
     "test": "vitest run",
@@ -68,7 +65,7 @@
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@napi-rs/cli": "^3.5.1",
+    "@napi-rs/cli": "^2.18.4",
     "eslint": "^10.1.0",
     "prettier": "^3.8.1",
     "tsup": "^8.5.1",
