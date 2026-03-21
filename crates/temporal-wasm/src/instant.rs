@@ -17,7 +17,7 @@ pub struct Instant {
 #[wasm_bindgen]
 impl Instant {
     #[wasm_bindgen(constructor)]
-    pub fn new(epoch_nanoseconds: i64) -> Result<Instant, JsValue> {
+    pub fn new(epoch_nanoseconds: f64) -> Result<Instant, JsValue> {
         let inner =
             temporal_rs::Instant::try_new(epoch_nanoseconds as i128).map_err(to_js_error)?;
         Ok(Self { inner })
@@ -30,19 +30,19 @@ impl Instant {
     }
 
     #[wasm_bindgen(js_name = "fromEpochMilliseconds")]
-    pub fn from_epoch_milliseconds(ms: i64) -> Result<Instant, JsValue> {
-        let inner = temporal_rs::Instant::from_epoch_milliseconds(ms).map_err(to_js_error)?;
+    pub fn from_epoch_milliseconds(ms: f64) -> Result<Instant, JsValue> {
+        let inner = temporal_rs::Instant::from_epoch_milliseconds(ms as i64).map_err(to_js_error)?;
         Ok(Self { inner })
     }
 
     #[wasm_bindgen(getter, js_name = "epochMilliseconds")]
-    pub fn epoch_milliseconds(&self) -> i64 {
-        self.inner.epoch_milliseconds()
+    pub fn epoch_milliseconds(&self) -> f64 {
+        self.inner.epoch_milliseconds() as f64
     }
 
     #[wasm_bindgen(getter, js_name = "epochNanoseconds")]
-    pub fn epoch_nanoseconds(&self) -> i64 {
-        self.inner.as_i128() as i64
+    pub fn epoch_nanoseconds(&self) -> f64 {
+        self.inner.as_i128() as f64
     }
 
     #[wasm_bindgen]

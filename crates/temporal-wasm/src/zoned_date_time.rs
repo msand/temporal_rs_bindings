@@ -24,7 +24,7 @@ pub struct ZonedDateTime {
 impl ZonedDateTime {
     #[wasm_bindgen(constructor)]
     pub fn new(
-        epoch_nanoseconds: i64,
+        epoch_nanoseconds: f64,
         timezone: &TimeZone,
         calendar: Option<Calendar>,
     ) -> Result<ZonedDateTime, JsValue> {
@@ -53,13 +53,13 @@ impl ZonedDateTime {
 
     #[wasm_bindgen(js_name = "fromEpochMilliseconds")]
     pub fn from_epoch_milliseconds(
-        ms: i64,
+        ms: f64,
         timezone: &TimeZone,
         calendar: Option<Calendar>,
     ) -> Result<ZonedDateTime, JsValue> {
         let cal = calendar.map(|c| c.inner.clone()).unwrap_or_default();
         let instant =
-            temporal_rs::Instant::from_epoch_milliseconds(ms).map_err(to_js_error)?;
+            temporal_rs::Instant::from_epoch_milliseconds(ms as i64).map_err(to_js_error)?;
         let inner = temporal_rs::ZonedDateTime::try_new_from_instant_with_provider(
             instant,
             timezone.inner,
@@ -201,18 +201,18 @@ impl ZonedDateTime {
     }
 
     #[wasm_bindgen(getter, js_name = "offsetNanoseconds")]
-    pub fn offset_nanoseconds(&self) -> i64 {
-        self.inner.offset_nanoseconds()
+    pub fn offset_nanoseconds(&self) -> f64 {
+        self.inner.offset_nanoseconds() as f64
     }
 
     #[wasm_bindgen(getter, js_name = "epochMilliseconds")]
-    pub fn epoch_milliseconds(&self) -> i64 {
-        self.inner.epoch_milliseconds()
+    pub fn epoch_milliseconds(&self) -> f64 {
+        self.inner.epoch_milliseconds() as f64
     }
 
     #[wasm_bindgen(getter, js_name = "epochNanoseconds")]
-    pub fn epoch_nanoseconds(&self) -> i64 {
-        self.inner.epoch_nanoseconds().as_i128() as i64
+    pub fn epoch_nanoseconds(&self) -> f64 {
+        self.inner.epoch_nanoseconds().as_i128() as f64
     }
 
     // ==== Arithmetic ====
