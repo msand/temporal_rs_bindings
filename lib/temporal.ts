@@ -1548,6 +1548,9 @@ function isHebrewLeapYear(hebrewYear: number): boolean {
 
 // For Chinese/Dangi: find which month code has the leap month in a given year.
 // Returns the base month number N such that M{N}L exists, or 0 if no leap month.
+// Intentionally unbounded — entries are tiny (string + number) and bounded by the
+// practical range of Chinese/Dangi years. A size cap causes severe cache thrashing
+// in PlainMonthDay reference year scanning.
 const _chineseDangiLeapMonthCache = new Map<string, number>();
 function getChineseDangiLeapMonth(calYear: number, calId: string): number {
   const cacheKey = `${calId}:${calYear}`;
@@ -1592,7 +1595,6 @@ function getChineseDangiLeapMonth(calYear: number, calId: string): number {
       }
     }
     if (probe.monthsInYear !== 13) {
-      if (_chineseDangiLeapMonthCache.size >= _CACHE_MAX) _chineseDangiLeapMonthCache.clear();
       _chineseDangiLeapMonthCache.set(cacheKey, 0);
       return 0;
     }
@@ -1608,7 +1610,6 @@ function getChineseDangiLeapMonth(calYear: number, calId: string): number {
           lastMonth = pd.month;
           if (pd.monthCode.endsWith('L')) {
             const base = parseInt(pd.monthCode.slice(1, 3), 10);
-            if (_chineseDangiLeapMonthCache.size >= _CACHE_MAX) _chineseDangiLeapMonthCache.clear();
             _chineseDangiLeapMonthCache.set(cacheKey, base);
             return base;
           }
@@ -1616,11 +1617,9 @@ function getChineseDangiLeapMonth(calYear: number, calId: string): number {
         if (pd.year > calYear && pd.month >= 2) break;
       } catch {}
     }
-    if (_chineseDangiLeapMonthCache.size >= _CACHE_MAX) _chineseDangiLeapMonthCache.clear();
     _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   } catch {
-    if (_chineseDangiLeapMonthCache.size >= _CACHE_MAX) _chineseDangiLeapMonthCache.clear();
     _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   }
