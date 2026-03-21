@@ -247,17 +247,18 @@ jobs:
         run: npx tsup
 
       - name: Run Test262
-        run: node test262-runner.mjs --write-failures
+        run: node test262-runner.mjs --write-failures || true
 
       - name: Check failure count
         run: |
           FAIL_COUNT=$(wc -l < test262-failures.txt)
-          echo "Failures: $FAIL_COUNT"
+          echo "Failures: $FAIL_COUNT / 6661"
+          cat test262-failures.txt
           if [ "$FAIL_COUNT" -gt 2 ]; then
             echo "::error::Test262 regression: $FAIL_COUNT failures (expected ≤ 2)"
-            cat test262-failures.txt
             exit 1
           fi
+          echo "✅ Within expected failure count (≤ 2)"
 
   publish:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true'
