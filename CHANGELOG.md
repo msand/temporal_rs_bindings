@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6] - 2026-03-21
+
+### Fixed
+- Strip all IXDTF critical flags (`[!`) using global regex (was only stripping the first)
+- Preserve sub-millisecond precision in IXDTF fallback path (was truncating to milliseconds)
+- Actually removed `_chineseDangiLeapMonthCache` size cap (was lost in previous commit)
+
 ## [0.1.5] - 2026-03-21
 
 ### Fixed
