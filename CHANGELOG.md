@@ -1,26 +1,48 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.4] - 2026-03-21
 
 ### Added
 - Conformance layer unit tests (36 tests via Vitest)
+- CJS require test (`__test__/cjs.spec.ts`)
 - WASM export path: `import from 'temporal_rs/wasm'`
 - WASM package included in npm distribution
+- WASM Duration: `round()`, `total()`, `compare()` methods
+- WASM/NAPI PlainTime: `compare()` static method
+- NAPI/WASM Duration: `toJSON()` and `valueOf()` methods
 - LICENSE file
+- CHANGELOG.md
 - CI: dependency caching, lint/typecheck job, Test262 conformance job
 - Dependabot for npm, cargo, and github-actions
+- `prepublishOnly` script to ensure tsup build before publish
+- `engines: { node: ">=20" }` in package.json
+- Semver validation in version bump script
 
 ### Changed
 - Converted conformance layer from JavaScript to TypeScript with strict type checking
 - Dual ESM/CJS output via tsup with type declarations and sourcemaps
 - Minified output (325KB to 151KB per file)
-- ESLint upgraded to `strictTypeChecked` preset
-- Version bump script for syncing all version numbers
+- ESLint upgraded to `strictTypeChecked` preset — zero warnings
+- Version bump script with portable macOS/Linux `sed` support
+- Upgraded napi 2 → 3, napi-derive 2 → 3, @napi-rs/cli 2 → 3
+- Upgraded vitest 1 → 4, actions/cache v4 → v5
+- Updated temporal_rs/timezone_provider to latest (rounding fix)
+- Cargo.toml opt-level changed from "s" to 3 (performance over size)
 
 ### Fixed
-- Clippy warnings fixed across both Rust crates
-- WASM: changed i64 to f64 in Instant and ZonedDateTime for JS compatibility
-- Restored arguments-based loop in `rejectPropertyBagInfinity`
+- WASM: changed i64 to f64 in Duration, Instant, ZonedDateTime for JS compatibility
+- WASM: added `#[wasm_bindgen]` on PlainTime.compare static method
+- Clippy warnings fixed across both Rust crates (extracted `make_relative_to` helper)
+- Restored arguments-based loop in `rejectPropertyBagInfinity` (prevented vm sandbox hang)
+- Sub-minute UTC offset regex in `_resolveLocalToEpochMs`
+- Capped all caches (`_dtfCache`, `_canonicalTzCache`, `_napiZdtCache`, `_chineseDangiLeapMonthCache`) at 100 entries
+- Removed dead ethioaa branches in year getters
+- CI: Test262 runner exit code handling (`set +e` for expected failures)
+- CI: `@napi-rs/cli` v3 migration (`--cargo-cwd` → `--manifest-path -o .`)
+- CI: publish job depends on test262 conformance
+- Removed wasm-pkg/.gitignore that blocked npm pack from including WASM files
+- Added missing `libc` field to linux-arm64-gnu platform package
+- Empty test262-failures.txt on zero failures (was writing lone newline)
 
 ## [0.1.3] - 2026-03-21
 
