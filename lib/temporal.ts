@@ -2570,9 +2570,9 @@ function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
             throw e; // Re-throw the original RangeError
           }
           try {
-            const tz = toNapiTimeZone(tzId);
-            const cal = calAnnot ? toNapiCalendar(calAnnot) : undefined;
-            const result = new NapiZonedDateTime(Number(epochNs / 1000000n), tz, cal);
+            // Use string-based construction to preserve full nanosecond precision
+            const zdtStr = bigintNsToZdtString(epochNs, tzId!, calAnnot || 'iso8601');
+            const result = call(() => NapiZonedDateTime.from(zdtStr));
             return result;
           } catch {
             /* fall through to original error */
@@ -6267,8 +6267,8 @@ class ZonedDateTime {
       if (calAnnotationCount > 1 && hasCriticalCal) {
         throw new RangeError('Multiple calendar annotations with critical flag are not allowed');
       }
-      // Strip the critical flag (!) from timezone annotation for NAPI
-      const cleanArg = arg.replace(/\[!/, '[');
+      // Strip all critical flags (!) from annotations for NAPI
+      const cleanArg = arg.replace(/\[!/g, '[');
       // Validate the string can be parsed before reading options (per spec)
       // Try a quick parse to detect obviously invalid strings like 2020-13-34T25:60:60+99:99[UTC]
       const _quickParsed = _parseZdtStringParts(cleanArg);
