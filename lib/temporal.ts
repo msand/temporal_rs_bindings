@@ -420,6 +420,7 @@ function _computeLocalPartsFromBigInt(epochNs: bigint, offsetNs: bigint): LocalP
 
 // ─── Helper: compute local time in a timezone from epoch ms ────
 
+const _CACHE_MAX = 100;
 const _dtfCache = new Map<string, Intl.DateTimeFormat>();
 const _napiZdtCache = new Map<string, NapiZonedDateTimeT>();
 const _canonicalTzCache = new Map<string, string>();
@@ -431,6 +432,7 @@ function _canonicalTzId(tzId: string): string {
   } catch {
     canon = tzId;
   }
+  if (_canonicalTzCache.size >= _CACHE_MAX) _canonicalTzCache.clear();
   _canonicalTzCache.set(tzId, canon);
   return canon;
 }
@@ -492,6 +494,7 @@ function getLocalPartsFromEpoch(epochMs: number, tzId: string): LocalParts {
       era: 'short',
       fractionalSecondDigits: 3,
     });
+    if (_dtfCache.size >= _CACHE_MAX) _dtfCache.clear();
     _dtfCache.set(tzId, fmt);
   }
   const parts: LocalParts = {} as LocalParts;
@@ -6137,7 +6140,8 @@ class ZonedDateTime {
         } else {
           const zdtStr = bigintNsToZdtString(epochNanoseconds, tzId, calId);
           this._inner = call(() => NapiZonedDateTime.from(zdtStr));
-          if (_napiZdtCache.size < 1000) _napiZdtCache.set(cacheKey, this._inner);
+          if (_napiZdtCache.size >= _CACHE_MAX) _napiZdtCache.clear();
+          _napiZdtCache.set(cacheKey, this._inner);
         }
       } catch {
         // For extreme epoch values where the local time is out of representable range,

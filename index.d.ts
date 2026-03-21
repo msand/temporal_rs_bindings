@@ -161,6 +161,7 @@ export declare class PlainTime {
   until(other: PlainTime, settings?: DifferenceSettings | undefined | null): Duration
   since(other: PlainTime, settings?: DifferenceSettings | undefined | null): Duration
   round(options: RoundingOptions): PlainTime
+  static compare(one: PlainTime, two: PlainTime): number
   equals(other: PlainTime): boolean
   toString(options?: ToStringRoundingOptions | undefined | null): string
   toJson(): string

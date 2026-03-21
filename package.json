@@ -1,6 +1,8 @@
 {
   "name": "temporal_rs",
   "version": "0.1.3",
+  "license": "MIT",
+  "type": "commonjs",
   "main": "lib/temporal.js",
   "module": "lib/temporal.mjs",
   "types": "lib/temporal.d.ts",
@@ -45,8 +47,8 @@
     "test262:failing": "node test262-runner.mjs --failing",
     "lint": "eslint lib/temporal.ts tsup.config.ts eslint.config.mjs",
     "lint:fix": "eslint lib/temporal.ts tsup.config.ts eslint.config.mjs --fix",
-    "format": "prettier --write 'lib/temporal.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json'",
-    "format:check": "prettier --check 'lib/temporal.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json'",
+    "format": "prettier --write 'lib/temporal.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json' '__test__/*.ts'",
+    "format:check": "prettier --check 'lib/temporal.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json' '__test__/*.ts'",
     "version": "./scripts/bump-version.sh",
     "prepublishOnly": "tsup"
   },

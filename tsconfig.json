@@ -6,7 +6,6 @@
     "lib": ["ES2022"],
     "strict": true,
     "skipLibCheck": true,
-    "declaration": true,
     "declarationMap": false,
     "outDir": "lib",
     "rootDir": "lib",

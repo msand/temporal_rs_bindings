@@ -12,5 +12,5 @@ temporal_rs = { git = "https://github.com/boa-dev/temporal.git", features = ["sy
 timezone_provider = { git = "https://github.com/boa-dev/temporal.git" }
 
 [profile.release]
-opt-level = "s"
+opt-level = 3
 lto = true

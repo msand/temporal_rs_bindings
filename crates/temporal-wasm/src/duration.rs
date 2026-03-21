@@ -1,6 +1,23 @@
 use wasm_bindgen::prelude::*;
+use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
-use crate::options::to_js_error;
+use crate::options::{to_js_error, deserialize_rounding_options, Unit};
+use crate::plain_date::PlainDate;
+use crate::zoned_date_time::ZonedDateTime;
+
+fn make_relative_to(
+    relative_to_date: &Option<PlainDate>,
+    relative_to_zdt: &Option<ZonedDateTime>,
+) -> Option<temporal_rs::options::RelativeTo> {
+    relative_to_zdt
+        .as_ref()
+        .map(|zdt| temporal_rs::options::RelativeTo::ZonedDateTime(zdt.inner.clone()))
+        .or_else(|| {
+            relative_to_date
+                .as_ref()
+                .map(|date| temporal_rs::options::RelativeTo::PlainDate(date.inner.clone()))
+        })
+}
 
 /// Convert an f64 (JS Number) to i64 for duration fields.
 fn f64_to_i64(v: f64) -> Result<i64, JsValue> {
@@ -151,6 +168,62 @@ impl Duration {
     pub fn subtract(&self, other: &Duration) -> Result<Duration, JsValue> {
         let inner = self.inner.subtract(&other.inner).map_err(to_js_error)?;
         Ok(Duration { inner })
+    }
+
+    pub fn round(
+        &self,
+        options: JsValue,
+        relative_to_date: Option<PlainDate>,
+        relative_to_zdt: Option<ZonedDateTime>,
+    ) -> Result<Duration, JsValue> {
+        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+            .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))?;
+
+        let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
+
+        let opts = deserialize_rounding_options(options)?;
+        let inner = self
+            .inner
+            .round_with_provider(opts, relative_to, &provider)
+            .map_err(to_js_error)?;
+        Ok(Duration { inner })
+    }
+
+    pub fn total(
+        &self,
+        unit: Unit,
+        relative_to_date: Option<PlainDate>,
+        relative_to_zdt: Option<ZonedDateTime>,
+    ) -> Result<f64, JsValue> {
+        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+            .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))?;
+
+        let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
+
+        let unit: temporal_rs::options::Unit = unit.into();
+        let result = self
+            .inner
+            .total_with_provider(unit, relative_to, &provider)
+            .map_err(to_js_error)?;
+        Ok(result.as_inner())
+    }
+
+    pub fn compare(
+        one: &Duration,
+        two: &Duration,
+        relative_to_date: Option<PlainDate>,
+        relative_to_zdt: Option<ZonedDateTime>,
+    ) -> Result<i32, JsValue> {
+        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+            .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))?;
+
+        let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
+
+        let result = one
+            .inner
+            .compare_with_provider(&two.inner, relative_to, &provider)
+            .map_err(to_js_error)?;
+        Ok(result as i32)
     }
 
     #[wasm_bindgen(js_name = "toString")]
