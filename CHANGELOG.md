@@ -1,5 +1,27 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Conformance layer unit tests (36 tests via Vitest)
+- WASM export path: `import from 'temporal_rs/wasm'`
+- WASM package included in npm distribution
+- LICENSE file
+- CI: dependency caching, lint/typecheck job, Test262 conformance job
+- Dependabot for npm, cargo, and github-actions
+
+### Changed
+- Converted conformance layer from JavaScript to TypeScript with strict type checking
+- Dual ESM/CJS output via tsup with type declarations and sourcemaps
+- Minified output (325KB to 151KB per file)
+- ESLint upgraded to `strictTypeChecked` preset
+- Version bump script for syncing all version numbers
+
+### Fixed
+- Clippy warnings fixed across both Rust crates
+- WASM: changed i64 to f64 in Instant and ZonedDateTime for JS compatibility
+- Restored arguments-based loop in `rejectPropertyBagInfinity`
+
 ## [0.1.3] - 2026-03-21
 
 ### Added

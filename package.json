@@ -47,7 +47,8 @@
     "lint:fix": "eslint lib/temporal.ts tsup.config.ts eslint.config.mjs --fix",
     "format": "prettier --write 'lib/temporal.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json'",
     "format:check": "prettier --check 'lib/temporal.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json'",
-    "version": "./scripts/bump-version.sh"
+    "version": "./scripts/bump-version.sh",
+    "prepublishOnly": "tsup"
   },
   "files": [
     "index.js",
@@ -69,6 +70,9 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.1",
     "vitest": "^1"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "optionalDependencies": {
     "temporal_rs-darwin-arm64": "0.1.3",
