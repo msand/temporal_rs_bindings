@@ -533,7 +533,7 @@ async function main() {
   if (args.includes('--write-failures')) {
     const failFile = 'test262-failures.txt';
     const lines = failures.map(f => f.test).sort();
-    fs.writeFileSync(failFile, lines.join('\n') + '\n');
+    fs.writeFileSync(failFile, lines.length > 0 ? lines.join('\n') + '\n' : '');
     console.log(`\nWrote ${lines.length} failure paths to ${failFile}`);
   }
 

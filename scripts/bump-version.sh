@@ -33,6 +33,10 @@ if [ "$ARG" = "patch" ] || [ "$ARG" = "minor" ] || [ "$ARG" = "major" ]; then
   NEW="${MAJOR}.${MINOR}.${PATCH}"
 else
   NEW="$ARG"
+  if ! [[ "$NEW" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+    echo "Error: '$NEW' is not a valid semver version (expected X.Y.Z or X.Y.Z-prerelease)"
+    exit 1
+  fi
 fi
 
 if [ "$CURRENT" = "$NEW" ]; then
