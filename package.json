@@ -1,6 +1,6 @@
 {
   "name": "temporal_rs",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "MIT",
   "type": "commonjs",
   "main": "lib/temporal.js",
@@ -77,12 +77,12 @@
     "node": ">=20"
   },
   "optionalDependencies": {
-    "temporal_rs-darwin-arm64": "0.1.4",
-    "temporal_rs-darwin-x64": "0.1.4",
-    "temporal_rs-linux-arm64-gnu": "0.1.4",
-    "temporal_rs-linux-x64-gnu": "0.1.4",
-    "temporal_rs-linux-x64-musl": "0.1.4",
-    "temporal_rs-win32-arm64-msvc": "0.1.4",
-    "temporal_rs-win32-x64-msvc": "0.1.4"
+    "temporal_rs-darwin-arm64": "0.1.5",
+    "temporal_rs-darwin-x64": "0.1.5",
+    "temporal_rs-linux-arm64-gnu": "0.1.5",
+    "temporal_rs-linux-x64-gnu": "0.1.5",
+    "temporal_rs-linux-x64-musl": "0.1.5",
+    "temporal_rs-win32-arm64-msvc": "0.1.5",
+    "temporal_rs-win32-x64-msvc": "0.1.5"
   }
 }
