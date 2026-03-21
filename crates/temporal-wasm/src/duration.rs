@@ -36,6 +36,7 @@ pub struct Duration {
 #[wasm_bindgen]
 impl Duration {
     #[wasm_bindgen(constructor)]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         years: Option<f64>,
         months: Option<f64>,
@@ -153,6 +154,7 @@ impl Duration {
     }
 
     #[wasm_bindgen(js_name = "toString")]
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         format!("{}", self.inner)
     }

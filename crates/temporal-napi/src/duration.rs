@@ -4,6 +4,18 @@ use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 use crate::options::to_napi_error;
 use crate::options::{RoundingOptions, Unit};
 
+fn make_relative_to(
+    relative_to_date: Option<&crate::plain_date::PlainDate>,
+    relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
+) -> Option<temporal_rs::options::RelativeTo> {
+    relative_to_zdt
+        .map(|zdt| temporal_rs::options::RelativeTo::ZonedDateTime(zdt.inner.clone()))
+        .or_else(|| {
+            relative_to_date
+                .map(|date| temporal_rs::options::RelativeTo::PlainDate(date.inner.clone()))
+        })
+}
+
 #[napi]
 pub struct Duration {
     pub(crate) inner: temporal_rs::Duration,
@@ -39,6 +51,7 @@ impl Duration {
     /// Microseconds and nanoseconds are converted to i128 to preserve
     /// precision for values exceeding i64 range.
     #[napi(constructor)]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         years: Option<f64>,
         months: Option<f64>,
@@ -169,17 +182,7 @@ impl Duration {
         let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
             .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
 
-        let relative_to = if let Some(zdt) = relative_to_zdt {
-            Some(temporal_rs::options::RelativeTo::ZonedDateTime(
-                zdt.inner.clone(),
-            ))
-        } else if let Some(date) = relative_to_date {
-            Some(temporal_rs::options::RelativeTo::PlainDate(
-                date.inner.clone(),
-            ))
-        } else {
-            None
-        };
+        let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 
         let opts: temporal_rs::options::RoundingOptions = options.try_into()?;
         let inner = self
@@ -199,17 +202,7 @@ impl Duration {
         let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
             .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
 
-        let relative_to = if let Some(zdt) = relative_to_zdt {
-            Some(temporal_rs::options::RelativeTo::ZonedDateTime(
-                zdt.inner.clone(),
-            ))
-        } else if let Some(date) = relative_to_date {
-            Some(temporal_rs::options::RelativeTo::PlainDate(
-                date.inner.clone(),
-            ))
-        } else {
-            None
-        };
+        let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 
         let unit: temporal_rs::options::Unit = unit.into();
         let result = self
@@ -229,17 +222,7 @@ impl Duration {
         let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
             .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
 
-        let relative_to = if let Some(zdt) = relative_to_zdt {
-            Some(temporal_rs::options::RelativeTo::ZonedDateTime(
-                zdt.inner.clone(),
-            ))
-        } else if let Some(date) = relative_to_date {
-            Some(temporal_rs::options::RelativeTo::PlainDate(
-                date.inner.clone(),
-            ))
-        } else {
-            None
-        };
+        let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 
         let result = one
             .inner
@@ -249,6 +232,7 @@ impl Duration {
     }
 
     #[napi]
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         format!("{}", self.inner)
     }
