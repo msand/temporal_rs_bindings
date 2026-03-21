@@ -3,11 +3,6 @@ use napi_derive::napi;
 use crate::duration::Duration;
 use crate::options::*;
 
-fn provider() -> napi::Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
-    temporal_common::cached_provider()
-        .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
-}
-
 #[napi]
 pub struct Instant {
     pub(crate) inner: temporal_rs::Instant,
@@ -17,7 +12,10 @@ pub struct Instant {
 impl Instant {
     #[napi(constructor)]
     pub fn new(epoch_nanoseconds: napi::bindgen_prelude::BigInt) -> napi::Result<Self> {
-        let (ns, _lossless) = epoch_nanoseconds.get_i128();
+        let (ns, lossless) = epoch_nanoseconds.get_i128();
+        if !lossless {
+            return Err(napi::Error::from_reason("RangeError: BigInt value out of i128 range"));
+        }
         let inner = temporal_rs::Instant::try_new(ns).map_err(to_napi_error)?;
         Ok(Self { inner })
     }

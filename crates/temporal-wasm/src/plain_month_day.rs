@@ -17,7 +17,7 @@ impl PlainMonthDay {
         calendar: Option<Calendar>,
         reference_year: Option<i32>,
     ) -> Result<PlainMonthDay, JsValue> {
-        let cal = calendar.map(|c| c.inner.clone()).unwrap_or_default();
+        let cal = calendar.map(|c| c.inner).unwrap_or_default();
         let inner = temporal_rs::PlainMonthDay::new_with_overflow(
             month,
             day,

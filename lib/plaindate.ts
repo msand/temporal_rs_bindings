@@ -15,7 +15,6 @@ import {
   _isTemporalZonedDateTime,
   toIntegerWithTruncation,
   toInteger,
-  toIntegerIfIntegral,
   rejectISODateRange,
   rejectTooManyFractionalSeconds,
   rejectPropertyBagInfinity,

@@ -43,8 +43,7 @@ import {
   monthCodeToMonth,
 } from './calendar';
 
-// Forward-reference types only used as return type annotations
-type PlainDate = any;
+import type { PlainDate } from './plaindate';
 
 class PlainMonthDay {
   _inner!: NapiPlainMonthDayT;

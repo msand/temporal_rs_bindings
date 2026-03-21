@@ -3,11 +3,6 @@ use wasm_bindgen::prelude::*;
 use crate::duration::Duration;
 use crate::options::*;
 
-fn provider() -> Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
-    temporal_common::cached_provider()
-        .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
-}
-
 #[wasm_bindgen]
 pub struct Instant {
     pub(crate) inner: temporal_rs::Instant,
@@ -30,6 +25,9 @@ impl Instant {
 
     #[wasm_bindgen(js_name = "fromEpochMilliseconds")]
     pub fn from_epoch_milliseconds(ms: f64) -> Result<Instant, JsValue> {
+        if ms.is_nan() || ms.is_infinite() {
+            return Err(JsValue::from_str("RangeError: epochMilliseconds must be finite"));
+        }
         let inner = temporal_rs::Instant::from_epoch_milliseconds(ms as i64).map_err(to_js_error)?;
         Ok(Self { inner })
     }

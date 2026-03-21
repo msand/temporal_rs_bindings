@@ -5,6 +5,10 @@
 
 use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
+/// Re-exported provider type so downstream crates don't need a direct
+/// `timezone_provider` dependency for type signatures.
+pub type TzProvider = ZoneInfo64TzdbProvider<'static>;
+
 /// Convert an f64 (JS Number) to i64, matching the spec's ToIntegerIfIntegral.
 /// The value must be finite, integral, and within the representable i64 range.
 pub fn f64_to_i64(v: f64) -> Result<i64, String> {
@@ -49,17 +53,6 @@ pub fn make_relative_to(
 // ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing() is the standard embedded
 // IANA timezone provider from the `icu` crate. Despite the "_for_testing" suffix in its
 // name (an upstream naming convention), it is the correct provider for production use.
-
-/// Create a fresh embedded IANA timezone provider instance.
-///
-/// Returns `None` only if the embedded timezone data failed to load,
-/// which should not happen in practice.
-///
-/// Prefer [`cached_provider`] when a shared reference suffices, to
-/// avoid repeated initialisation overhead.
-pub fn create_provider() -> Option<ZoneInfo64TzdbProvider<'static>> {
-    ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-}
 
 /// Return a reference to a lazily-initialised, process-wide timezone provider.
 ///

@@ -1,13 +1,8 @@
 use wasm_bindgen::prelude::*;
 
-use crate::options::{to_js_error, deserialize_rounding_options, Unit};
+use crate::options::{provider, to_js_error, deserialize_rounding_options, Unit};
 use crate::plain_date::PlainDate;
 use crate::zoned_date_time::ZonedDateTime;
-
-fn make_provider() -> Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
-    temporal_common::cached_provider()
-        .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
-}
 
 fn make_relative_to(
     relative_to_date: &Option<PlainDate>,
@@ -130,35 +125,40 @@ impl Duration {
         self.inner.is_zero()
     }
 
+    #[wasm_bindgen]
     pub fn negated(&self) -> Duration {
         Duration {
             inner: self.inner.negated(),
         }
     }
 
+    #[wasm_bindgen]
     pub fn abs(&self) -> Duration {
         Duration {
             inner: self.inner.abs(),
         }
     }
 
+    #[wasm_bindgen]
     pub fn add(&self, other: &Duration) -> Result<Duration, JsValue> {
         let inner = self.inner.add(&other.inner).map_err(to_js_error)?;
         Ok(Duration { inner })
     }
 
+    #[wasm_bindgen]
     pub fn subtract(&self, other: &Duration) -> Result<Duration, JsValue> {
         let inner = self.inner.subtract(&other.inner).map_err(to_js_error)?;
         Ok(Duration { inner })
     }
 
+    #[wasm_bindgen]
     pub fn round(
         &self,
         options: JsValue,
         relative_to_date: Option<PlainDate>,
         relative_to_zdt: Option<ZonedDateTime>,
     ) -> Result<Duration, JsValue> {
-        let provider = make_provider()?;
+        let provider = provider()?;
 
         let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
 
@@ -170,13 +170,14 @@ impl Duration {
         Ok(Duration { inner })
     }
 
+    #[wasm_bindgen]
     pub fn total(
         &self,
         unit: Unit,
         relative_to_date: Option<PlainDate>,
         relative_to_zdt: Option<ZonedDateTime>,
     ) -> Result<f64, JsValue> {
-        let provider = make_provider()?;
+        let provider = provider()?;
 
         let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
 
@@ -188,13 +189,14 @@ impl Duration {
         Ok(result.as_inner())
     }
 
+    #[wasm_bindgen]
     pub fn compare(
         one: &Duration,
         two: &Duration,
         relative_to_date: Option<PlainDate>,
         relative_to_zdt: Option<ZonedDateTime>,
     ) -> Result<i32, JsValue> {
-        let provider = make_provider()?;
+        let provider = provider()?;
 
         let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
 

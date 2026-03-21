@@ -16,23 +16,6 @@ export type NapiPlainYearMonthT = import('../index.js').PlainYearMonth;
 export type NapiPlainMonthDayT = import('../index.js').PlainMonthDay;
 export type NapiToStringRoundingOptions = import('../index.js').ToStringRoundingOptions;
 
-// Augment ImportMeta for Node.js ESM
-declare global {
-  interface ImportMeta {
-    url: string;
-  }
-  // Intl.DurationFormat is not yet in TS libs
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Intl {
-    class DurationFormat {
-      constructor(locales?: string | string[], options?: Record<string, unknown>);
-      format(duration: Record<string, unknown> | string): string;
-      formatToParts(duration: Record<string, unknown> | string): Array<{ type: string; value: string }>;
-      resolvedOptions(): Record<string, unknown>;
-    }
-  }
-}
-
 // Local date/time parts extracted from DateTimeFormat
 export interface LocalParts {
   year: string;

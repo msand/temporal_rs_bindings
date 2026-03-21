@@ -18,7 +18,7 @@ impl PlainYearMonth {
         calendar: Option<Calendar>,
         reference_day: Option<u8>,
     ) -> Result<PlainYearMonth, JsValue> {
-        let cal = calendar.map(|c| c.inner.clone()).unwrap_or_default();
+        let cal = calendar.map(|c| c.inner).unwrap_or_default();
         let inner =
             temporal_rs::PlainYearMonth::new(year, month, reference_day, cal)
                 .map_err(to_js_error)?;

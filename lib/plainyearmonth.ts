@@ -1,6 +1,6 @@
 // PlainYearMonth class extracted from temporal.ts
 
-import { NapiPlainDate, NapiPlainYearMonth, type NapiPlainYearMonthT } from './binding';
+import { NapiPlainDate, NapiPlainYearMonth, NapiDuration, type NapiPlainYearMonthT } from './binding';
 import {
   call,
   _wrapperSet,
@@ -50,11 +50,8 @@ import {
   monthCodeToMonth,
 } from './calendar';
 
-import { NapiDuration } from './binding';
-
-// Forward-reference types only used as return type annotations
-type Duration = any;
-type PlainDate = any;
+import type { Duration } from './duration';
+import type { PlainDate } from './plaindate';
 
 class PlainYearMonth {
   _inner!: NapiPlainYearMonthT;

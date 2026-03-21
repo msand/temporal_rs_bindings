@@ -27,7 +27,6 @@ import {
   toNapiInstant,
   convertDifferenceSettings,
   convertRoundingOptions,
-  convertToStringOptions,
   _parseDurationForInstant,
   toNapiTimeZone,
 } from './convert';

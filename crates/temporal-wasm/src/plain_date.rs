@@ -14,7 +14,7 @@ impl PlainDate {
     #[wasm_bindgen(constructor)]
     pub fn new(year: i32, month: u8, day: u8, calendar: Option<Calendar>) -> Result<PlainDate, JsValue> {
         let cal = calendar
-            .map(|c| c.inner.clone())
+            .map(|c| c.inner)
             .unwrap_or_default();
         let inner = temporal_rs::PlainDate::new(year, month, day, cal).map_err(to_js_error)?;
         Ok(Self { inner })

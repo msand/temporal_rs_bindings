@@ -9,11 +9,6 @@ use crate::plain_date_time::PlainDateTime;
 use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 
-fn provider() -> Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
-    temporal_common::cached_provider()
-        .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
-}
-
 #[wasm_bindgen]
 pub struct ZonedDateTime {
     pub(crate) inner: temporal_rs::ZonedDateTime,
@@ -27,7 +22,7 @@ impl ZonedDateTime {
         timezone: &TimeZone,
         calendar: Option<Calendar>,
     ) -> Result<ZonedDateTime, JsValue> {
-        let cal = calendar.map(|c| c.inner.clone()).unwrap_or_default();
+        let cal = calendar.map(|c| c.inner).unwrap_or_default();
         let inner = temporal_rs::ZonedDateTime::try_new_with_provider(
             epoch_nanoseconds as i128,
             timezone.inner,
@@ -56,7 +51,10 @@ impl ZonedDateTime {
         timezone: &TimeZone,
         calendar: Option<Calendar>,
     ) -> Result<ZonedDateTime, JsValue> {
-        let cal = calendar.map(|c| c.inner.clone()).unwrap_or_default();
+        let cal = calendar.map(|c| c.inner).unwrap_or_default();
+        if ms.is_nan() || ms.is_infinite() {
+            return Err(JsValue::from_str("RangeError: epochMilliseconds must be finite"));
+        }
         let instant =
             temporal_rs::Instant::from_epoch_milliseconds(ms as i64).map_err(to_js_error)?;
         let inner = temporal_rs::ZonedDateTime::try_new_from_instant_with_provider(

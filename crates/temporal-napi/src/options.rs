@@ -1,3 +1,7 @@
+// NOTE: The enum definitions and From impls in this file must stay in sync
+// with the corresponding file in the sibling crate (temporal-napi or temporal-wasm).
+// Changes to enum variants or conversion logic must be applied to both.
+
 use temporal_rs::options::RoundingIncrement;
 
 pub(crate) fn to_napi_error(e: temporal_rs::TemporalError) -> napi::Error {
@@ -245,4 +249,9 @@ impl From<ToStringRoundingOptions> for temporal_rs::options::ToStringRoundingOpt
             rounding_mode: value.rounding_mode.map(Into::into),
         }
     }
+}
+
+pub(crate) fn provider() -> napi::Result<&'static temporal_common::TzProvider> {
+    temporal_common::cached_provider()
+        .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
 }

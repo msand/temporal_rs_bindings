@@ -1,6 +1,4 @@
 import {
-  NapiCalendar,
-  NapiTimeZone,
   NapiPlainDate,
   NapiPlainTime,
   NapiPlainDateTime,
@@ -74,13 +72,10 @@ import {
   toNapiCalendar,
   toNapiTimeZone,
   toNapiDuration,
-  toNapiPlainDate,
   toNapiPlainTime,
   toNapiZonedDateTime,
   convertDifferenceSettings,
   convertRoundingOptions,
-  convertToStringOptions,
-  _parseDurationForInstant,
 } from './convert';
 
 import {
@@ -92,7 +87,6 @@ import {
   resolveEraYear,
   calendarDateToISO,
   calendarDateDifference,
-  USE_JS_DIFF_CALENDARS,
   isMonthCodeValidForYear,
   calendarDaysInMonth,
   ISO_MONTH_ALIGNED_CALENDARS,

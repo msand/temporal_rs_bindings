@@ -1,7 +1,7 @@
 use napi_derive::napi;
 
 use crate::options::to_napi_error;
-use crate::options::{RoundingOptions, Unit};
+use crate::options::{provider, RoundingOptions, Unit};
 
 fn make_relative_to(
     relative_to_date: Option<&crate::plain_date::PlainDate>,
@@ -11,11 +11,6 @@ fn make_relative_to(
         relative_to_date.map(|d| &d.inner),
         relative_to_zdt.map(|z| &z.inner),
     )
-}
-
-fn make_provider() -> napi::Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
-    temporal_common::cached_provider()
-        .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
 }
 
 #[napi]
@@ -165,7 +160,7 @@ impl Duration {
         relative_to_date: Option<&crate::plain_date::PlainDate>,
         relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
     ) -> napi::Result<Duration> {
-        let provider = make_provider()?;
+        let provider = provider()?;
 
         let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 
@@ -184,7 +179,7 @@ impl Duration {
         relative_to_date: Option<&crate::plain_date::PlainDate>,
         relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
     ) -> napi::Result<f64> {
-        let provider = make_provider()?;
+        let provider = provider()?;
 
         let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 
@@ -203,7 +198,7 @@ impl Duration {
         relative_to_date: Option<&crate::plain_date::PlainDate>,
         relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
     ) -> napi::Result<i32> {
-        let provider = make_provider()?;
+        let provider = provider()?;
 
         let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 

@@ -10,6 +10,8 @@ import {
   NapiPlainYearMonth,
   NapiPlainMonthDay,
   NapiDuration,
+  type ISOFields,
+  type RangeInfo,
 } from './binding';
 import { _isTemporalDuration } from './helpers';
 import { Instant } from './instant';
@@ -27,23 +29,6 @@ declare global {
       resolvedOptions(): Record<string, unknown>;
     }
   }
-}
-
-// ISO date fields
-interface ISOFields {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
-  second: number;
-}
-
-// Range info for Intl formatting
-interface RangeInfo {
-  ms: any;
-  isoFields: ISOFields | null | undefined;
-  isTemporal: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════

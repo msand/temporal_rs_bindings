@@ -1,3 +1,7 @@
+// NOTE: The enum definitions and From impls in this file must stay in sync
+// with the corresponding file in the sibling crate (temporal-napi or temporal-wasm).
+// Changes to enum variants or conversion logic must be applied to both.
+
 use serde::Deserialize;
 use temporal_rs::options::RoundingIncrement;
 use wasm_bindgen::prelude::*;
@@ -283,4 +287,9 @@ pub(crate) fn deserialize_to_string_rounding_options(
             serde_wasm_bindgen::from_value(val).map_err(|e| JsValue::from_str(&format!("{e}")))?;
         Ok(options.into())
     }
+}
+
+pub(crate) fn provider() -> Result<&'static temporal_common::TzProvider, JsValue> {
+    temporal_common::cached_provider()
+        .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
 }

@@ -937,6 +937,9 @@ let _getUtcOffsetString: ((epochMs: number, tzId: string) => string) | undefined
 let _calendarDaysInMonth: ((calYear: number, calMonth: any, calId: string) => any) | undefined;
 let _monthCodeToMonth: ((monthCode: any, calendarId?: string, targetYear?: number) => any) | undefined;
 
+// Lazy require() to break circular module dependency.
+// These modules import from helpers.ts, so a static ESM import here would create a cycle
+// that fails at module initialization time. Using require() defers the resolution.
 function getUtcOffsetString(epochMs: number, tzId: string): string {
   if (!_getUtcOffsetString) {
     _getUtcOffsetString = require('./timezone').getUtcOffsetString;
@@ -944,6 +947,9 @@ function getUtcOffsetString(epochMs: number, tzId: string): string {
   return _getUtcOffsetString!(epochMs, tzId);
 }
 
+// Lazy require() to break circular module dependency.
+// These modules import from helpers.ts, so a static ESM import here would create a cycle
+// that fails at module initialization time. Using require() defers the resolution.
 function calendarDaysInMonth(calYear: number, calMonth: any, calId: string): any {
   if (!_calendarDaysInMonth) {
     _calendarDaysInMonth = require('./calendar').calendarDaysInMonth;
@@ -951,111 +957,12 @@ function calendarDaysInMonth(calYear: number, calMonth: any, calId: string): any
   return _calendarDaysInMonth!(calYear, calMonth, calId);
 }
 
+// Lazy require() to break circular module dependency.
+// These modules import from helpers.ts, so a static ESM import here would create a cycle
+// that fails at module initialization time. Using require() defers the resolution.
 export function monthCodeToMonth(monthCode: any, calendarId?: string, targetYear?: number): any {
   if (!_monthCodeToMonth) {
     _monthCodeToMonth = require('./calendar').monthCodeToMonth;
   }
   return _monthCodeToMonth!(monthCode, calendarId, targetYear);
 }
-
-// ─── Intl-related helpers used by class modules' toLocaleString ───
-
-const _DATE_TIME_COMPONENT_OPTS = [
-  'year',
-  'month',
-  'day',
-  'weekday',
-  'hour',
-  'minute',
-  'second',
-  'fractionalSecondDigits',
-  'dayPeriod',
-  'dateStyle',
-  'timeStyle',
-];
-export function _hasDateTimeOptions(opts: any): boolean {
-  if (!opts || typeof opts !== 'object') return false;
-  for (const key of _DATE_TIME_COMPONENT_OPTS) {
-    if (opts[key] !== undefined) return true;
-  }
-  return false;
-}
-
-// Helper: convert a Temporal object to epoch milliseconds for Intl formatting
-export function _temporalToEpochMs(temporalObj: any): number | undefined {
-  if (!temporalObj || typeof temporalObj !== 'object') return undefined;
-  const inner = temporalObj._inner;
-  if (!inner) return undefined;
-  if (inner instanceof NapiInstant) {
-    return inner.epochMilliseconds;
-  }
-  if (inner instanceof NapiZonedDateTime) {
-    return inner.epochMilliseconds;
-  }
-  if (inner instanceof NapiPlainDateTime) {
-    const d = new Date(0);
-    d.setUTCFullYear(
-      (inner as any).isoYear || inner.year,
-      ((inner as any).isoMonth || inner.month) - 1,
-      (inner as any).isoDay || inner.day,
-    );
-    d.setUTCHours(inner.hour, inner.minute, inner.second, inner.millisecond);
-    return d.getTime();
-  }
-  if (inner instanceof NapiPlainDate) {
-    const d = new Date(0);
-    const str = inner.toString();
-    const m = str.match(/^(-?\d+|\+\d+)-(\d{2})-(\d{2})/);
-    if (m) {
-      d.setUTCFullYear(parseInt(m[1]!, 10), parseInt(m[2]!, 10) - 1, parseInt(m[3]!, 10));
-    } else {
-      d.setUTCFullYear(inner.year, inner.month - 1, inner.day);
-    }
-    d.setUTCHours(12, 0, 0, 0);
-    return d.getTime();
-  }
-  if (inner instanceof NapiPlainTime) {
-    const d = new Date(0);
-    d.setUTCFullYear(1970, 0, 1);
-    d.setUTCHours(inner.hour, inner.minute, inner.second, inner.millisecond);
-    return d.getTime();
-  }
-  if (inner instanceof NapiPlainYearMonth) {
-    const str = inner.toString();
-    const m3 = str.match(/(-?\d+|\+\d+)-(\d{2})-(\d{2})/);
-    if (m3) {
-      const d = new Date(0);
-      d.setUTCFullYear(parseInt(m3[1]!, 10), parseInt(m3[2]!, 10) - 1, parseInt(m3[3]!, 10));
-      d.setUTCHours(12, 0, 0, 0);
-      return d.getTime();
-    }
-    const m2 = str.match(/(-?\d+|\+\d+)-(\d{2})/);
-    if (m2) {
-      const d = new Date(0);
-      d.setUTCFullYear(parseInt(m2[1]!, 10), parseInt(m2[2]!, 10) - 1, 1);
-      d.setUTCHours(12, 0, 0, 0);
-      return d.getTime();
-    }
-    return undefined;
-  }
-  if (inner instanceof NapiPlainMonthDay) {
-    const str = inner.toString();
-    const m = str.match(/(-?\d+|\+\d+)-(\d{2})-(\d{2})/) || str.match(/^(\d{2})-(\d{2})$/);
-    if (m) {
-      const d = new Date(0);
-      if (m.length === 4) {
-        d.setUTCFullYear(parseInt(m[1]!, 10), parseInt(m[2]!, 10) - 1, parseInt(m[3]!, 10));
-      } else {
-        d.setUTCFullYear(1972, parseInt(m[1]!, 10) - 1, parseInt(m[2]!, 10));
-      }
-      d.setUTCHours(12, 0, 0, 0);
-      return d.getTime();
-    }
-    return undefined;
-  }
-  return undefined;
-}
-
-// Original format getter for Intl.DateTimeFormat
-const _origFormatDesc = Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, 'format');
-export const _origFormatGetter = _origFormatDesc && (_origFormatDesc.get as () => (date?: number | Date) => string);

@@ -1,4 +1,4 @@
-import { NapiPlainTime, NapiPlainDateTime, NapiZonedDateTime, type NapiPlainTimeT } from './binding';
+import { NapiPlainTime, type NapiPlainTimeT } from './binding';
 import {
   call,
   _wrapperSet,
@@ -22,13 +22,7 @@ import {
 } from './helpers';
 import { _hasDateTimeOptions, _origFormatGetter } from './intl';
 import { mapUnit, mapRoundingMode } from './enums';
-import {
-  toNapiDuration,
-  toNapiPlainTime,
-  convertDifferenceSettings,
-  convertRoundingOptions,
-  convertToStringOptions,
-} from './convert';
+import { toNapiDuration, toNapiPlainTime, convertDifferenceSettings, convertRoundingOptions } from './convert';
 
 class PlainTime {
   _inner!: NapiPlainTimeT;

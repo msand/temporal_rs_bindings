@@ -28,7 +28,7 @@ impl PlainDateTime {
         calendar: Option<Calendar>,
     ) -> Result<PlainDateTime, JsValue> {
         let cal = calendar
-            .map(|c| c.inner.clone())
+            .map(|c| c.inner)
             .unwrap_or_default();
         let inner = temporal_rs::PlainDateTime::new(
             year,

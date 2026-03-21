@@ -2,17 +2,12 @@ use napi_derive::napi;
 use temporal_rs::sys::{LocalHostSystem, Temporal};
 
 use crate::instant::Instant;
-use crate::options::to_napi_error;
+use crate::options::{provider, to_napi_error};
 use crate::plain_date::PlainDate;
 use crate::plain_date_time::PlainDateTime;
 use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 use crate::zoned_date_time::ZonedDateTime;
-
-fn make_provider() -> napi::Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
-    temporal_common::cached_provider()
-        .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
-}
 
 fn local_now() -> temporal_rs::now::Now<LocalHostSystem> {
     Temporal::local_now()
@@ -26,7 +21,7 @@ pub fn now_instant() -> napi::Result<Instant> {
 
 #[napi]
 pub fn now_time_zone() -> napi::Result<TimeZone> {
-    let provider = make_provider()?;
+    let provider = provider()?;
     let inner = local_now()
         .time_zone_with_provider(&provider)
         .map_err(to_napi_error)?;
@@ -35,7 +30,7 @@ pub fn now_time_zone() -> napi::Result<TimeZone> {
 
 #[napi]
 pub fn now_zoned_date_time_iso(time_zone: Option<&TimeZone>) -> napi::Result<ZonedDateTime> {
-    let provider = make_provider()?;
+    let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = local_now()
         .zoned_date_time_iso_with_provider(tz, &provider)
@@ -45,7 +40,7 @@ pub fn now_zoned_date_time_iso(time_zone: Option<&TimeZone>) -> napi::Result<Zon
 
 #[napi]
 pub fn now_plain_date_time_iso(time_zone: Option<&TimeZone>) -> napi::Result<PlainDateTime> {
-    let provider = make_provider()?;
+    let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = local_now()
         .plain_date_time_iso_with_provider(tz, &provider)
@@ -55,7 +50,7 @@ pub fn now_plain_date_time_iso(time_zone: Option<&TimeZone>) -> napi::Result<Pla
 
 #[napi]
 pub fn now_plain_date_iso(time_zone: Option<&TimeZone>) -> napi::Result<PlainDate> {
-    let provider = make_provider()?;
+    let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = local_now()
         .plain_date_iso_with_provider(tz, &provider)
@@ -65,7 +60,7 @@ pub fn now_plain_date_iso(time_zone: Option<&TimeZone>) -> napi::Result<PlainDat
 
 #[napi]
 pub fn now_plain_time_iso(time_zone: Option<&TimeZone>) -> napi::Result<PlainTime> {
-    let provider = make_provider()?;
+    let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = local_now()
         .plain_time_iso_with_provider(tz, &provider)

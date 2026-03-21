@@ -9,11 +9,6 @@ use crate::plain_date_time::PlainDateTime;
 use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 
-fn provider() -> napi::Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
-    temporal_common::cached_provider()
-        .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
-}
-
 #[napi]
 pub struct ZonedDateTime {
     pub(crate) inner: temporal_rs::ZonedDateTime,
@@ -27,7 +22,10 @@ impl ZonedDateTime {
         timezone: &TimeZone,
         calendar: Option<&Calendar>,
     ) -> napi::Result<Self> {
-        let (ns, _lossless) = epoch_nanoseconds.get_i128();
+        let (ns, lossless) = epoch_nanoseconds.get_i128();
+        if !lossless {
+            return Err(napi::Error::from_reason("RangeError: BigInt value out of i128 range"));
+        }
         let cal = calendar.map(|c| c.inner.clone()).unwrap_or_default();
         let inner = temporal_rs::ZonedDateTime::try_new_with_provider(
             ns,
