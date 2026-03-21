@@ -8,6 +8,8 @@ test262-failures.txt
 
 # Compiled conformance layer outputs (built from lib/temporal.ts)
 lib/temporal.js
+lib/temporal.js.map
 lib/temporal.mjs
+lib/temporal.mjs.map
 lib/temporal.d.ts
 lib/temporal.d.mts

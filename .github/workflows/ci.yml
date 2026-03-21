@@ -181,6 +181,46 @@ jobs:
       - name: Run tests
         run: npm test
 
+  test262:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Test262 Conformance
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: binding-x86_64-unknown-linux-gnu
+          path: .
+
+      - name: Build TypeScript conformance layer
+        run: npx tsup
+
+      - name: Run Test262
+        run: node test262-runner.mjs --write-failures
+
+      - name: Check failure count
+        run: |
+          FAIL_COUNT=$(wc -l < test262-failures.txt)
+          echo "Failures: $FAIL_COUNT"
+          if [ "$FAIL_COUNT" -gt 2 ]; then
+            echo "::error::Test262 regression: $FAIL_COUNT failures (expected ≤ 2)"
+            cat test262-failures.txt
+            exit 1
+          fi
+
   publish:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true'
     needs: [test, lint, build-wasm]

@@ -39,17 +39,19 @@
     "test262": "node test262-runner.mjs",
     "test262:verbose": "node test262-runner.mjs -v",
     "test262:failing": "node test262-runner.mjs --failing",
-    "lint": "eslint lib/temporal.ts",
-    "lint:fix": "eslint lib/temporal.ts --fix",
-    "format": "prettier --write lib/temporal.ts",
-    "format:check": "prettier --check lib/temporal.ts",
+    "lint": "eslint lib/temporal.ts tsup.config.ts eslint.config.mjs",
+    "lint:fix": "eslint lib/temporal.ts tsup.config.ts eslint.config.mjs --fix",
+    "format": "prettier --write 'lib/temporal.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json'",
+    "format:check": "prettier --check 'lib/temporal.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json'",
     "version": "./scripts/bump-version.sh"
   },
   "files": [
     "index.js",
     "index.d.ts",
     "lib/temporal.js",
+    "lib/temporal.js.map",
     "lib/temporal.mjs",
+    "lib/temporal.mjs.map",
     "lib/temporal.d.ts",
     "lib/temporal.d.mts"
   ],
