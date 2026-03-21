@@ -257,19 +257,9 @@ function bigintNsToISOString(epochNs: bigint): string {
 // ─── Helper: compute epoch nanoseconds BigInt from NAPI inner ──
 
 function computeEpochNanoseconds(inner: NapiInstantT | NapiZonedDateTimeT): bigint {
-  // The NAPI epochNanoseconds is a Number which loses precision for large values.
-  // Compute precise BigInt from epochMilliseconds + sub-ms components from toString.
-  const str = inner.toString();
-  const epochMs = BigInt(inner.epochMilliseconds);
-  // Extract fractional seconds from the string
-  const dotMatch = str.match(/\.(\d+)/);
-  if (!dotMatch) {
-    return epochMs * 1000000n;
-  }
-  const fracStr = (dotMatch[1]! + '000000000').substring(0, 9);
-  const us = parseInt(fracStr.substring(3, 6), 10);
-  const ns = parseInt(fracStr.substring(6, 9), 10);
-  return epochMs * 1000000n + BigInt(us) * 1000n + BigInt(ns);
+  // The NAPI epochNanoseconds getter now returns BigInt (i128) directly,
+  // preserving full nanosecond precision without string-parsing workarounds.
+  return inner.epochNanoseconds;
 }
 
 // Helper: parse a duration argument for Instant.add/subtract, preserving BigInt precision

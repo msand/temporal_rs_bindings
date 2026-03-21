@@ -207,7 +207,7 @@ export declare class PlainDateTime {
   valueOf(): void
 }
 export declare class ZonedDateTime {
-  constructor(epochNanoseconds: number, timezone: TimeZone, calendar?: Calendar | undefined | null)
+  constructor(epochNanoseconds: bigint, timezone: TimeZone, calendar?: Calendar | undefined | null)
   static from(s: string): ZonedDateTime
   static fromEpochMilliseconds(ms: number, timezone: TimeZone, calendar?: Calendar | undefined | null): ZonedDateTime
   get year(): number
@@ -236,7 +236,7 @@ export declare class ZonedDateTime {
   get offset(): string
   get offsetNanoseconds(): number
   get epochMilliseconds(): number
-  get epochNanoseconds(): number
+  get epochNanoseconds(): bigint
   add(duration: Duration, overflow?: Overflow | undefined | null): ZonedDateTime
   subtract(duration: Duration, overflow?: Overflow | undefined | null): ZonedDateTime
   until(other: ZonedDateTime, settings?: DifferenceSettings | undefined | null): Duration
@@ -257,11 +257,11 @@ export declare class ZonedDateTime {
   valueOf(): void
 }
 export declare class Instant {
-  constructor(epochNanoseconds: number)
+  constructor(epochNanoseconds: bigint)
   static from(s: string): Instant
   static fromEpochMilliseconds(ms: number): Instant
   get epochMilliseconds(): number
-  get epochNanoseconds(): number
+  get epochNanoseconds(): bigint
   add(duration: Duration): Instant
   subtract(duration: Duration): Instant
   until(other: Instant, settings?: DifferenceSettings | undefined | null): Duration

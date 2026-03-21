@@ -16,9 +16,9 @@ pub struct Instant {
 #[napi]
 impl Instant {
     #[napi(constructor)]
-    pub fn new(epoch_nanoseconds: i64) -> napi::Result<Self> {
-        let inner =
-            temporal_rs::Instant::try_new(epoch_nanoseconds as i128).map_err(to_napi_error)?;
+    pub fn new(epoch_nanoseconds: napi::bindgen_prelude::BigInt) -> napi::Result<Self> {
+        let (ns, _lossless) = epoch_nanoseconds.get_i128();
+        let inner = temporal_rs::Instant::try_new(ns).map_err(to_napi_error)?;
         Ok(Self { inner })
     }
 
@@ -40,8 +40,8 @@ impl Instant {
     }
 
     #[napi(getter)]
-    pub fn epoch_nanoseconds(&self) -> i64 {
-        self.inner.as_i128() as i64
+    pub fn epoch_nanoseconds(&self) -> i128 {
+        self.inner.as_i128()
     }
 
     #[napi]

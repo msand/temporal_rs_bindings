@@ -23,13 +23,14 @@ pub struct ZonedDateTime {
 impl ZonedDateTime {
     #[napi(constructor)]
     pub fn new(
-        epoch_nanoseconds: i64,
+        epoch_nanoseconds: napi::bindgen_prelude::BigInt,
         timezone: &TimeZone,
         calendar: Option<&Calendar>,
     ) -> napi::Result<Self> {
+        let (ns, _lossless) = epoch_nanoseconds.get_i128();
         let cal = calendar.map(|c| c.inner.clone()).unwrap_or_default();
         let inner = temporal_rs::ZonedDateTime::try_new_with_provider(
-            epoch_nanoseconds as i128,
+            ns,
             timezone.inner,
             cal,
             provider()?,
@@ -210,8 +211,8 @@ impl ZonedDateTime {
     }
 
     #[napi(getter)]
-    pub fn epoch_nanoseconds(&self) -> i64 {
-        self.inner.epoch_nanoseconds().as_i128() as i64
+    pub fn epoch_nanoseconds(&self) -> i128 {
+        self.inner.epoch_nanoseconds().as_i128()
     }
 
     // ==== Arithmetic ====
