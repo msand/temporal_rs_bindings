@@ -1564,10 +1564,10 @@ function isHebrewLeapYear(hebrewYear: number): boolean {
 
 // For Chinese/Dangi: find which month code has the leap month in a given year.
 // Returns the base month number N such that M{N}L exists, or 0 if no leap month.
-const _chineseDangiLeapMonthCache: Record<string, number> = {};
+const _chineseDangiLeapMonthCache = new Map<string, number>();
 function getChineseDangiLeapMonth(calYear: number, calId: string): number {
   const cacheKey = `${calId}:${calYear}`;
-  if (_chineseDangiLeapMonthCache[cacheKey] !== undefined) return _chineseDangiLeapMonthCache[cacheKey];
+  if (_chineseDangiLeapMonthCache.has(cacheKey)) return _chineseDangiLeapMonthCache.get(cacheKey)!;
   try {
     const cal = toNapiCalendar(calId);
     // First find approximate ISO year
@@ -1608,7 +1608,8 @@ function getChineseDangiLeapMonth(calYear: number, calId: string): number {
       }
     }
     if (probe.monthsInYear !== 13) {
-      _chineseDangiLeapMonthCache[cacheKey] = 0;
+      if (_chineseDangiLeapMonthCache.size >= _CACHE_MAX) _chineseDangiLeapMonthCache.clear();
+      _chineseDangiLeapMonthCache.set(cacheKey, 0);
       return 0;
     }
     // Scan through the year to find which month code has 'L'
@@ -1623,17 +1624,20 @@ function getChineseDangiLeapMonth(calYear: number, calId: string): number {
           lastMonth = pd.month;
           if (pd.monthCode.endsWith('L')) {
             const base = parseInt(pd.monthCode.slice(1, 3), 10);
-            _chineseDangiLeapMonthCache[cacheKey] = base;
+            if (_chineseDangiLeapMonthCache.size >= _CACHE_MAX) _chineseDangiLeapMonthCache.clear();
+            _chineseDangiLeapMonthCache.set(cacheKey, base);
             return base;
           }
         }
         if (pd.year > calYear && pd.month >= 2) break;
       } catch {}
     }
-    _chineseDangiLeapMonthCache[cacheKey] = 0;
+    if (_chineseDangiLeapMonthCache.size >= _CACHE_MAX) _chineseDangiLeapMonthCache.clear();
+    _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   } catch {
-    _chineseDangiLeapMonthCache[cacheKey] = 0;
+    if (_chineseDangiLeapMonthCache.size >= _CACHE_MAX) _chineseDangiLeapMonthCache.clear();
+    _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   }
 }
@@ -4636,8 +4640,6 @@ class PlainDate {
   }
 
   get year() {
-    const calId = getRealCalendarId(this);
-    if (calId === 'ethioaa') return this._inner.year;
     return this._inner.year;
   }
   get month() {
@@ -5586,8 +5588,6 @@ class PlainDateTime {
   }
 
   get year() {
-    const calId = getRealCalendarId(this);
-    if (calId === 'ethioaa') return this._inner.year;
     return this._inner.year;
   }
   get month() {
@@ -6780,8 +6780,6 @@ class ZonedDateTime {
   }
 
   get year() {
-    const calId = getRealCalendarId(this);
-    if (calId === 'ethioaa') return this._inner.year;
     return this._inner.year;
   }
   get month() {

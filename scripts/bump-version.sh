@@ -65,6 +65,12 @@ for dir in npm/*/; do
   sed_i "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" "$dir/package.json"
 done
 
+# 3b. WASM package (if built)
+if [ -f "wasm-pkg/package.json" ]; then
+  echo "  wasm-pkg/package.json"
+  sed_i "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" wasm-pkg/package.json
+fi
+
 # 4. Cargo workspace version
 echo "  Cargo.toml"
 sed_i "s/^version = \"$CURRENT\"/version = \"$NEW\"/" Cargo.toml
