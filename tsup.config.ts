@@ -8,6 +8,7 @@ export default defineConfig({
   clean: false,
   splitting: false,
   sourcemap: true,
+  minify: true,
   // Don't bundle dependencies - keep the require('../index.js') external
   noExternal: [],
   external: ['node:module', 'node:child_process', 'node:url'],

@@ -199,6 +199,9 @@ import { PlainDate } from 'temporal_rs/native'
 
 // CJS — raw NAPI bindings
 const { PlainDate } = require('temporal_rs/native')
+
+// WASM — for browser/edge runtimes (ESM only)
+import { PlainDate } from 'temporal_rs/wasm'
 ```
 
 ## WASM (Browser)

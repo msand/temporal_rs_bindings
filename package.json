@@ -14,6 +14,10 @@
       "types": "./index.d.ts",
       "import": "./index.js",
       "require": "./index.js"
+    },
+    "./wasm": {
+      "types": "./wasm-pkg/temporal_wasm.d.ts",
+      "import": "./wasm-pkg/temporal_wasm.js"
     }
   },
   "repository": {
@@ -53,7 +57,8 @@
     "lib/temporal.mjs",
     "lib/temporal.mjs.map",
     "lib/temporal.d.ts",
-    "lib/temporal.d.mts"
+    "lib/temporal.d.mts",
+    "wasm-pkg/"
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -47,11 +47,23 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: cargo-${{ matrix.target }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ matrix.target }}-
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -96,9 +108,21 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: cargo-wasm-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-wasm-
 
       - name: Install wasm-pack
         run: cargo install wasm-pack
@@ -123,9 +147,21 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: cargo-lint-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-lint-
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -165,6 +201,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -195,6 +232,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -238,6 +276,7 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -250,6 +289,12 @@ jobs:
 
       - name: Build TypeScript conformance layer
         run: npx tsup
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Build WASM
+        run: npm run build:wasm
 
       - name: Download all artifacts
         uses: actions/download-artifact@v8
