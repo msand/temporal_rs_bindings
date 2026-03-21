@@ -248,8 +248,10 @@ jobs:
 
       - name: Run Test262
         run: |
+          set +e
           node test262-runner.mjs --write-failures
           TEST262_EXIT=$?
+          set -e
           if [ $TEST262_EXIT -ne 0 ] && [ $TEST262_EXIT -ne 1 ]; then
             echo "::error::Test262 runner crashed with exit code $TEST262_EXIT"
             exit $TEST262_EXIT

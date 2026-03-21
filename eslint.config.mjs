@@ -29,17 +29,10 @@ export default tseslint.config(
       '@typescript-eslint/unbound-method': 'off',
     },
   },
-  // Config and build files — strict with no exemptions
+  // Config and build files — basic linting without type-aware rules
+  // (these files are outside tsconfig rootDir so projectService can't find them)
   {
     files: ['*.ts', '*.mjs'],
     extends: [...tseslint.configs.recommended],
-    languageOptions: {
-      parserOptions: {
-        projectService: {
-          allowDefaultProject: ['tsup.config.ts', 'eslint.config.mjs'],
-        },
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
   },
 );
