@@ -9,8 +9,8 @@ use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 use crate::zoned_date_time::ZonedDateTime;
 
-fn make_provider() -> napi::Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
-    temporal_common::create_provider()
+fn make_provider() -> napi::Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
+    temporal_common::cached_provider()
         .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
 }
 

@@ -90,7 +90,6 @@ interface RangeInfo {
   isTemporal: boolean;
 }
 
-// @ts-expect-error - Node.js built-in module
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const binding: NapiTypes = require('../index.js');

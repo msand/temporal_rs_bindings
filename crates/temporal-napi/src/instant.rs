@@ -3,8 +3,8 @@ use napi_derive::napi;
 use crate::duration::Duration;
 use crate::options::*;
 
-fn provider() -> napi::Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
-    temporal_common::create_provider()
+fn provider() -> napi::Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
+    temporal_common::cached_provider()
         .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
 }
 
@@ -112,7 +112,7 @@ impl Instant {
             .to_ixdtf_string_with_provider(
                 None,
                 temporal_rs::options::ToStringRoundingOptions::default(),
-                &provider()?,
+                provider()?,
             )
             .map_err(to_napi_error)
     }
@@ -123,7 +123,7 @@ impl Instant {
             .to_ixdtf_string_with_provider(
                 None,
                 temporal_rs::options::ToStringRoundingOptions::default(),
-                &provider()?,
+                provider()?,
             )
             .map_err(to_napi_error)
     }

@@ -9,8 +9,8 @@ use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 use crate::zoned_date_time::ZonedDateTime;
 
-fn make_provider() -> Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
-    temporal_common::create_provider()
+fn make_provider() -> Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
+    temporal_common::cached_provider()
         .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
 }
 

@@ -9,8 +9,8 @@ use crate::plain_date_time::PlainDateTime;
 use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 
-fn provider() -> napi::Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
-    temporal_common::create_provider()
+fn provider() -> napi::Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
+    temporal_common::cached_provider()
         .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
 }
 
@@ -32,7 +32,7 @@ impl ZonedDateTime {
             epoch_nanoseconds as i128,
             timezone.inner,
             cal,
-            &provider()?,
+            provider()?,
         )
         .map_err(to_napi_error)?;
         Ok(Self { inner })
@@ -44,7 +44,7 @@ impl ZonedDateTime {
             s.as_bytes(),
             temporal_rs::options::Disambiguation::Compatible,
             temporal_rs::options::OffsetDisambiguation::Reject,
-            &provider()?,
+            provider()?,
         )
         .map_err(to_napi_error)?;
         Ok(Self { inner })
@@ -63,7 +63,7 @@ impl ZonedDateTime {
             instant,
             timezone.inner,
             cal,
-            &provider()?,
+            provider()?,
         )
         .map_err(to_napi_error)?;
         Ok(Self { inner })
@@ -224,7 +224,7 @@ impl ZonedDateTime {
     ) -> napi::Result<ZonedDateTime> {
         let inner = self
             .inner
-            .add_with_provider(&duration.inner, overflow.map(Into::into), &provider()?)
+            .add_with_provider(&duration.inner, overflow.map(Into::into), provider()?)
             .map_err(to_napi_error)?;
         Ok(ZonedDateTime { inner })
     }
@@ -237,7 +237,7 @@ impl ZonedDateTime {
     ) -> napi::Result<ZonedDateTime> {
         let inner = self
             .inner
-            .subtract_with_provider(&duration.inner, overflow.map(Into::into), &provider()?)
+            .subtract_with_provider(&duration.inner, overflow.map(Into::into), provider()?)
             .map_err(to_napi_error)?;
         Ok(ZonedDateTime { inner })
     }
@@ -252,7 +252,7 @@ impl ZonedDateTime {
             settings.unwrap_or_default().try_into()?;
         let inner = self
             .inner
-            .until_with_provider(&other.inner, s, &provider()?)
+            .until_with_provider(&other.inner, s, provider()?)
             .map_err(to_napi_error)?;
         Ok(Duration { inner })
     }
@@ -267,7 +267,7 @@ impl ZonedDateTime {
             settings.unwrap_or_default().try_into()?;
         let inner = self
             .inner
-            .since_with_provider(&other.inner, s, &provider()?)
+            .since_with_provider(&other.inner, s, provider()?)
             .map_err(to_napi_error)?;
         Ok(Duration { inner })
     }
@@ -279,7 +279,7 @@ impl ZonedDateTime {
         let opts: temporal_rs::options::RoundingOptions = options.try_into()?;
         let inner = self
             .inner
-            .round_with_provider(opts, &provider()?)
+            .round_with_provider(opts, provider()?)
             .map_err(to_napi_error)?;
         Ok(ZonedDateTime { inner })
     }
@@ -287,7 +287,7 @@ impl ZonedDateTime {
     #[napi]
     pub fn equals(&self, other: &ZonedDateTime) -> napi::Result<bool> {
         self.inner
-            .equals_with_provider(&other.inner, &provider()?)
+            .equals_with_provider(&other.inner, provider()?)
             .map_err(to_napi_error)
     }
 
@@ -299,7 +299,7 @@ impl ZonedDateTime {
     #[napi(getter)]
     pub fn hours_in_day(&self) -> napi::Result<f64> {
         self.inner
-            .hours_in_day_with_provider(&provider()?)
+            .hours_in_day_with_provider(provider()?)
             .map_err(to_napi_error)
     }
 
@@ -307,7 +307,7 @@ impl ZonedDateTime {
     pub fn start_of_day(&self) -> napi::Result<ZonedDateTime> {
         let inner = self
             .inner
-            .start_of_day_with_provider(&provider()?)
+            .start_of_day_with_provider(provider()?)
             .map_err(to_napi_error)?;
         Ok(ZonedDateTime { inner })
     }
@@ -351,7 +351,7 @@ impl ZonedDateTime {
     pub fn with_time_zone(&self, timezone: &TimeZone) -> napi::Result<ZonedDateTime> {
         let inner = self
             .inner
-            .with_time_zone_with_provider(timezone.inner, &provider()?)
+            .with_time_zone_with_provider(timezone.inner, provider()?)
             .map_err(to_napi_error)?;
         Ok(ZonedDateTime { inner })
     }
@@ -359,14 +359,14 @@ impl ZonedDateTime {
     #[napi]
     pub fn to_string(&self) -> napi::Result<String> {
         self.inner
-            .to_string_with_provider(&provider()?)
+            .to_string_with_provider(provider()?)
             .map_err(to_napi_error)
     }
 
     #[napi]
     pub fn to_json(&self) -> napi::Result<String> {
         self.inner
-            .to_string_with_provider(&provider()?)
+            .to_string_with_provider(provider()?)
             .map_err(to_napi_error)
     }
 

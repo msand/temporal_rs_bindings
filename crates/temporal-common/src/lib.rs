@@ -50,10 +50,25 @@ pub fn make_relative_to(
 // IANA timezone provider from the `icu` crate. Despite the "_for_testing" suffix in its
 // name (an upstream naming convention), it is the correct provider for production use.
 
-/// Create the embedded IANA timezone provider.
+/// Create a fresh embedded IANA timezone provider instance.
 ///
 /// Returns `None` only if the embedded timezone data failed to load,
 /// which should not happen in practice.
+///
+/// Prefer [`cached_provider`] when a shared reference suffices, to
+/// avoid repeated initialisation overhead.
 pub fn create_provider() -> Option<ZoneInfo64TzdbProvider<'static>> {
     ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+}
+
+/// Return a reference to a lazily-initialised, process-wide timezone provider.
+///
+/// This avoids creating a new provider on every timezone operation.
+/// The provider is initialised once on first call and reused thereafter.
+pub fn cached_provider() -> Option<&'static ZoneInfo64TzdbProvider<'static>> {
+    use std::sync::OnceLock;
+    static PROVIDER: OnceLock<Option<ZoneInfo64TzdbProvider<'static>>> = OnceLock::new();
+    PROVIDER
+        .get_or_init(ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing)
+        .as_ref()
 }

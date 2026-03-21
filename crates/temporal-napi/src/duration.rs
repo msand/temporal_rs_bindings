@@ -13,8 +13,8 @@ fn make_relative_to(
     )
 }
 
-fn make_provider() -> napi::Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
-    temporal_common::create_provider()
+fn make_provider() -> napi::Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
+    temporal_common::cached_provider()
         .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
 }
 

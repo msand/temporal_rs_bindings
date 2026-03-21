@@ -3,8 +3,8 @@ use wasm_bindgen::prelude::*;
 use crate::duration::Duration;
 use crate::options::*;
 
-fn provider() -> Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
-    temporal_common::create_provider()
+fn provider() -> Result<&'static timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
+    temporal_common::cached_provider()
         .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
 }
 
@@ -103,7 +103,7 @@ impl Instant {
             .to_ixdtf_string_with_provider(
                 None,
                 temporal_rs::options::ToStringRoundingOptions::default(),
-                &p,
+                p,
             )
             .map_err(to_js_error)
     }
@@ -115,7 +115,7 @@ impl Instant {
             .to_ixdtf_string_with_provider(
                 None,
                 temporal_rs::options::ToStringRoundingOptions::default(),
-                &p,
+                p,
             )
             .map_err(to_js_error)
     }
