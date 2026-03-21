@@ -4,6 +4,9 @@ use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 use crate::options::to_napi_error;
 use crate::options::{RoundingOptions, Unit};
 
+// ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing() is the standard embedded
+// IANA timezone provider from the `icu` crate. Despite the "_for_testing" suffix in its
+// name (an upstream naming convention), it is the correct provider for production use.
 fn make_relative_to(
     relative_to_date: Option<&crate::plain_date::PlainDate>,
     relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
@@ -235,5 +238,17 @@ impl Duration {
     #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         format!("{}", self.inner)
+    }
+
+    #[napi]
+    pub fn to_json(&self) -> String {
+        format!("{}", self.inner)
+    }
+
+    #[napi]
+    pub fn value_of(&self) -> napi::Result<()> {
+        Err(napi::Error::from_reason(
+            "Use compare() to compare Duration values",
+        ))
     }
 }

@@ -104,39 +104,6 @@ function parseFrontmatter(source) {
 
 // ─── Build Temporal namespace from NAPI binding ─────────────
 
-function buildTemporalNamespaceSync(binding) {
-  return {
-    PlainDate: binding.PlainDate,
-    PlainTime: binding.PlainTime,
-    PlainDateTime: binding.PlainDateTime,
-    ZonedDateTime: binding.ZonedDateTime,
-    Instant: binding.Instant,
-    Duration: binding.Duration,
-    PlainYearMonth: binding.PlainYearMonth,
-    PlainMonthDay: binding.PlainMonthDay,
-    Now: {
-      instant: binding.nowInstant,
-      timeZoneId: () => binding.nowTimeZone().id,
-      zonedDateTimeISO: (tz) => {
-        if (typeof tz === 'string') tz = new binding.TimeZone(tz);
-        return binding.nowZonedDateTimeIso(tz);
-      },
-      plainDateTimeISO: (tz) => {
-        if (typeof tz === 'string') tz = new binding.TimeZone(tz);
-        return binding.nowPlainDateTimeIso(tz);
-      },
-      plainDateISO: (tz) => {
-        if (typeof tz === 'string') tz = new binding.TimeZone(tz);
-        return binding.nowPlainDateIso(tz);
-      },
-      plainTimeISO: (tz) => {
-        if (typeof tz === 'string') tz = new binding.TimeZone(tz);
-        return binding.nowPlainTimeIso(tz);
-      },
-    },
-  };
-}
-
 // ─── Collect test files ─────────────────────────────────────
 
 function collectTests(dirs, filter) {

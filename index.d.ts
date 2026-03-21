@@ -301,6 +301,8 @@ export declare class Duration {
   total(unit: Unit, relativeToDate?: PlainDate | undefined | null, relativeToZdt?: ZonedDateTime | undefined | null): number
   static compare(one: Duration, two: Duration, relativeToDate?: PlainDate | undefined | null, relativeToZdt?: ZonedDateTime | undefined | null): number
   toString(): string
+  toJson(): string
+  valueOf(): void
 }
 export declare class PlainYearMonth {
   constructor(year: number, month: number, calendar?: Calendar | undefined | null, referenceDay?: number | undefined | null)

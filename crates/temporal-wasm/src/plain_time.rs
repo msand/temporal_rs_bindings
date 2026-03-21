@@ -103,6 +103,7 @@ impl PlainTime {
         Ok(PlainTime { inner })
     }
 
+    #[wasm_bindgen]
     pub fn compare(one: &PlainTime, two: &PlainTime) -> i32 {
         one.inner.cmp(&two.inner) as i32
     }

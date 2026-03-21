@@ -553,7 +553,7 @@ function _resolveLocalToEpochMs(
   tzId: string,
   disambiguation: string,
 ): { epochMs: number; offsetStr: string } {
-  if (tzId === 'UTC' || /^[+-]\d{2}:\d{2}$/.test(tzId)) {
+  if (tzId === 'UTC' || /^[+-]\d{2}:\d{2}(:\d{2})?$/.test(tzId)) {
     const d = new Date(0);
     d.setUTCFullYear(isoYear, isoMonth - 1, isoDay);
     d.setUTCHours(hour, minute, second, ms);
@@ -570,7 +570,8 @@ function _resolveLocalToEpochMs(
     const sign = tzId[0] === '+' ? 1 : -1;
     const tzH = parseInt(tzId.substring(1, 3), 10);
     const tzM = parseInt(tzId.substring(4, 6), 10);
-    const offsetMs = sign * (tzH * 3600000 + tzM * 60000);
+    const tzS = tzId.length > 6 ? parseInt(tzId.substring(7, 9), 10) : 0;
+    const offsetMs = sign * (tzH * 3600000 + tzM * 60000 + tzS * 1000);
     return { epochMs: localAsUtcMs - offsetMs, offsetStr: tzId };
   }
 

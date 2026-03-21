@@ -43,24 +43,31 @@ fi
 echo "Bumping version: $CURRENT → $NEW"
 echo ""
 
+# Portable sed -i (macOS requires '' argument, GNU sed does not)
+if [[ "$(uname)" == "Darwin" ]]; then
+  sed_i() { sed -i '' "$@"; }
+else
+  sed_i() { sed -i "$@"; }
+fi
+
 # 1. Root package.json — version field
 echo "  package.json (version)"
-sed -i '' "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" package.json
+sed_i "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" package.json
 
 # 2. Root package.json — optionalDependencies versions
 echo "  package.json (optionalDependencies)"
-sed -i '' "s/\"temporal_rs-\([^\"]*\)\": \"$CURRENT\"/\"temporal_rs-\1\": \"$NEW\"/g" package.json
+sed_i "s/\"temporal_rs-\([^\"]*\)\": \"$CURRENT\"/\"temporal_rs-\1\": \"$NEW\"/g" package.json
 
 # 3. Platform npm packages
 for dir in npm/*/; do
   name=$(basename "$dir")
   echo "  npm/$name/package.json"
-  sed -i '' "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" "$dir/package.json"
+  sed_i "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" "$dir/package.json"
 done
 
 # 4. Cargo workspace version
 echo "  Cargo.toml"
-sed -i '' "s/^version = \"$CURRENT\"/version = \"$NEW\"/" Cargo.toml
+sed_i "s/^version = \"$CURRENT\"/version = \"$NEW\"/" Cargo.toml
 
 # 5. Sync Cargo.lock
 echo "  Cargo.lock (cargo check)"

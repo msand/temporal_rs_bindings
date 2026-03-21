@@ -231,4 +231,16 @@ impl Duration {
     pub fn to_string(&self) -> String {
         format!("{}", self.inner)
     }
+
+    #[wasm_bindgen(js_name = "toJSON")]
+    pub fn to_json(&self) -> String {
+        format!("{}", self.inner)
+    }
+
+    #[wasm_bindgen(js_name = "valueOf")]
+    pub fn value_of(&self) -> Result<(), JsValue> {
+        Err(JsValue::from_str(
+            "Use compare() to compare Duration values",
+        ))
+    }
 }
