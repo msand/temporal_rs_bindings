@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 temporal_rs = { workspace = true }
 timezone_provider = { workspace = true, features = ["zoneinfo64"] }
-napi = { version = "2", features = ["napi9", "serde-json"] }
+napi = { version = "3", features = ["napi9", "serde-json"] }
 napi-derive = "2"
 
 [build-dependencies]
