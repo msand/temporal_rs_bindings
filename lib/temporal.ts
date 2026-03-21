@@ -3682,9 +3682,16 @@ function rejectISODateRange(year: number, month: number, day: number): void {
   if (day > maxDay) throw new RangeError(`Invalid day ${day} for month ${month}`);
 }
 
-function rejectPropertyBagInfinity(bag: any, ...fields: string[]): void {
-  // Use rest params loop
-  for (const f of fields) {
+// Uses arguments internally to avoid Array.prototype[Symbol.iterator]
+// which test262 tests monkey-patch to throw.
+function rejectPropertyBagInfinity(
+  bag: any,
+  ..._fields: string[] // declared for type checking, accessed via arguments
+): void {
+  /* eslint-disable prefer-rest-params */
+  for (let i = 1; i < arguments.length; i++) {
+    const f = (arguments as unknown as string[])[i]!;
+    /* eslint-enable prefer-rest-params */
     if (bag[f] !== undefined) rejectInfinity(bag[f], f);
   }
 }
