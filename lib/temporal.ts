@@ -528,16 +528,7 @@ function getUtcOffsetString(epochMs: number, tzId: string): string {
   localAsUtcDate.setUTCHours(localHour, localMinute, localSecond, 0);
   const localAsUtc = localAsUtcDate.getTime();
   const offsetMs = localAsUtc - Math.floor(epochMs / 1000) * 1000;
-  const totalSeconds = Math.round(offsetMs / 1000);
-  const sign = totalSeconds >= 0 ? '+' : '-';
-  const absSeconds = Math.abs(totalSeconds);
-  const offHr = String(Math.floor(absSeconds / 3600)).padStart(2, '0');
-  const offMn = String(Math.floor((absSeconds % 3600) / 60)).padStart(2, '0');
-  const offSc = absSeconds % 60;
-  if (offSc !== 0) {
-    return sign + offHr + ':' + offMn + ':' + String(offSc).padStart(2, '0');
-  }
-  return sign + offHr + ':' + offMn;
+  return _formatOffsetMs(offsetMs);
 }
 
 // Helper: resolve a local datetime to an epoch ms in a given timezone with disambiguation
@@ -1066,7 +1057,7 @@ function _parseZdtStringParts(str: string): ZdtStringParts | null {
 }
 
 // Helper: parse a ZDT string and use the offset to compute the exact instant
-function _zdtFromStringWithOffset(str: string, _mode: string): ZonedDateTime {
+function _zdtFromStringWithOffset(str: string): ZonedDateTime {
   // Parse: dateT time offset [timezone] [u-ca=calendar]
   // Extract the offset and timezone
   const tzMatch = str.match(/\[([^\]=]+)\]/);
@@ -1187,14 +1178,7 @@ function bigintNsToZdtString(epochNs: bigint, tzId: string, calId?: string): str
     localAsUtcDate.setUTCHours(hour, parseInt(minute, 10), parseInt(second, 10), 0);
     const localAsUtc = localAsUtcDate.getTime();
     const offsetMs = localAsUtc - Math.floor(msNum / 1000) * 1000;
-    const totalSeconds = Math.round(offsetMs / 1000);
-    const sign = totalSeconds >= 0 ? '+' : '-';
-    const absSeconds = Math.abs(totalSeconds);
-    const offHr = String(Math.floor(absSeconds / 3600)).padStart(2, '0');
-    const offMn = String(Math.floor((absSeconds % 3600) / 60)).padStart(2, '0');
-    const offSc = absSeconds % 60;
-    offset =
-      offSc !== 0 ? sign + offHr + ':' + offMn + ':' + String(offSc).padStart(2, '0') : sign + offHr + ':' + offMn;
+    offset = _formatOffsetMs(offsetMs);
   }
   const calPart = calId && calId !== 'iso8601' ? '[u-ca=' + calId + ']' : '';
   return (
@@ -1985,6 +1969,47 @@ function getCalendarId(calArg: any): string {
 // ─── Calendars where months align with ISO months ─────────────
 // These calendars only differ from ISO in the year offset; months are the same.
 const ISO_MONTH_ALIGNED_CALENDARS = new Set(['iso8601', 'gregory', 'buddhist', 'roc', 'japanese']);
+
+// Calendars known to have NAPI arithmetic issues for date difference calculations
+const USE_JS_DIFF_CALENDARS = new Set([
+  'chinese',
+  'dangi',
+  'hebrew',
+  'coptic',
+  'ethiopic',
+  'ethioaa',
+  'ethiopian',
+  'islamic-civil',
+  'islamic-tbla',
+  'islamic-umalqura',
+  'indian',
+  'persian',
+]);
+
+// Mapping from fractional-second digit count to rounding unit and increment
+const DIGIT_ROUND: ReadonlyArray<{ unit: string; increment: number }> = [
+  /* 0 */ { unit: 'Second', increment: 1 },
+  /* 1 */ { unit: 'Millisecond', increment: 100 },
+  /* 2 */ { unit: 'Millisecond', increment: 10 },
+  /* 3 */ { unit: 'Millisecond', increment: 1 },
+  /* 4 */ { unit: 'Microsecond', increment: 100 },
+  /* 5 */ { unit: 'Microsecond', increment: 10 },
+  /* 6 */ { unit: 'Microsecond', increment: 1 },
+  /* 7 */ { unit: 'Nanosecond', increment: 100 },
+  /* 8 */ { unit: 'Nanosecond', increment: 10 },
+];
+
+// Valid smallestUnit values for Duration.toString()
+const DURATION_TOSTRING_UNITS: Record<string, string> = {
+  second: 'second',
+  seconds: 'second',
+  millisecond: 'millisecond',
+  milliseconds: 'millisecond',
+  microsecond: 'microsecond',
+  microseconds: 'microsecond',
+  nanosecond: 'nanosecond',
+  nanoseconds: 'nanosecond',
+};
 
 // ─── Helper: convert calendar date fields to ISO date fields ──
 // For non-ISO calendars, the "year", "month", "day" in a property bag are
@@ -3083,20 +3108,6 @@ function calendarDateDifference(
     return null; // signal to use NAPI
   }
   // Only use JS implementation for calendars known to have NAPI arithmetic issues
-  const USE_JS_DIFF_CALENDARS = new Set([
-    'chinese',
-    'dangi',
-    'hebrew',
-    'coptic',
-    'ethiopic',
-    'ethioaa',
-    'ethiopian',
-    'islamic-civil',
-    'islamic-tbla',
-    'islamic-umalqura',
-    'indian',
-    'persian',
-  ]);
   if (!USE_JS_DIFF_CALENDARS.has(calId)) {
     return null; // signal to use NAPI
   }
@@ -4380,17 +4391,7 @@ class Duration {
     const _suRaw = options.smallestUnit;
     if (_suRaw !== undefined) {
       const su = toStringOption(_suRaw);
-      const DURATION_TOSTRING_UNITS = {
-        second: 'second',
-        seconds: 'second',
-        millisecond: 'millisecond',
-        milliseconds: 'millisecond',
-        microsecond: 'microsecond',
-        microseconds: 'microsecond',
-        nanosecond: 'nanosecond',
-        nanoseconds: 'nanosecond',
-      };
-      smallestUnit = (DURATION_TOSTRING_UNITS as any)[su];
+      smallestUnit = DURATION_TOSTRING_UNITS[su];
       if (!smallestUnit) {
         throw new RangeError(`Invalid unit for Duration.toString: ${su}`);
       }
@@ -4416,17 +4417,6 @@ class Duration {
     if (precision !== 'auto' && precision !== 9) {
       // Try NAPI round first (works for time-only durations)
       try {
-        const DIGIT_ROUND: Array<{ unit: string; increment: number }> = [
-          { unit: 'Second', increment: 1 },
-          { unit: 'Millisecond', increment: 100 },
-          { unit: 'Millisecond', increment: 10 },
-          { unit: 'Millisecond', increment: 1 },
-          { unit: 'Microsecond', increment: 100 },
-          { unit: 'Microsecond', increment: 10 },
-          { unit: 'Microsecond', increment: 1 },
-          { unit: 'Nanosecond', increment: 100 },
-          { unit: 'Nanosecond', increment: 10 },
-        ];
         const entry = DIGIT_ROUND[precision as number];
         const unit = entry!.unit;
         const increment = entry!.increment;
@@ -4721,14 +4711,18 @@ class PlainDate {
     let era, eraYear, year;
     let _hasEra = false,
       _hasEraYear = false;
+    if (!calSupportsEras && calId !== 'iso8601') {
+      const hasEra = fields.era !== undefined;
+      const hasEraYear = fields.eraYear !== undefined;
+      if (hasEra || hasEraYear) {
+        throw new TypeError(`era and eraYear are not valid for the ${calId} calendar`);
+      }
+    }
     if (calSupportsEras) {
       const hasEra = fields.era !== undefined;
       const hasEraYear = fields.eraYear !== undefined;
       _hasEra = hasEra;
       _hasEraYear = hasEraYear;
-      if (!calSupportsEras && (hasEra || hasEraYear) && calId !== 'iso8601') {
-        throw new TypeError(`era and eraYear are not valid for the ${calId} calendar`);
-      }
       if (hasEra !== hasEraYear) {
         throw new TypeError('era and eraYear must be provided together');
       }
@@ -6178,16 +6172,7 @@ class ZonedDateTime {
                   ? Math.max(msNum, -8639999900000000) // safely within range
                   : Math.min(msNum, 8639999900000000);
               const offsetMs = _getOffsetMs(safeMs, tzId);
-              const totalSeconds = Math.round(offsetMs / 1000);
-              const sign = totalSeconds >= 0 ? '+' : '-';
-              const absSeconds = Math.abs(totalSeconds);
-              const offHr = String(Math.floor(absSeconds / 3600)).padStart(2, '0');
-              const offMn = String(Math.floor((absSeconds % 3600) / 60)).padStart(2, '0');
-              const offSc = absSeconds % 60;
-              const offset =
-                offSc !== 0
-                  ? sign + offHr + ':' + offMn + ':' + String(offSc).padStart(2, '0')
-                  : sign + offHr + ':' + offMn;
+              const offset = _formatOffsetMs(offsetMs);
               const calStr = calId !== 'iso8601' ? `[u-ca=${calId}]` : '';
               // Use a safe date near the boundary
               const boundary =
@@ -6369,7 +6354,7 @@ class ZonedDateTime {
       }
       if (offsetMode === 'use') {
         // Parse the offset from the string and use it to compute the instant
-        const r = _zdtFromStringWithOffset(cleanArg, 'use');
+        const r = _zdtFromStringWithOffset(cleanArg);
         if (_zdtCalId) r._calId = _zdtCalId;
         return r;
       }
@@ -6681,7 +6666,7 @@ class ZonedDateTime {
         if (offsetMode === 'use') {
           // Use the provided offset to determine the instant
           const str = baseStr + offsetProp + '[' + tz.id + ']' + calAnnotation;
-          const zdtR = _zdtFromStringWithOffset(str, 'use');
+          const zdtR = _zdtFromStringWithOffset(str);
           zdtR._calId = calId;
           return zdtR;
         }
@@ -7467,17 +7452,6 @@ class ZonedDateTime {
       const roundOpts = { smallestUnit: mapUnit(smallestUnit), roundingMode };
       inner = call(() => this._inner.round(roundOpts as any));
     } else if (typeof precision === 'number' && precision < 9) {
-      const DIGIT_ROUND = [
-        /* 0 */ { unit: 'Second', increment: 1 },
-        /* 1 */ { unit: 'Millisecond', increment: 100 },
-        /* 2 */ { unit: 'Millisecond', increment: 10 },
-        /* 3 */ { unit: 'Millisecond', increment: 1 },
-        /* 4 */ { unit: 'Microsecond', increment: 100 },
-        /* 5 */ { unit: 'Microsecond', increment: 10 },
-        /* 6 */ { unit: 'Microsecond', increment: 1 },
-        /* 7 */ { unit: 'Nanosecond', increment: 100 },
-        /* 8 */ { unit: 'Nanosecond', increment: 10 },
-      ];
       const { unit, increment } = DIGIT_ROUND[precision]!;
       const roundOpts = { smallestUnit: unit, roundingMode, roundingIncrement: increment };
       inner = call(() => this._inner.round(roundOpts as any));
@@ -7805,18 +7779,6 @@ class Instant {
       inner = call(() => this._inner.round(roundOpts as any));
     } else if (typeof precision === 'number' && precision < 9) {
       // Round to the given number of fractional second digits
-      // Compute the correct unit and increment
-      const DIGIT_ROUND = [
-        /* 0 */ { unit: 'Second', increment: 1 },
-        /* 1 */ { unit: 'Millisecond', increment: 100 },
-        /* 2 */ { unit: 'Millisecond', increment: 10 },
-        /* 3 */ { unit: 'Millisecond', increment: 1 },
-        /* 4 */ { unit: 'Microsecond', increment: 100 },
-        /* 5 */ { unit: 'Microsecond', increment: 10 },
-        /* 6 */ { unit: 'Microsecond', increment: 1 },
-        /* 7 */ { unit: 'Nanosecond', increment: 100 },
-        /* 8 */ { unit: 'Nanosecond', increment: 10 },
-      ];
       const { unit, increment } = DIGIT_ROUND[precision]!;
       const roundOpts = { smallestUnit: unit, roundingMode, roundingIncrement: increment };
       inner = call(() => this._inner.round(roundOpts as any));
@@ -9205,7 +9167,7 @@ class PlainMonthDay {
   }
 
   valueOf() {
-    throw new TypeError('Use Temporal.PlainMonthDay.compare() to compare Temporal.PlainMonthDay');
+    throw new TypeError('Use equals() to compare Temporal.PlainMonthDay');
   }
 
   // Symbol.toStringTag defined as data property below
