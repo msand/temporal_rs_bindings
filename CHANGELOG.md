@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.5] - 2026-03-21
+
+### Fixed
+- Downgraded napi 3 → 2 to fix 10x NAPI call overhead regression (30s vs 350s+ for full test262)
+- Reverted @napi-rs/cli 3 → 2 and associated CLI flag changes
+- Removed `_chineseDangiLeapMonthCache` size cap that caused cache thrashing
+- Reduced test262 per-test timeout back to 30s
+- Hoisted repeated allocations to module scope (USE_JS_DIFF_CALENDARS, DIGIT_ROUND, DURATION_TOSTRING_UNITS)
+- Consolidated 4 offset formatting locations into `_formatOffsetMs` helper
+- Fixed dead branch in PlainDate.with() era validation
+- Fixed PlainMonthDay.valueOf() error message (no compare() exists)
+- Removed unused `_mode` parameter from `_zdtFromStringWithOffset`
+
 ## [0.1.4] - 2026-03-21
 
 ### Added
