@@ -43,7 +43,7 @@
     "build:debug": "napi build --platform --manifest-path crates/temporal-napi/Cargo.toml -o . && tsup",
     "build:napi": "napi build --platform --release --manifest-path crates/temporal-napi/Cargo.toml -o .",
     "build:ts": "tsup",
-    "build:wasm": "wasm-pack build crates/temporal-wasm --target bundler --out-dir ../../wasm-pkg",
+    "build:wasm": "wasm-pack build crates/temporal-wasm --target bundler --out-dir ../../wasm-pkg && rm -f wasm-pkg/.gitignore",
     "test": "vitest run",
     "test262": "node test262-runner.mjs",
     "test262:verbose": "node test262-runner.mjs -v",
