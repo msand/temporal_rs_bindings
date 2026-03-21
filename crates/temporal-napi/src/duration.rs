@@ -1,22 +1,21 @@
 use napi_derive::napi;
-use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
 use crate::options::to_napi_error;
 use crate::options::{RoundingOptions, Unit};
 
-// ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing() is the standard embedded
-// IANA timezone provider from the `icu` crate. Despite the "_for_testing" suffix in its
-// name (an upstream naming convention), it is the correct provider for production use.
 fn make_relative_to(
     relative_to_date: Option<&crate::plain_date::PlainDate>,
     relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
 ) -> Option<temporal_rs::options::RelativeTo> {
-    relative_to_zdt
-        .map(|zdt| temporal_rs::options::RelativeTo::ZonedDateTime(zdt.inner.clone()))
-        .or_else(|| {
-            relative_to_date
-                .map(|date| temporal_rs::options::RelativeTo::PlainDate(date.inner.clone()))
-        })
+    temporal_common::make_relative_to(
+        relative_to_date.map(|d| &d.inner),
+        relative_to_zdt.map(|z| &z.inner),
+    )
+}
+
+fn make_provider() -> napi::Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
+    temporal_common::create_provider()
+        .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
 }
 
 #[napi]
@@ -24,28 +23,12 @@ pub struct Duration {
     pub(crate) inner: temporal_rs::Duration,
 }
 
-/// Convert an f64 (JS Number) to i64, matching the spec's ToIntegerIfIntegral.
-/// The value must be finite and integral.
 fn f64_to_i64(v: f64) -> napi::Result<i64> {
-    if v.is_nan() || v.is_infinite() {
-        return Err(napi::Error::from_reason("RangeError: Duration field must be finite"));
-    }
-    if v.fract() != 0.0 {
-        return Err(napi::Error::from_reason("RangeError: Duration field must be an integer"));
-    }
-    Ok(v as i64)
+    temporal_common::f64_to_i64(v).map_err(napi::Error::from_reason)
 }
 
-/// Convert an f64 (JS Number) to i128 for microseconds/nanoseconds.
-/// These fields can hold values larger than i64 range.
 fn f64_to_i128(v: f64) -> napi::Result<i128> {
-    if v.is_nan() || v.is_infinite() {
-        return Err(napi::Error::from_reason("RangeError: Duration field must be finite"));
-    }
-    if v.fract() != 0.0 {
-        return Err(napi::Error::from_reason("RangeError: Duration field must be an integer"));
-    }
-    Ok(v as i128)
+    temporal_common::f64_to_i128(v).map_err(napi::Error::from_reason)
 }
 
 #[napi]
@@ -182,8 +165,7 @@ impl Duration {
         relative_to_date: Option<&crate::plain_date::PlainDate>,
         relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
     ) -> napi::Result<Duration> {
-        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-            .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
+        let provider = make_provider()?;
 
         let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 
@@ -202,8 +184,7 @@ impl Duration {
         relative_to_date: Option<&crate::plain_date::PlainDate>,
         relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
     ) -> napi::Result<f64> {
-        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-            .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
+        let provider = make_provider()?;
 
         let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 
@@ -222,8 +203,7 @@ impl Duration {
         relative_to_date: Option<&crate::plain_date::PlainDate>,
         relative_to_zdt: Option<&crate::zoned_date_time::ZonedDateTime>,
     ) -> napi::Result<i32> {
-        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-            .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))?;
+        let provider = make_provider()?;
 
         let relative_to = make_relative_to(relative_to_date, relative_to_zdt);
 

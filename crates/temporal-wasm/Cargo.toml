@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 temporal_rs = { workspace = true }
+temporal-common = { path = "../temporal-common" }
 timezone_provider = { workspace = true, features = ["zoneinfo64"] }
 wasm-bindgen = "0.2"
 js-sys = "0.3"

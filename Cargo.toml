@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/temporal-napi", "crates/temporal-wasm"]
+members = ["crates/temporal-common", "crates/temporal-napi", "crates/temporal-wasm"]
 
 [workspace.package]
 edition = "2021"
@@ -8,8 +8,8 @@ version = "0.1.6"
 license = "MIT"
 
 [workspace.dependencies]
-temporal_rs = { git = "https://github.com/boa-dev/temporal.git", features = ["sys-local", "float64_representable_durations"] }
-timezone_provider = { git = "https://github.com/boa-dev/temporal.git" }
+temporal_rs = { git = "https://github.com/boa-dev/temporal.git", rev = "dbd731d44beef3f348d97c39b4a9fc576264eabd", features = ["sys-local", "float64_representable_durations"] }
+timezone_provider = { git = "https://github.com/boa-dev/temporal.git", rev = "dbd731d44beef3f348d97c39b4a9fc576264eabd" }
 
 [profile.release]
 opt-level = 3

@@ -1,5 +1,4 @@
 use napi_derive::napi;
-use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
 use crate::calendar::Calendar;
 use crate::duration::Duration;
@@ -10,8 +9,8 @@ use crate::plain_date_time::PlainDateTime;
 use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 
-fn provider() -> napi::Result<ZoneInfo64TzdbProvider<'static>> {
-    ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+fn provider() -> napi::Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
+    temporal_common::create_provider()
         .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
 }
 

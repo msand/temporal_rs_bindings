@@ -1,48 +1,30 @@
 use wasm_bindgen::prelude::*;
-use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
 use crate::options::{to_js_error, deserialize_rounding_options, Unit};
 use crate::plain_date::PlainDate;
 use crate::zoned_date_time::ZonedDateTime;
 
+fn make_provider() -> Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
+    temporal_common::create_provider()
+        .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
+}
+
 fn make_relative_to(
     relative_to_date: &Option<PlainDate>,
     relative_to_zdt: &Option<ZonedDateTime>,
 ) -> Option<temporal_rs::options::RelativeTo> {
-    relative_to_zdt
-        .as_ref()
-        .map(|zdt| temporal_rs::options::RelativeTo::ZonedDateTime(zdt.inner.clone()))
-        .or_else(|| {
-            relative_to_date
-                .as_ref()
-                .map(|date| temporal_rs::options::RelativeTo::PlainDate(date.inner.clone()))
-        })
+    temporal_common::make_relative_to(
+        relative_to_date.as_ref().map(|d| &d.inner),
+        relative_to_zdt.as_ref().map(|z| &z.inner),
+    )
 }
 
-/// Convert an f64 (JS Number) to i64 for duration fields.
 fn f64_to_i64(v: f64) -> Result<i64, JsValue> {
-    if v.is_nan() || v.is_infinite() {
-        return Err(JsValue::from_str("RangeError: Duration field must be finite"));
-    }
-    if v.fract() != 0.0 {
-        return Err(JsValue::from_str(
-            "RangeError: Duration field must be an integer",
-        ));
-    }
-    Ok(v as i64)
+    temporal_common::f64_to_i64(v).map_err(|e| JsValue::from_str(&e))
 }
 
-/// Convert an f64 (JS Number) to i128 for microseconds/nanoseconds.
 fn f64_to_i128(v: f64) -> Result<i128, JsValue> {
-    if v.is_nan() || v.is_infinite() {
-        return Err(JsValue::from_str("RangeError: Duration field must be finite"));
-    }
-    if v.fract() != 0.0 {
-        return Err(JsValue::from_str(
-            "RangeError: Duration field must be an integer",
-        ));
-    }
-    Ok(v as i128)
+    temporal_common::f64_to_i128(v).map_err(|e| JsValue::from_str(&e))
 }
 
 #[wasm_bindgen]
@@ -176,8 +158,7 @@ impl Duration {
         relative_to_date: Option<PlainDate>,
         relative_to_zdt: Option<ZonedDateTime>,
     ) -> Result<Duration, JsValue> {
-        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-            .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))?;
+        let provider = make_provider()?;
 
         let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
 
@@ -195,8 +176,7 @@ impl Duration {
         relative_to_date: Option<PlainDate>,
         relative_to_zdt: Option<ZonedDateTime>,
     ) -> Result<f64, JsValue> {
-        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-            .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))?;
+        let provider = make_provider()?;
 
         let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
 
@@ -214,8 +194,7 @@ impl Duration {
         relative_to_date: Option<PlainDate>,
         relative_to_zdt: Option<ZonedDateTime>,
     ) -> Result<i32, JsValue> {
-        let provider = ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-            .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))?;
+        let provider = make_provider()?;
 
         let relative_to = make_relative_to(&relative_to_date, &relative_to_zdt);
 

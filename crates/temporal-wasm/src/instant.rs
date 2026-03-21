@@ -1,11 +1,10 @@
 use wasm_bindgen::prelude::*;
-use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
 use crate::duration::Duration;
 use crate::options::*;
 
-fn provider() -> Result<ZoneInfo64TzdbProvider<'static>, JsValue> {
-    ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+fn provider() -> Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
+    temporal_common::create_provider()
         .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
 }
 

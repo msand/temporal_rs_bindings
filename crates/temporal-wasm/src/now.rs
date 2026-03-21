@@ -1,6 +1,5 @@
 use wasm_bindgen::prelude::*;
 use temporal_rs::sys::{LocalHostSystem, Temporal};
-use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
 use crate::instant::Instant;
 use crate::options::to_js_error;
@@ -10,8 +9,8 @@ use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 use crate::zoned_date_time::ZonedDateTime;
 
-fn make_provider() -> Result<ZoneInfo64TzdbProvider<'static>, JsValue> {
-    ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
+fn make_provider() -> Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>, JsValue> {
+    temporal_common::create_provider()
         .ok_or_else(|| JsValue::from_str("Failed to initialize timezone provider"))
 }
 

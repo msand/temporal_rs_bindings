@@ -553,12 +553,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "temporal-common"
+version = "0.1.6"
+dependencies = [
+ "temporal_rs",
+ "timezone_provider",
+]
+
+[[package]]
 name = "temporal-napi"
 version = "0.1.6"
 dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
+ "temporal-common",
  "temporal_rs",
  "timezone_provider",
 ]
@@ -570,6 +579,7 @@ dependencies = [
  "js-sys",
  "serde",
  "serde-wasm-bindgen",
+ "temporal-common",
  "temporal_rs",
  "timezone_provider",
  "wasm-bindgen",
@@ -578,7 +588,7 @@ dependencies = [
 [[package]]
 name = "temporal_rs"
 version = "0.2.0"
-source = "git+https://github.com/boa-dev/temporal.git#dbd731d44beef3f348d97c39b4a9fc576264eabd"
+source = "git+https://github.com/boa-dev/temporal.git?rev=dbd731d44beef3f348d97c39b4a9fc576264eabd#dbd731d44beef3f348d97c39b4a9fc576264eabd"
 dependencies = [
  "core_maths",
  "iana-time-zone",
@@ -595,7 +605,7 @@ dependencies = [
 [[package]]
 name = "timezone_provider"
 version = "0.2.0"
-source = "git+https://github.com/boa-dev/temporal.git#dbd731d44beef3f348d97c39b4a9fc576264eabd"
+source = "git+https://github.com/boa-dev/temporal.git?rev=dbd731d44beef3f348d97c39b4a9fc576264eabd#dbd731d44beef3f348d97c39b4a9fc576264eabd"
 dependencies = [
  "combine",
  "jiff-tzdb",

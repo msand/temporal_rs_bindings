@@ -1,8 +1,12 @@
 use napi_derive::napi;
-use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 
 use crate::duration::Duration;
 use crate::options::*;
+
+fn provider() -> napi::Result<timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider<'static>> {
+    temporal_common::create_provider()
+        .ok_or_else(|| napi::Error::from_reason("Failed to initialize timezone provider"))
+}
 
 #[napi]
 pub struct Instant {
@@ -104,32 +108,22 @@ impl Instant {
 
     #[napi]
     pub fn to_string(&self) -> napi::Result<String> {
-        let provider =
-            ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-                .ok_or_else(|| {
-                    napi::Error::from_reason("Failed to initialize timezone provider")
-                })?;
         self.inner
             .to_ixdtf_string_with_provider(
                 None,
                 temporal_rs::options::ToStringRoundingOptions::default(),
-                &provider,
+                &provider()?,
             )
             .map_err(to_napi_error)
     }
 
     #[napi]
     pub fn to_json(&self) -> napi::Result<String> {
-        let provider =
-            ZoneInfo64TzdbProvider::zoneinfo64_provider_for_testing()
-                .ok_or_else(|| {
-                    napi::Error::from_reason("Failed to initialize timezone provider")
-                })?;
         self.inner
             .to_ixdtf_string_with_provider(
                 None,
                 temporal_rs::options::ToStringRoundingOptions::default(),
-                &provider,
+                &provider()?,
             )
             .map_err(to_napi_error)
     }

@@ -541,10 +541,22 @@ async function main() {
 }
 
 // Some Test262 tests throw non-Error objects (Test262Error) that escape the
-// vm sandbox's try-catch. Swallow them to prevent runner crashes.
-process.on('uncaughtException', () => {});
-process.on('unhandledRejection', () => {});
+// vm sandbox's try-catch. Log them in verbose mode to aid debugging,
+// but don't crash the runner.
+process.on('uncaughtException', (err) => {
+  if (process.argv.includes('-v') || process.argv.includes('--verbose')) {
+    process.stderr.write(`[uncaughtException] ${err?.message || err}\n`);
+  }
+});
+process.on('unhandledRejection', (reason) => {
+  if (process.argv.includes('-v') || process.argv.includes('--verbose')) {
+    process.stderr.write(`[unhandledRejection] ${reason?.message || reason}\n`);
+  }
+});
 
-main().then(() => {}, () => {
-  // Swallow — errors from vm sandbox escaping into the event loop
+main().then(() => {}, (err) => {
+  // Errors from vm sandbox escaping into the event loop — log in verbose mode
+  if (process.argv.includes('-v') || process.argv.includes('--verbose')) {
+    process.stderr.write(`[main error] ${err?.message || err}\n`);
+  }
 });

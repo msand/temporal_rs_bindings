@@ -421,9 +421,22 @@ function _computeLocalPartsFromBigInt(epochNs: bigint, offsetNs: bigint): LocalP
 // ─── Helper: compute local time in a timezone from epoch ms ────
 
 const _CACHE_MAX = 100;
+const _CACHE_EVICT = 20; // evict oldest entries when cache is full
 const _dtfCache = new Map<string, Intl.DateTimeFormat>();
 const _napiZdtCache = new Map<string, NapiZonedDateTimeT>();
 const _canonicalTzCache = new Map<string, string>();
+
+// Evict the oldest entries from a Map when it exceeds the size limit.
+// Uses Map insertion order (oldest first) to approximate LRU eviction.
+function _evictOldest<K, V>(cache: Map<K, V>, count: number): void {
+  let i = 0;
+  for (const key of cache.keys()) {
+    if (i >= count) break;
+    cache.delete(key);
+    i++;
+  }
+}
+
 function _canonicalTzId(tzId: string): string {
   let canon = _canonicalTzCache.get(tzId);
   if (canon !== undefined) return canon;
@@ -432,7 +445,7 @@ function _canonicalTzId(tzId: string): string {
   } catch {
     canon = tzId;
   }
-  if (_canonicalTzCache.size >= _CACHE_MAX) _canonicalTzCache.clear();
+  if (_canonicalTzCache.size >= _CACHE_MAX) _evictOldest(_canonicalTzCache, _CACHE_EVICT);
   _canonicalTzCache.set(tzId, canon);
   return canon;
 }
@@ -494,7 +507,7 @@ function getLocalPartsFromEpoch(epochMs: number, tzId: string): LocalParts {
       era: 'short',
       fractionalSecondDigits: 3,
     });
-    if (_dtfCache.size >= _CACHE_MAX) _dtfCache.clear();
+    if (_dtfCache.size >= _CACHE_MAX) _evictOldest(_dtfCache, _CACHE_EVICT);
     _dtfCache.set(tzId, fmt);
   }
   const parts: LocalParts = {} as LocalParts;
@@ -6134,7 +6147,7 @@ class ZonedDateTime {
         } else {
           const zdtStr = bigintNsToZdtString(epochNanoseconds, tzId, calId);
           this._inner = call(() => NapiZonedDateTime.from(zdtStr));
-          if (_napiZdtCache.size >= _CACHE_MAX) _napiZdtCache.clear();
+          if (_napiZdtCache.size >= _CACHE_MAX) _evictOldest(_napiZdtCache, _CACHE_EVICT);
           _napiZdtCache.set(cacheKey, this._inner);
         }
       } catch {
