@@ -161,6 +161,9 @@ impl Duration {
         Ok(Duration { inner })
     }
 
+    /// The `relative_to_date` and `relative_to_zdt` parameters, if provided,
+    /// are consumed (moved) due to wasm-bindgen limitations on passing
+    /// borrowed references.
     #[wasm_bindgen]
     pub fn round(
         &self,
@@ -180,6 +183,9 @@ impl Duration {
         Ok(Duration { inner })
     }
 
+    /// The `relative_to_date` and `relative_to_zdt` parameters, if provided,
+    /// are consumed (moved) due to wasm-bindgen limitations on passing
+    /// borrowed references.
     #[wasm_bindgen]
     pub fn total(
         &self,
@@ -199,6 +205,9 @@ impl Duration {
         Ok(result.as_inner())
     }
 
+    /// The `relative_to_date` and `relative_to_zdt` parameters, if provided,
+    /// are consumed (moved) due to wasm-bindgen limitations on passing
+    /// borrowed references.
     #[wasm_bindgen]
     pub fn compare(
         one: &Duration,

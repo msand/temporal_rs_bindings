@@ -582,7 +582,8 @@ class ZonedDateTime {
       } else {
         // Constrain values to valid ranges
         month = Math.min(month, maxMonth);
-        day = Math.min(day, 31);
+        const dim = calendarDaysInMonth(year, _trunc(month), calId);
+        day = Math.min(day, dim !== undefined ? dim : 31);
         hour = Math.min(hour, 23);
         minute = Math.min(minute, 59);
         second = Math.min(second, 59);
@@ -1201,7 +1202,8 @@ class ZonedDateTime {
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
     const lu = settings && settings.largestUnit ? settings.largestUnit : 'Hour';
-    if ((lu === 'Year' || lu === 'Month') && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
+    const hasRounding = settings && (settings.smallestUnit || settings.roundingIncrement);
+    if (!hasRounding && (lu === 'Year' || lu === 'Month') && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
       const startDate = this._inner.toPlainDate();
       const endDate = otherInner.toPlainDate();
       const dateDiff = calendarDateDifference(startDate, endDate, lu, calId);
@@ -1235,7 +1237,8 @@ class ZonedDateTime {
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
     const lu = settings && settings.largestUnit ? settings.largestUnit : 'Hour';
-    if ((lu === 'Year' || lu === 'Month') && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
+    const hasRounding = settings && (settings.smallestUnit || settings.roundingIncrement);
+    if (!hasRounding && (lu === 'Year' || lu === 'Month') && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
       const startDate = this._inner.toPlainDate();
       const endDate = otherInner.toPlainDate();
       const dateDiff = calendarDateDifference(startDate, endDate, lu, calId);

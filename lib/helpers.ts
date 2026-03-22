@@ -106,7 +106,7 @@ export function _roundToIncrement(value: number, increment: number, mode: string
       rounded = quotient >= 0 ? Math.ceil(quotient) : Math.floor(quotient);
       break;
     case 'halfExpand':
-      rounded = Math.round(quotient);
+      rounded = quotient >= 0 ? Math.floor(quotient + 0.5) : Math.ceil(quotient - 0.5);
       break;
     case 'halfTrunc':
       rounded =

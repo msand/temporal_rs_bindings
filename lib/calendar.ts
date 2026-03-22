@@ -116,6 +116,20 @@ export function isHebrewLeapYear(hebrewYear: number): boolean {
 // practical range of Chinese/Dangi years. A size cap causes severe cache thrashing
 // in PlainMonthDay reference year scanning.
 export const _chineseDangiLeapMonthCache = new Map<string, number>();
+
+function _evictLeapMonthCache(): void {
+  if (_chineseDangiLeapMonthCache.size > 10000) {
+    // Evict oldest ~20% to avoid thrashing
+    const evictCount = Math.floor(_chineseDangiLeapMonthCache.size * 0.2);
+    let i = 0;
+    for (const key of _chineseDangiLeapMonthCache.keys()) {
+      if (i >= evictCount) break;
+      _chineseDangiLeapMonthCache.delete(key);
+      i++;
+    }
+  }
+}
+
 export function getChineseDangiLeapMonth(calYear: number, calId: string): number {
   const cacheKey = `${calId}:${calYear}`;
   if (_chineseDangiLeapMonthCache.has(cacheKey)) return _chineseDangiLeapMonthCache.get(cacheKey)!;
@@ -159,9 +173,7 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
       }
     }
     if (probe.monthsInYear !== 13) {
-      if (_chineseDangiLeapMonthCache.size > 10000) {
-        _chineseDangiLeapMonthCache.clear();
-      }
+      _evictLeapMonthCache();
       _chineseDangiLeapMonthCache.set(cacheKey, 0);
       return 0;
     }
@@ -177,9 +189,7 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
           lastMonth = pd.month;
           if (pd.monthCode.endsWith('L')) {
             const base = parseInt(pd.monthCode.slice(1, 3), 10);
-            if (_chineseDangiLeapMonthCache.size > 10000) {
-              _chineseDangiLeapMonthCache.clear();
-            }
+            _evictLeapMonthCache();
             _chineseDangiLeapMonthCache.set(cacheKey, base);
             return base;
           }
@@ -187,15 +197,11 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
         if (pd.year > calYear && pd.month >= 2) break;
       } catch {}
     }
-    if (_chineseDangiLeapMonthCache.size > 10000) {
-      _chineseDangiLeapMonthCache.clear();
-    }
+    _evictLeapMonthCache();
     _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   } catch {
-    if (_chineseDangiLeapMonthCache.size > 10000) {
-      _chineseDangiLeapMonthCache.clear();
-    }
+    _evictLeapMonthCache();
     _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   }

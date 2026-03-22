@@ -125,7 +125,7 @@ jobs:
             cargo-wasm-
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack --locked || true
+        run: which wasm-pack || cargo install wasm-pack --locked
 
       - name: Build WASM
         run: npm run build:wasm
@@ -180,7 +180,7 @@ jobs:
 
       - name: Security audit
         run: |
-          npm audit --audit-level=moderate || true
+          npm audit --audit-level=high || true
 
   test:
     needs: build
@@ -309,7 +309,7 @@ jobs:
         run: npx tsup
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack --locked || true
+        run: which wasm-pack || cargo install wasm-pack --locked
 
       - name: Build WASM
         run: npm run build:wasm

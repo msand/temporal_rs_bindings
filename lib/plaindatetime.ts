@@ -606,8 +606,9 @@ class PlainDateTime {
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
     const lu = settings && settings.largestUnit ? settings.largestUnit : 'Day';
+    const hasRounding = settings && (settings.smallestUnit || settings.roundingIncrement);
     // For year/month largest units on non-ISO calendars, use JS implementation for date part
-    if ((lu === 'Year' || lu === 'Month') && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
+    if (!hasRounding && (lu === 'Year' || lu === 'Month') && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
       // Get the date part difference using our calendar-aware algorithm
       const startDate = this._inner.toPlainDate
         ? this._inner.toPlainDate()
@@ -648,7 +649,8 @@ class PlainDateTime {
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
     const lu = settings && settings.largestUnit ? settings.largestUnit : 'Day';
-    if ((lu === 'Year' || lu === 'Month') && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
+    const hasRounding = settings && (settings.smallestUnit || settings.roundingIncrement);
+    if (!hasRounding && (lu === 'Year' || lu === 'Month') && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
       const startDate = this._inner.toPlainDate
         ? this._inner.toPlainDate()
         : call(() => new NapiPlainDate(this._inner.year, this._inner.month, this._inner.day, this._inner.calendar));

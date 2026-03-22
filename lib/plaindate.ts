@@ -454,11 +454,14 @@ class PlainDate {
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
     const lu = settings && settings.largestUnit ? settings.largestUnit : 'Day';
-    const diff = calendarDateDifference(this._inner, otherInner, lu, calId);
-    if (diff) {
-      return wrapDuration(
-        call(() => new NapiDuration(diff.years, diff.months, diff.weeks, diff.days, 0, 0, 0, 0, 0, 0)),
-      );
+    const hasRounding = settings && (settings.smallestUnit || settings.roundingIncrement);
+    if (!hasRounding) {
+      const diff = calendarDateDifference(this._inner, otherInner, lu, calId);
+      if (diff) {
+        return wrapDuration(
+          call(() => new NapiDuration(diff.years, diff.months, diff.weeks, diff.days, 0, 0, 0, 0, 0, 0)),
+        );
+      }
     }
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
@@ -469,12 +472,15 @@ class PlainDate {
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
     const lu = settings && settings.largestUnit ? settings.largestUnit : 'Day';
+    const hasRounding = settings && (settings.smallestUnit || settings.roundingIncrement);
     // since(other) = negate(until(other))
-    const diff = calendarDateDifference(this._inner, otherInner, lu, calId);
-    if (diff) {
-      return wrapDuration(
-        call(() => new NapiDuration(-diff.years, -diff.months, -diff.weeks, -diff.days, 0, 0, 0, 0, 0, 0)),
-      );
+    if (!hasRounding) {
+      const diff = calendarDateDifference(this._inner, otherInner, lu, calId);
+      if (diff) {
+        return wrapDuration(
+          call(() => new NapiDuration(-diff.years, -diff.months, -diff.weeks, -diff.days, 0, 0, 0, 0, 0, 0)),
+        );
+      }
     }
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
