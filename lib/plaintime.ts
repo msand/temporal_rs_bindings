@@ -152,8 +152,13 @@ class PlainTime {
           throw new RangeError('Time field value out of range with overflow: reject');
         }
       } else {
-        // Constrain: clamp second 60 to 59 (leap second)
-        if (s === 60) s = 59;
+        // Constrain: clamp all time fields to valid ranges
+        h = Math.max(0, Math.min(h, 23));
+        mi = Math.max(0, Math.min(mi, 59));
+        s = Math.max(0, Math.min(s === 60 ? 59 : s, 59));
+        ms = Math.max(0, Math.min(ms, 999));
+        us = Math.max(0, Math.min(us, 999));
+        ns = Math.max(0, Math.min(ns, 999));
       }
       return new PlainTime(call(() => new NapiPlainTime(h, mi, s, ms, us, ns)));
     }
@@ -201,17 +206,17 @@ class PlainTime {
     validateWithFields(fields, null, 'PlainTime');
     // Per spec: read fields in ALPHABETICAL order, coercing each immediately
     const _hour = fields.hour;
-    const h = _hour !== undefined ? toIntegerWithTruncation(_hour) : this.hour;
+    let h = _hour !== undefined ? toIntegerWithTruncation(_hour) : this.hour;
     const _microsecond = fields.microsecond;
-    const us = _microsecond !== undefined ? toIntegerWithTruncation(_microsecond) : this.microsecond;
+    let us = _microsecond !== undefined ? toIntegerWithTruncation(_microsecond) : this.microsecond;
     const _millisecond = fields.millisecond;
-    const ms = _millisecond !== undefined ? toIntegerWithTruncation(_millisecond) : this.millisecond;
+    let ms = _millisecond !== undefined ? toIntegerWithTruncation(_millisecond) : this.millisecond;
     const _minute = fields.minute;
-    const mi = _minute !== undefined ? toIntegerWithTruncation(_minute) : this.minute;
+    let mi = _minute !== undefined ? toIntegerWithTruncation(_minute) : this.minute;
     const _nanosecond = fields.nanosecond;
-    const ns = _nanosecond !== undefined ? toIntegerWithTruncation(_nanosecond) : this.nanosecond;
+    let ns = _nanosecond !== undefined ? toIntegerWithTruncation(_nanosecond) : this.nanosecond;
     const _second = fields.second;
-    const s = _second !== undefined ? toIntegerWithTruncation(_second) : this.second;
+    let s = _second !== undefined ? toIntegerWithTruncation(_second) : this.second;
     // Check at least one recognized field was provided
     if (
       _hour === undefined &&
@@ -241,6 +246,14 @@ class PlainTime {
       ) {
         throw new RangeError('Time field value out of range with overflow: reject');
       }
+    } else {
+      // Constrain: clamp all time fields to valid ranges
+      h = Math.max(0, Math.min(h, 23));
+      mi = Math.max(0, Math.min(mi, 59));
+      s = Math.max(0, Math.min(s === 60 ? 59 : s, 59));
+      ms = Math.max(0, Math.min(ms, 999));
+      us = Math.max(0, Math.min(us, 999));
+      ns = Math.max(0, Math.min(ns, 999));
     }
     return new PlainTime(call(() => new NapiPlainTime(h, mi, s, ms, us, ns)));
   }

@@ -30,6 +30,7 @@ import {
   validateOverflowReject,
   rejectISODateRange,
   toStringOption,
+  _isoDaysInMonth,
 } from './helpers';
 
 import {
@@ -54,6 +55,7 @@ import {
   isMonthCodeValidForYear,
   calendarDaysInMonth,
   ISO_MONTH_ALIGNED_CALENDARS,
+  THIRTEEN_MONTH_CALENDARS,
   _getMaxMonthForCalendarYear,
   monthCodeToMonth,
   calendarDateDifference,
@@ -226,11 +228,15 @@ class PlainDateTime {
         }
       }
       validateOverflowReject({ year: resolvedYear, month, day }, overflow, cal);
+      // Negative month/day are always invalid regardless of overflow mode
+      if (month < 1 || day < 1) {
+        throw new RangeError('month and day must be positive integers');
+      }
       // Handle leap second: second:60 should reject or constrain
       let s = second || 0;
-      const h = hour || 0,
+      let h = hour || 0,
         mi = minute || 0;
-      const ms = millisecond || 0,
+      let ms = millisecond || 0,
         us = microsecond || 0,
         ns = nanosecond || 0;
       if (overflow === 'Reject') {
@@ -251,15 +257,36 @@ class PlainDateTime {
           throw new RangeError('Time field value out of range with overflow: reject');
         }
       } else {
-        if (s === 60) s = 59;
+        // Constrain: clamp all time fields to valid ranges
+        h = Math.max(0, Math.min(h, 23));
+        mi = Math.max(0, Math.min(mi, 59));
+        s = Math.max(0, Math.min(s === 60 ? 59 : s, 59));
+        ms = Math.max(0, Math.min(ms, 999));
+        us = Math.max(0, Math.min(us, 999));
+        ns = Math.max(0, Math.min(ns, 999));
       }
-      // Constrain month for non-ISO calendars
+      // Constrain month/day for all calendars in constrain mode
       let constrainedMonth = month;
-      if (overflow !== 'Reject' && !ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
-        const maxM = _getMaxMonthForCalendarYear(calId, resolvedYear);
-        constrainedMonth = Math.max(1, Math.min(month, maxM));
+      let constrainedDay = day;
+      if (overflow !== 'Reject') {
+        if (calId === 'iso8601' || calId === 'gregory') {
+          constrainedMonth = Math.max(1, Math.min(constrainedMonth, 12));
+          const maxDay = _isoDaysInMonth(resolvedYear, constrainedMonth);
+          constrainedDay = Math.max(1, Math.min(constrainedDay, maxDay));
+        } else if (THIRTEEN_MONTH_CALENDARS.has(calId)) {
+          constrainedMonth = Math.max(1, Math.min(constrainedMonth, 13));
+          const dim = calendarDaysInMonth(resolvedYear, constrainedMonth, calId);
+          if (dim) constrainedDay = Math.max(1, Math.min(constrainedDay, dim));
+          else constrainedDay = Math.max(1, Math.min(constrainedDay, 30));
+        } else if (!ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
+          const maxM = _getMaxMonthForCalendarYear(calId, resolvedYear);
+          constrainedMonth = Math.max(1, Math.min(month, maxM));
+          const dim = calendarDaysInMonth(resolvedYear, constrainedMonth, calId);
+          if (dim) constrainedDay = Math.max(1, Math.min(constrainedDay, dim));
+          else constrainedDay = Math.max(1, Math.min(constrainedDay, 31));
+        }
       }
-      const iso = calendarDateToISO(resolvedYear, constrainedMonth, day, calId);
+      const iso = calendarDateToISO(resolvedYear, constrainedMonth, constrainedDay, calId);
       const r = new PlainDateTime(
         call(() => new NapiPlainDateTime(iso.isoYear, iso.isoMonth, iso.isoDay, h, mi, s, ms, us, ns, cal)),
       );
