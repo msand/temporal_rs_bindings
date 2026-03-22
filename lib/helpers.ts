@@ -119,10 +119,12 @@ export function _roundToIncrement(value: number, increment: number, mode: string
             : Math.ceil(quotient);
       break;
     case 'halfCeil':
-      rounded = quotient % 1 >= 0.5 || quotient % 1 <= -0.5 ? Math.ceil(quotient) : Math.floor(quotient);
+      // Round ties toward +infinity
+      rounded = Math.floor(quotient + 0.5);
       break;
     case 'halfFloor':
-      rounded = quotient % 1 > 0.5 || quotient % 1 < -0.5 ? Math.ceil(quotient) : Math.floor(quotient);
+      // Round ties toward -infinity
+      rounded = Math.ceil(quotient - 0.5);
       break;
     case 'halfEven': {
       const lo = Math.floor(quotient);
