@@ -783,6 +783,6 @@ class PlainDateTime {
   }
 }
 
-_classes.PlainDateTime = PlainDateTime;
+_classes['PlainDateTime'] = PlainDateTime;
 
 export { PlainDateTime };

@@ -1591,8 +1591,8 @@ class ZonedDateTime {
   }
 }
 
-_classes.ZonedDateTime = ZonedDateTime;
+_classes['ZonedDateTime'] = ZonedDateTime;
 // Register with timezone.ts for _findTimeZoneTransition
-_tzClasses.ZonedDateTime = ZonedDateTime;
+_tzClasses['ZonedDateTime'] = ZonedDateTime;
 
 export { ZonedDateTime };

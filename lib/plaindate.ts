@@ -68,6 +68,9 @@ import {
   monthCodeToMonth,
 } from './calendar';
 import { PlainMonthDay } from './plainmonthday';
+import type { Duration } from './duration';
+import type { PlainDateTime } from './plaindatetime';
+import type { ZonedDateTime } from './zoneddatetime';
 
 class PlainDate {
   _inner!: NapiPlainDateT;
@@ -629,6 +632,6 @@ class PlainDate {
   }
 }
 
-_classes.PlainDate = PlainDate;
+_classes['PlainDate'] = PlainDate;
 
 export { PlainDate };

@@ -151,41 +151,41 @@ export function requireBranding(thisObj: any, NapiClass: any, typeName: string):
 // ─── Wrap functions (use late-bound _classes) ─────────────────
 
 export function wrapDuration(napi: any): any {
-  return napi ? new _classes.Duration(napi) : napi;
+  return napi ? new _classes['Duration'](napi) : napi;
 }
 export function wrapPlainDate(napi: any, calId?: string): any {
   if (!napi) return napi;
-  const r = new _classes.PlainDate(napi);
+  const r = new _classes['PlainDate'](napi);
   if (calId) r._calId = calId;
   return r;
 }
 export function wrapPlainTime(napi: any): any {
-  return napi ? new _classes.PlainTime(napi) : napi;
+  return napi ? new _classes['PlainTime'](napi) : napi;
 }
 export function wrapPlainDateTime(napi: any, calId?: string): any {
   if (!napi) return napi;
-  const r = new _classes.PlainDateTime(napi);
+  const r = new _classes['PlainDateTime'](napi);
   if (calId) r._calId = calId;
   return r;
 }
 export function wrapZonedDateTime(napi: any, calId?: string): any {
   if (!napi) return napi;
-  const r = new _classes.ZonedDateTime(napi);
+  const r = new _classes['ZonedDateTime'](napi);
   if (calId) r._calId = calId;
   return r;
 }
 export function wrapInstant(napi: any): any {
-  return napi ? new _classes.Instant(napi) : napi;
+  return napi ? new _classes['Instant'](napi) : napi;
 }
 export function wrapPlainYearMonth(napi: any, calId?: string): any {
   if (!napi) return napi;
-  const r = new _classes.PlainYearMonth(napi);
+  const r = new _classes['PlainYearMonth'](napi);
   if (calId) r._calId = calId;
   return r;
 }
 export function wrapPlainMonthDay(napi: any, calId?: string): any {
   if (!napi) return napi;
-  const r = new _classes.PlainMonthDay(napi);
+  const r = new _classes['PlainMonthDay'](napi);
   if (calId) r._calId = calId;
   return r;
 }
@@ -768,7 +768,7 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
   }
   const isoStr = s + 'P' + datePart + (timePart ? 'T' + timePart : '');
   try {
-    return new _classes.Duration(call(() => NapiDuration.from(isoStr)));
+    return new _classes['Duration'](call(() => NapiDuration.from(isoStr)));
   } catch {
     return dur;
   }

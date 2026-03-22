@@ -463,4 +463,4 @@ class Duration {
 
 export { Duration };
 
-_classes.Duration = Duration;
+_classes['Duration'] = Duration;

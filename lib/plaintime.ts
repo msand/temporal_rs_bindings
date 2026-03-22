@@ -24,6 +24,8 @@ import { _hasDateTimeOptions, _origFormatGetter } from './intl';
 import { mapUnit, mapRoundingMode } from './enums';
 import { toNapiDuration, toNapiPlainTime, convertDifferenceSettings, convertRoundingOptions } from './convert';
 
+import type { Duration } from './duration';
+
 class PlainTime {
   _inner!: NapiPlainTimeT;
   constructor(hour?: any, minute?: any, second?: any, millisecond?: any, microsecond?: any, nanosecond?: any) {
@@ -343,6 +345,6 @@ class PlainTime {
   }
 }
 
-_classes.PlainTime = PlainTime;
+_classes['PlainTime'] = PlainTime;
 
 export { PlainTime };

@@ -677,6 +677,6 @@ class PlainYearMonth {
   }
 }
 
-_classes.PlainYearMonth = PlainYearMonth;
+_classes['PlainYearMonth'] = PlainYearMonth;
 
 export { PlainYearMonth };

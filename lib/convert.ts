@@ -803,7 +803,7 @@ export function toNapiPlainMonthDay(arg: any): NapiPlainMonthDayT {
   }
   if (typeof arg === 'object' && arg !== null) {
     // Delegate to PlainMonthDay.from which properly handles calendar conversion
-    const result = _convertClasses.PlainMonthDay.from(arg);
+    const result = _convertClasses['PlainMonthDay'].from(arg);
     return result._inner;
   }
   throw new TypeError('Invalid PlainMonthDay argument');

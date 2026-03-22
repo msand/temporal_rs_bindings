@@ -398,7 +398,7 @@ export function _findTimeZoneTransition(zdt: any, dir: string): any {
         const isoStr = bigintNsToZdtString(transitionNs, tzId, zdt.calendarId);
         return call(() => {
           const inner = NapiZonedDateTime.from(isoStr);
-          return new _tzClasses.ZonedDateTime(inner);
+          return new _tzClasses['ZonedDateTime'](inner);
         });
       }
     }
@@ -470,7 +470,7 @@ export function _findTimeZoneTransition(zdt: any, dir: string): any {
     const isoStr = bigintNsToZdtString(transitionNs, tzId, zdt.calendarId);
     return call(() => {
       const inner = NapiZonedDateTime.from(isoStr);
-      return new _tzClasses.ZonedDateTime(inner);
+      return new _tzClasses['ZonedDateTime'](inner);
     });
   } else {
     // Search backward: find the most recent transition BEFORE the current instant
@@ -494,7 +494,7 @@ export function _findTimeZoneTransition(zdt: any, dir: string): any {
         const isoStr = bigintNsToZdtString(transitionNs, tzId, zdt.calendarId);
         return call(() => {
           const inner = NapiZonedDateTime.from(isoStr);
-          return new _tzClasses.ZonedDateTime(inner);
+          return new _tzClasses['ZonedDateTime'](inner);
         });
       }
       searchFromMs = clampedEpochMs - 1;
@@ -568,7 +568,7 @@ export function _findTimeZoneTransition(zdt: any, dir: string): any {
     const isoStr = bigintNsToZdtString(transitionNs, tzId, zdt.calendarId);
     return call(() => {
       const inner = NapiZonedDateTime.from(isoStr);
-      return new _tzClasses.ZonedDateTime(inner);
+      return new _tzClasses['ZonedDateTime'](inner);
     });
   }
 }
@@ -732,7 +732,7 @@ export function _zdtFromStringWithOffset(str: string): any {
 
   if (!offsetMatch && !isZ) {
     // No offset found, try NAPI directly
-    return new _tzClasses.ZonedDateTime(call(() => NapiZonedDateTime.from(str)));
+    return new _tzClasses['ZonedDateTime'](call(() => NapiZonedDateTime.from(str)));
   }
 
   let offsetNs = 0n;
@@ -787,7 +787,7 @@ export function _zdtFromStringWithOffset(str: string): any {
 
   // Create ZDT from epoch nanoseconds + timezone using the ZonedDateTime constructor
   // which handles extreme values with proper fallbacks
-  return new _tzClasses.ZonedDateTime(epochNs, tzId, calId !== 'iso8601' ? calId : undefined);
+  return new _tzClasses['ZonedDateTime'](epochNs, tzId, calId !== 'iso8601' ? calId : undefined);
 }
 
 export function bigintNsToZdtString(epochNs: bigint, tzId: string, calId?: string): string {

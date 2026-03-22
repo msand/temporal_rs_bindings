@@ -45,6 +45,7 @@
     "test262": "node test262-runner.mjs",
     "test262:verbose": "node test262-runner.mjs -v",
     "test262:failing": "node test262-runner.mjs --failing",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint 'lib/**/*.ts' tsup.config.ts eslint.config.mjs",
     "lint:fix": "eslint 'lib/**/*.ts' tsup.config.ts eslint.config.mjs --fix",
     "format": "prettier --write 'lib/**/*.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json' '__test__/*.ts'",

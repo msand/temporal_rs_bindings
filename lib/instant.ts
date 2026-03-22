@@ -313,4 +313,4 @@ class Instant {
 
 export { Instant };
 
-_classes.Instant = Instant;
+_classes['Instant'] = Instant;

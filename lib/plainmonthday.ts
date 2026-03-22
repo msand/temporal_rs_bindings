@@ -728,8 +728,8 @@ class PlainMonthDay {
   }
 }
 
-_classes.PlainMonthDay = PlainMonthDay;
+_classes['PlainMonthDay'] = PlainMonthDay;
 // Register with convert.ts for toNapiPlainMonthDay
-_convertClasses.PlainMonthDay = PlainMonthDay;
+_convertClasses['PlainMonthDay'] = PlainMonthDay;
 
 export { PlainMonthDay };
