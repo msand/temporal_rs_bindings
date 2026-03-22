@@ -111,9 +111,10 @@ impl PlainDate {
 
     #[napi]
     pub fn add(&self, duration: &Duration, overflow: Option<Overflow>) -> napi::Result<PlainDate> {
+        let ov = Some(overflow.map(Into::into).unwrap_or(temporal_rs::options::Overflow::Constrain));
         let inner = self
             .inner
-            .add(&duration.inner, overflow.map(Into::into))
+            .add(&duration.inner, ov)
             .map_err(to_napi_error)?;
         Ok(PlainDate { inner })
     }
@@ -124,9 +125,10 @@ impl PlainDate {
         duration: &Duration,
         overflow: Option<Overflow>,
     ) -> napi::Result<PlainDate> {
+        let ov = Some(overflow.map(Into::into).unwrap_or(temporal_rs::options::Overflow::Constrain));
         let inner = self
             .inner
-            .subtract(&duration.inner, overflow.map(Into::into))
+            .subtract(&duration.inner, ov)
             .map_err(to_napi_error)?;
         Ok(PlainDate { inner })
     }

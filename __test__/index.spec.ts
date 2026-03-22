@@ -569,6 +569,34 @@ describe('PlainMonthDay', () => {
   });
 });
 
+// ─── Error paths ────────────────────────────────────────────
+
+describe('Error paths for invalid input', () => {
+  it('Duration.from throws on invalid string', () => {
+    expect(() => Duration.from('invalid')).toThrow();
+  });
+
+  it('PlainDate.from throws on invalid string', () => {
+    expect(() => PlainDate.from('invalid')).toThrow();
+  });
+
+  it('PlainTime.from throws on invalid string', () => {
+    expect(() => PlainTime.from('invalid')).toThrow();
+  });
+
+  it('Instant.from throws on invalid string', () => {
+    expect(() => Instant.from('invalid')).toThrow();
+  });
+
+  it('PlainDateTime.from throws on invalid string', () => {
+    expect(() => PlainDateTime.from('invalid')).toThrow();
+  });
+
+  it('ZonedDateTime.from throws on invalid string', () => {
+    expect(() => ZonedDateTime.from('invalid')).toThrow();
+  });
+});
+
 // ─── Now ────────────────────────────────────────────────────
 
 describe('Now', () => {

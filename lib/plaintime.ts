@@ -172,21 +172,27 @@ class PlainTime {
   }
 
   get hour() {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     return this._inner.hour;
   }
   get minute() {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     return this._inner.minute;
   }
   get second() {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     return this._inner.second;
   }
   get millisecond() {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     return this._inner.millisecond;
   }
   get microsecond() {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     return this._inner.microsecond;
   }
   get nanosecond() {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     return this._inner.nanosecond;
   }
 
@@ -252,29 +258,34 @@ class PlainTime {
   }
 
   until(other: any, options?: any): Duration {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     const otherInner = toNapiPlainTime(other);
     const settings = convertDifferenceSettings(options);
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
 
   since(other: any, options?: any): Duration {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     const otherInner = toNapiPlainTime(other);
     const settings = convertDifferenceSettings(options);
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
 
   round(options: any): any {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     if (options === undefined) throw new TypeError('options parameter is required');
     const opts = convertRoundingOptions(options, { includeLargestUnit: false });
     return wrapPlainTime(call(() => this._inner.round(opts)));
   }
 
   equals(other: any): boolean {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     const otherInner = toNapiPlainTime(other);
     return this._inner.equals(otherInner);
   }
 
   toString(options?: any): string {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     if (options === undefined) return call(() => this._inner.toString());
     validateOptions(options);
     // Per spec: read options in alphabetical order (no calendarName for PlainTime)

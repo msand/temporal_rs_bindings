@@ -1,10 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 
 describe('CJS require', () => {
-  const { Temporal } = require('../lib/temporal.js');
+  let Temporal: any;
+
+  beforeAll(() => {
+    try {
+      ({ Temporal } = require('../lib/temporal.js'));
+    } catch (err) {
+      throw new Error(`Failed to require ../lib/temporal.js — did you run the build first? Original error: ${err}`);
+    }
+  });
 
   it('can require the conformance layer', () => {
     expect(Temporal).toBeDefined();

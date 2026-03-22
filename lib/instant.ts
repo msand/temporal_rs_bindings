@@ -82,9 +82,7 @@ class Instant {
     }
     // Per spec: ZonedDateTime is accepted (extract instant)
     if (_isTemporalZonedDateTime(arg) || (arg && arg._inner instanceof NapiZonedDateTime)) {
-      const inner = arg._inner || arg;
-      const zdt = inner instanceof NapiZonedDateTime ? inner : arg._inner;
-      return new Instant(zdt.toInstant());
+      return new Instant(arg._inner.toInstant());
     }
     // Per spec: other objects - call toString() and try to parse
     if (arg !== null && arg !== undefined && (typeof arg === 'object' || typeof arg === 'function')) {
@@ -116,14 +114,17 @@ class Instant {
   }
 
   get epochMilliseconds() {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     return this._inner.epochMilliseconds;
   }
   get epochNanoseconds() {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     if (this._epochNs !== undefined) return this._epochNs;
     return computeEpochNanoseconds(this._inner);
   }
 
   add(durationArg: any): any {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     // Parse duration and compute total nanoseconds using BigInt for precision
     const { totalNs } = _parseDurationForInstant(durationArg);
     const currentNs = this.epochNanoseconds;
@@ -132,6 +133,7 @@ class Instant {
   }
 
   subtract(durationArg: any): any {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     // Parse duration and compute total nanoseconds using BigInt for precision
     const { totalNs } = _parseDurationForInstant(durationArg);
     const currentNs = this.epochNanoseconds;
@@ -140,24 +142,28 @@ class Instant {
   }
 
   until(other: any, options?: any): any {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     const otherInner = toNapiInstant(other);
     const settings = convertDifferenceSettings(options);
     return wrapDuration(call(() => this._inner.until(otherInner, settings)));
   }
 
   since(other: any, options?: any): any {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     const otherInner = toNapiInstant(other);
     const settings = convertDifferenceSettings(options);
     return wrapDuration(call(() => this._inner.since(otherInner, settings)));
   }
 
   round(options: any): any {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     if (options === undefined) throw new TypeError('options parameter is required');
     const opts = convertRoundingOptions(options, { includeLargestUnit: false });
     return wrapInstant(call(() => this._inner.round(opts)));
   }
 
   equals(other: any): boolean {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     const otherInner = toNapiInstant(other);
     return this._inner.equals(otherInner);
   }
@@ -174,6 +180,7 @@ class Instant {
   }
 
   toString(options?: any): string {
+    requireBranding(this, NapiInstant, 'Temporal.Instant');
     if (options !== undefined) validateOptions(options);
     if (options === undefined) {
       return call(() => this._inner.toString());

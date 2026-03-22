@@ -184,9 +184,13 @@ impl RoundingOptions {
 pub(crate) fn deserialize_rounding_options(
     val: JsValue,
 ) -> Result<temporal_rs::options::RoundingOptions, JsValue> {
-    let options: RoundingOptions =
-        serde_wasm_bindgen::from_value(val).map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    options.try_into_temporal()
+    if val.is_undefined() || val.is_null() {
+        Ok(temporal_rs::options::RoundingOptions::default())
+    } else {
+        let options: RoundingOptions =
+            serde_wasm_bindgen::from_value(val).map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        options.try_into_temporal()
+    }
 }
 
 #[derive(Default, Deserialize)]
@@ -223,6 +227,50 @@ pub(crate) fn deserialize_to_string_rounding_options(
         let options: ToStringRoundingOptions =
             serde_wasm_bindgen::from_value(val).map_err(|e| JsValue::from_str(&format!("{e}")))?;
         Ok(options.into())
+    }
+}
+
+#[derive(Default, Deserialize)]
+pub(crate) struct ZonedToStringOptions {
+    pub precision: Option<u8>,
+    pub is_minute: Option<bool>,
+    pub smallest_unit: Option<Unit>,
+    pub rounding_mode: Option<RoundingMode>,
+    pub display_offset: Option<DisplayOffset>,
+    pub display_time_zone: Option<DisplayTimeZone>,
+    pub display_calendar: Option<DisplayCalendar>,
+}
+
+pub(crate) fn deserialize_zoned_to_string_options(
+    val: JsValue,
+) -> Result<(
+    temporal_rs::options::ToStringRoundingOptions,
+    temporal_rs::options::DisplayOffset,
+    temporal_rs::options::DisplayTimeZone,
+    temporal_rs::options::DisplayCalendar,
+), JsValue> {
+    if val.is_undefined() || val.is_null() {
+        Ok((
+            temporal_rs::options::ToStringRoundingOptions::default(),
+            temporal_rs::options::DisplayOffset::Auto,
+            temporal_rs::options::DisplayTimeZone::Auto,
+            temporal_rs::options::DisplayCalendar::Auto,
+        ))
+    } else {
+        let options: ZonedToStringOptions =
+            serde_wasm_bindgen::from_value(val).map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        let rounding = ToStringRoundingOptions {
+            precision: options.precision,
+            is_minute: options.is_minute,
+            smallest_unit: options.smallest_unit,
+            rounding_mode: options.rounding_mode,
+        };
+        Ok((
+            rounding.into(),
+            options.display_offset.unwrap_or(DisplayOffset::Auto).into(),
+            options.display_time_zone.unwrap_or(DisplayTimeZone::Auto).into(),
+            options.display_calendar.unwrap_or(DisplayCalendar::Auto).into(),
+        ))
     }
 }
 

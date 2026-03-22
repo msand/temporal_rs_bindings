@@ -2,6 +2,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::duration::Duration;
 use crate::options::*;
+use crate::time_zone::TimeZone;
 
 #[wasm_bindgen(inspectable)]
 pub struct Instant {
@@ -104,12 +105,12 @@ impl Instant {
     }
 
     #[wasm_bindgen(js_name = "toString")]
-    pub fn to_string(&self, options: JsValue) -> Result<String, JsValue> {
+    pub fn to_string(&self, options: JsValue, time_zone: Option<TimeZone>) -> Result<String, JsValue> {
         let p = provider()?;
         let opts = deserialize_to_string_rounding_options(options)?;
         self.inner
             .to_ixdtf_string_with_provider(
-                None,
+                time_zone.map(|tz| tz.inner),
                 opts,
                 p,
             )

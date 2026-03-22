@@ -10,7 +10,10 @@ import { call, computeEpochNanoseconds, isoDateToEpochDays } from './helpers';
 // Late-bound class reference to break circular dependency
 export const _tzClasses: Record<string, any> = {};
 
-// Helper: compute local date/time parts from BigInt nanoseconds (for extreme values)
+// Helper: compute local date/time parts from BigInt nanoseconds (for extreme values).
+// NOTE: `fractionalSecond` only captures millisecond precision; microsecond and
+// nanosecond precision is lost because the sub-second remainder is truncated to
+// whole milliseconds when converting from BigInt nanoseconds.
 export function _computeLocalPartsFromBigInt(epochNs: bigint, offsetNs: bigint): LocalParts {
   const localNs = epochNs + offsetNs;
   const NS_PER_DAY = 86400000000000n;

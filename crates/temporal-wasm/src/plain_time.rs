@@ -12,17 +12,17 @@ pub struct PlainTime {
 impl PlainTime {
     #[wasm_bindgen(constructor)]
     pub fn new(
-        hour: u8,
-        minute: u8,
-        second: u8,
+        hour: Option<u8>,
+        minute: Option<u8>,
+        second: Option<u8>,
         millisecond: Option<u16>,
         microsecond: Option<u16>,
         nanosecond: Option<u16>,
     ) -> Result<PlainTime, JsValue> {
         let inner = temporal_rs::PlainTime::new(
-            hour,
-            minute,
-            second,
+            hour.unwrap_or(0),
+            minute.unwrap_or(0),
+            second.unwrap_or(0),
             millisecond.unwrap_or(0),
             microsecond.unwrap_or(0),
             nanosecond.unwrap_or(0),

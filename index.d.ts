@@ -165,7 +165,7 @@ export declare class PlainDate {
   valueOf(): void
 }
 export declare class PlainTime {
-  constructor(hour: number, minute: number, second: number, millisecond?: number | undefined | null, microsecond?: number | undefined | null, nanosecond?: number | undefined | null)
+  constructor(hour?: number | undefined | null, minute?: number | undefined | null, second?: number | undefined | null, millisecond?: number | undefined | null, microsecond?: number | undefined | null, nanosecond?: number | undefined | null)
   static from(s: string): PlainTime
   get hour(): number
   get minute(): number
@@ -271,7 +271,7 @@ export declare class ZonedDateTime {
   toPlainDateTime(): PlainDateTime
   withCalendar(calendar: Calendar): ZonedDateTime
   withTimeZone(timezone: TimeZone): ZonedDateTime
-  toString(options?: ToStringRoundingOptions | undefined | null): string
+  toString(options?: ToStringRoundingOptions | undefined | null, displayOffset?: DisplayOffset | undefined | null, displayTimeZone?: DisplayTimeZone | undefined | null, displayCalendar?: DisplayCalendar | undefined | null): string
   toJson(): string
   valueOf(): void
 }
@@ -291,7 +291,7 @@ export declare class Instant {
   round(options: RoundingOptions): Instant
   equals(other: Instant): boolean
   static compare(one: Instant, two: Instant): number
-  toString(options?: ToStringRoundingOptions | undefined | null): string
+  toString(options?: ToStringRoundingOptions | undefined | null, timeZone?: TimeZone | undefined | null): string
   toJson(): string
   valueOf(): void
 }
@@ -309,9 +309,33 @@ export declare class Duration {
   get months(): number
   get weeks(): number
   get days(): number
+  /**
+   * Hours component as f64.
+   *
+   * **Precision note:** The inner value is i64. Values beyond ±2^53 will
+   * lose precision when returned as f64.
+   */
   get hours(): number
+  /**
+   * Minutes component as f64.
+   *
+   * **Precision note:** The inner value is i64. Values beyond ±2^53 will
+   * lose precision when returned as f64.
+   */
   get minutes(): number
+  /**
+   * Seconds component as f64.
+   *
+   * **Precision note:** The inner value is i64. Values beyond ±2^53 will
+   * lose precision when returned as f64.
+   */
   get seconds(): number
+  /**
+   * Milliseconds component as f64.
+   *
+   * **Precision note:** The inner value is i64. Values beyond ±2^53 will
+   * lose precision when returned as f64.
+   */
   get milliseconds(): number
   /** Note: returns f64 per TC39 Temporal spec. Precision loss possible for values > 2^53. */
   get microseconds(): number

@@ -276,47 +276,61 @@ class PlainDateTime {
   }
 
   get year() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.year;
   }
   get month() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.month;
   }
   get monthCode() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.monthCode;
   }
   get day() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.day;
   }
   get dayOfWeek() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.dayOfWeek;
   }
   get dayOfYear() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.dayOfYear;
   }
   get weekOfYear() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const v = this._inner.weekOfYear;
     return v === null ? undefined : v;
   }
   get yearOfWeek() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const v = this._inner.yearOfWeek;
     return v === null ? undefined : v;
   }
   get daysInWeek() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.daysInWeek;
   }
   get daysInMonth() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.daysInMonth;
   }
   get daysInYear() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.daysInYear;
   }
   get monthsInYear() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.monthsInYear;
   }
   get inLeapYear() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.inLeapYear;
   }
   get era() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const calId = getRealCalendarId(this);
     const v = this._inner.era;
     if (v === null) return undefined;
@@ -324,6 +338,7 @@ class PlainDateTime {
       .era;
   }
   get eraYear() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const calId = getRealCalendarId(this);
     const v = this._inner.eraYear;
     if (v === null) return undefined;
@@ -331,27 +346,35 @@ class PlainDateTime {
       .eraYear;
   }
   get hour() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.hour;
   }
   get minute() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.minute;
   }
   get second() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.second;
   }
   get millisecond() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.millisecond;
   }
   get microsecond() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.microsecond;
   }
   get nanosecond() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return this._inner.nanosecond;
   }
   get calendarId() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return getRealCalendarId(this);
   }
   get calendar() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return getRealCalendarId(this);
   }
 
@@ -515,6 +538,7 @@ class PlainDateTime {
   }
 
   withCalendar(calendar: any): any {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     if (calendar === undefined) throw new TypeError('calendar argument is required');
     const newCalId = getCalendarId(calendar);
     const cal = toNapiCalendar(calendar);
@@ -561,6 +585,7 @@ class PlainDateTime {
   }
 
   add(durationArg: any, options?: any): any {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -568,6 +593,7 @@ class PlainDateTime {
   }
 
   subtract(durationArg: any, options?: any): any {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -575,6 +601,7 @@ class PlainDateTime {
   }
 
   until(other: any, options?: any): any {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const otherInner = toNapiPlainDateTime(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -616,6 +643,7 @@ class PlainDateTime {
   }
 
   since(other: any, options?: any): any {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const otherInner = toNapiPlainDateTime(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -653,6 +681,7 @@ class PlainDateTime {
   }
 
   round(options: any): any {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     if (options === undefined) throw new TypeError('options parameter is required');
     const opts = convertRoundingOptions(options, { includeLargestUnit: false });
     return wrapPlainDateTime(
@@ -662,15 +691,18 @@ class PlainDateTime {
   }
 
   equals(other: any): boolean {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const otherInner = toNapiPlainDateTime(other);
     return this._inner.equals(otherInner);
   }
 
   toPlainDate() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return wrapPlainDate(this._inner.toPlainDate(), getRealCalendarId(this));
   }
 
   toPlainTime() {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     return wrapPlainTime(this._inner.toPlainTime());
   }
 
@@ -723,6 +755,7 @@ class PlainDateTime {
   }
 
   toString(options?: any): string {
+    requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     const opts = convertToStringOptions(options);
     return call(() => this._inner.toString(opts.roundingOptions as any, opts.displayCalendar as any));
   }

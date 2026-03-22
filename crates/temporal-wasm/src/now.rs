@@ -66,7 +66,7 @@ pub fn now_instant() -> Result<Instant, JsValue> {
 pub fn now_time_zone() -> Result<TimeZone, JsValue> {
     let provider = provider()?;
     let inner = browser_now()
-        .time_zone_with_provider(&provider)
+        .time_zone_with_provider(provider)
         .map_err(to_js_error)?;
     Ok(TimeZone { inner })
 }
@@ -75,12 +75,15 @@ pub fn now_time_zone() -> Result<TimeZone, JsValue> {
 ///
 /// Uses `js_sys::Date::now()` for the current time. The fallback time zone
 /// is UTC in WASM environments.
+///
+/// The `time_zone` parameter, if provided, is consumed (moved) due to
+/// wasm-bindgen limitations on passing borrowed references.
 #[wasm_bindgen(js_name = "nowZonedDateTimeISO")]
 pub fn now_zoned_date_time_iso(time_zone: Option<TimeZone>) -> Result<ZonedDateTime, JsValue> {
     let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = browser_now()
-        .zoned_date_time_iso_with_provider(tz, &provider)
+        .zoned_date_time_iso_with_provider(tz, provider)
         .map_err(to_js_error)?;
     Ok(ZonedDateTime { inner })
 }
@@ -89,12 +92,15 @@ pub fn now_zoned_date_time_iso(time_zone: Option<TimeZone>) -> Result<ZonedDateT
 ///
 /// Uses `js_sys::Date::now()` for the current time. The fallback time zone
 /// is UTC in WASM environments.
+///
+/// The `time_zone` parameter, if provided, is consumed (moved) due to
+/// wasm-bindgen limitations on passing borrowed references.
 #[wasm_bindgen(js_name = "nowPlainDateTimeISO")]
 pub fn now_plain_date_time_iso(time_zone: Option<TimeZone>) -> Result<PlainDateTime, JsValue> {
     let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = browser_now()
-        .plain_date_time_iso_with_provider(tz, &provider)
+        .plain_date_time_iso_with_provider(tz, provider)
         .map_err(to_js_error)?;
     Ok(PlainDateTime { inner })
 }
@@ -103,12 +109,15 @@ pub fn now_plain_date_time_iso(time_zone: Option<TimeZone>) -> Result<PlainDateT
 ///
 /// Uses `js_sys::Date::now()` for the current time. The fallback time zone
 /// is UTC in WASM environments.
+///
+/// The `time_zone` parameter, if provided, is consumed (moved) due to
+/// wasm-bindgen limitations on passing borrowed references.
 #[wasm_bindgen(js_name = "nowPlainDateISO")]
 pub fn now_plain_date_iso(time_zone: Option<TimeZone>) -> Result<PlainDate, JsValue> {
     let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = browser_now()
-        .plain_date_iso_with_provider(tz, &provider)
+        .plain_date_iso_with_provider(tz, provider)
         .map_err(to_js_error)?;
     Ok(PlainDate { inner })
 }
@@ -117,12 +126,15 @@ pub fn now_plain_date_iso(time_zone: Option<TimeZone>) -> Result<PlainDate, JsVa
 ///
 /// Uses `js_sys::Date::now()` for the current time. The fallback time zone
 /// is UTC in WASM environments.
+///
+/// The `time_zone` parameter, if provided, is consumed (moved) due to
+/// wasm-bindgen limitations on passing borrowed references.
 #[wasm_bindgen(js_name = "nowPlainTimeISO")]
 pub fn now_plain_time_iso(time_zone: Option<TimeZone>) -> Result<PlainTime, JsValue> {
     let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = browser_now()
-        .plain_time_iso_with_provider(tz, &provider)
+        .plain_time_iso_with_provider(tz, provider)
         .map_err(to_js_error)?;
     Ok(PlainTime { inner })
 }

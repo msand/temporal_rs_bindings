@@ -110,18 +110,20 @@ impl PlainDate {
 
     #[wasm_bindgen]
     pub fn add(&self, duration: &Duration, overflow: Option<Overflow>) -> Result<PlainDate, JsValue> {
+        let ov = Some(overflow.map(Into::into).unwrap_or(temporal_rs::options::Overflow::Constrain));
         let inner = self
             .inner
-            .add(&duration.inner, overflow.map(Into::into))
+            .add(&duration.inner, ov)
             .map_err(to_js_error)?;
         Ok(PlainDate { inner })
     }
 
     #[wasm_bindgen]
     pub fn subtract(&self, duration: &Duration, overflow: Option<Overflow>) -> Result<PlainDate, JsValue> {
+        let ov = Some(overflow.map(Into::into).unwrap_or(temporal_rs::options::Overflow::Constrain));
         let inner = self
             .inner
-            .subtract(&duration.inner, overflow.map(Into::into))
+            .subtract(&duration.inner, ov)
             .map_err(to_js_error)?;
         Ok(PlainDate { inner })
     }

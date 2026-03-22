@@ -779,47 +779,61 @@ class ZonedDateTime {
   }
 
   get year() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.year;
   }
   get month() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.month;
   }
   get monthCode() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.monthCode;
   }
   get day() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.day;
   }
   get dayOfWeek() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.dayOfWeek;
   }
   get dayOfYear() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.dayOfYear;
   }
   get weekOfYear() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const v = this._inner.weekOfYear;
     return v === null ? undefined : v;
   }
   get yearOfWeek() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const v = this._inner.yearOfWeek;
     return v === null ? undefined : v;
   }
   get daysInWeek() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.daysInWeek;
   }
   get daysInMonth() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.daysInMonth;
   }
   get daysInYear() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.daysInYear;
   }
   get monthsInYear() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.monthsInYear;
   }
   get inLeapYear() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.inLeapYear;
   }
   get era() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const calId = getRealCalendarId(this);
     const v = this._inner.era;
     if (v === null) return undefined;
@@ -827,6 +841,7 @@ class ZonedDateTime {
       .era;
   }
   get eraYear() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const calId = getRealCalendarId(this);
     const v = this._inner.eraYear;
     if (v === null) return undefined;
@@ -834,49 +849,64 @@ class ZonedDateTime {
       .eraYear;
   }
   get hour() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.hour;
   }
   get minute() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.minute;
   }
   get second() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.second;
   }
   get millisecond() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.millisecond;
   }
   get microsecond() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.microsecond;
   }
   get nanosecond() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.nanosecond;
   }
   get calendarId() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return getRealCalendarId(this);
   }
   get calendar() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return getRealCalendarId(this);
   }
   get timeZoneId() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.timeZone.id;
   }
   get timeZone() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.timeZone.id;
   }
   get offset() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.offset;
   }
   get offsetNanoseconds() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.offsetNanoseconds;
   }
   get epochMilliseconds() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return this._inner.epochMilliseconds;
   }
   get epochNanoseconds() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     if (this._epochNs !== undefined) return this._epochNs;
     return computeEpochNanoseconds(this._inner);
   }
   get hoursInDay() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     this._checkLocalTimeInRange();
     return call(() => this._inner.hoursInDay);
   }
@@ -1080,6 +1110,7 @@ class ZonedDateTime {
   }
 
   withCalendar(calendar: any): any {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     if (calendar === undefined) throw new TypeError('calendar argument is required');
     const newCalId = getCalendarId(calendar);
     const cal = toNapiCalendar(calendar);
@@ -1087,6 +1118,7 @@ class ZonedDateTime {
   }
 
   withTimeZone(timeZone: any): any {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const tz = toNapiTimeZone(timeZone);
     return wrapZonedDateTime(
       call(() => this._inner.withTimeZone(tz)),
@@ -1095,6 +1127,7 @@ class ZonedDateTime {
   }
 
   withPlainTime(time: any) {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     if (time === undefined) {
       this._checkLocalTimeInRange();
       return this.startOfDay();
@@ -1147,6 +1180,7 @@ class ZonedDateTime {
   }
 
   add(durationArg: any, options?: any): any {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -1154,6 +1188,7 @@ class ZonedDateTime {
   }
 
   subtract(durationArg: any, options?: any): any {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -1161,6 +1196,7 @@ class ZonedDateTime {
   }
 
   until(other: any, options?: any): any {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const otherInner = toNapiZonedDateTime(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -1194,6 +1230,7 @@ class ZonedDateTime {
   }
 
   since(other: any, options?: any): any {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const otherInner = toNapiZonedDateTime(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -1227,6 +1264,7 @@ class ZonedDateTime {
   }
 
   round(options: any): any {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     if (options === undefined) throw new TypeError('options parameter is required');
     if (typeof options === 'string') {
       const obj = Object.create(null);
@@ -1250,6 +1288,7 @@ class ZonedDateTime {
   }
 
   equals(other: any): boolean {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     const otherInner = toNapiZonedDateTime(other);
     // Per spec: ZDT.equals compares epoch nanoseconds, timezone ID (canonicalized), and calendar ID.
     // Short-circuit: if canonical timezone IDs differ, they're not equal.
@@ -1269,6 +1308,7 @@ class ZonedDateTime {
   }
 
   startOfDay() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     this._checkLocalTimeInRange();
     return wrapZonedDateTime(
       call(() => this._inner.startOfDay()),
@@ -1277,18 +1317,22 @@ class ZonedDateTime {
   }
 
   toInstant() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return wrapInstant(this._inner.toInstant());
   }
 
   toPlainDate() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return wrapPlainDate(this._inner.toPlainDate(), getRealCalendarId(this));
   }
 
   toPlainTime() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     return wrapPlainTime(this._inner.toPlainTime());
   }
 
   toPlainDateTime() {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     // For extreme epoch nanoseconds with large UTC offsets, the NAPI's internal
     // representation may be incorrect. Use manual computation via BigInt arithmetic
     // to get the correct local date/time.
@@ -1380,6 +1424,7 @@ class ZonedDateTime {
   }
 
   toString(options?: any): string {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     if (options !== undefined) validateOptions(options);
     if (options === undefined) {
       return call(() => this._inner.toString());
@@ -1572,7 +1617,10 @@ class ZonedDateTime {
       }
       try {
         const dtf = new Intl.DateTimeFormat(locales, opts);
-        return _origFormatGetter!.call(dtf)(ms);
+        if (_origFormatGetter) {
+          return _origFormatGetter.call(dtf)(ms);
+        }
+        return dtf.format(ms);
       } catch (e: any) {
         // Re-throw TypeErrors (e.g. dateStyle + component options conflict)
         if (e instanceof TypeError) throw e;

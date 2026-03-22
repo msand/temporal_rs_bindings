@@ -170,7 +170,7 @@ jobs:
         run: npx napi build --platform --cargo-cwd crates/temporal-napi
 
       - name: Typecheck
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
       - name: Lint
         run: npm run lint

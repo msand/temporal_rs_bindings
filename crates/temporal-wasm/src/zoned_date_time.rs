@@ -364,12 +364,13 @@ impl ZonedDateTime {
 
     #[wasm_bindgen(js_name = "toString")]
     pub fn to_string(&self, options: JsValue) -> Result<String, JsValue> {
-        let opts = deserialize_to_string_rounding_options(options)?;
+        let (opts, display_offset, display_time_zone, display_calendar) =
+            deserialize_zoned_to_string_options(options)?;
         self.inner
             .to_ixdtf_string_with_provider(
-                temporal_rs::options::DisplayOffset::Auto,
-                temporal_rs::options::DisplayTimeZone::Auto,
-                temporal_rs::options::DisplayCalendar::Auto,
+                display_offset,
+                display_time_zone,
+                display_calendar,
                 opts,
                 provider()?,
             )

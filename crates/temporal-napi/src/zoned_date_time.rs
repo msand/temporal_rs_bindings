@@ -358,12 +358,18 @@ impl ZonedDateTime {
     }
 
     #[napi]
-    pub fn to_string(&self, options: Option<ToStringRoundingOptions>) -> napi::Result<String> {
+    pub fn to_string(
+        &self,
+        options: Option<ToStringRoundingOptions>,
+        display_offset: Option<DisplayOffset>,
+        display_time_zone: Option<DisplayTimeZone>,
+        display_calendar: Option<DisplayCalendar>,
+    ) -> napi::Result<String> {
         self.inner
             .to_ixdtf_string_with_provider(
-                temporal_rs::options::DisplayOffset::Auto,
-                temporal_rs::options::DisplayTimeZone::Auto,
-                temporal_rs::options::DisplayCalendar::Auto,
+                display_offset.unwrap_or(DisplayOffset::Auto).into(),
+                display_time_zone.unwrap_or(DisplayTimeZone::Auto).into(),
+                display_calendar.unwrap_or(DisplayCalendar::Auto).into(),
                 options.unwrap_or_default().into(),
                 provider()?,
             )

@@ -215,47 +215,61 @@ class PlainDate {
   }
 
   get year() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.year;
   }
   get month() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.month;
   }
   get monthCode() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.monthCode;
   }
   get day() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.day;
   }
   get dayOfWeek() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.dayOfWeek;
   }
   get dayOfYear() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.dayOfYear;
   }
   get weekOfYear() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const v = this._inner.weekOfYear;
     return v === null ? undefined : v;
   }
   get yearOfWeek() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const v = this._inner.yearOfWeek;
     return v === null ? undefined : v;
   }
   get daysInWeek() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.daysInWeek;
   }
   get daysInMonth() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.daysInMonth;
   }
   get daysInYear() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.daysInYear;
   }
   get monthsInYear() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.monthsInYear;
   }
   get inLeapYear() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return this._inner.inLeapYear;
   }
   get era() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const calId = getRealCalendarId(this);
     const v = this._inner.era;
     if (v === null) return undefined;
@@ -263,6 +277,7 @@ class PlainDate {
       .era;
   }
   get eraYear(): number | undefined {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const calId = getRealCalendarId(this);
     const v = this._inner.eraYear;
     if (v === null) return undefined;
@@ -270,9 +285,11 @@ class PlainDate {
       .eraYear;
   }
   get calendarId() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return getRealCalendarId(this);
   }
   get calendar() {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     return getRealCalendarId(this);
   }
 
@@ -406,6 +423,7 @@ class PlainDate {
   }
 
   withCalendar(calendar: any): any {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     if (calendar === undefined) throw new TypeError('calendar argument is required');
     const newCalId = getCalendarId(calendar);
     const cal = toNapiCalendar(calendar);
@@ -431,6 +449,7 @@ class PlainDate {
   }
 
   until(other: any, options?: any): Duration {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const otherInner = toNapiPlainDate(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -445,6 +464,7 @@ class PlainDate {
   }
 
   since(other: any, options?: any): Duration {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const otherInner = toNapiPlainDate(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -460,6 +480,7 @@ class PlainDate {
   }
 
   equals(other: any): boolean {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const otherInner = toNapiPlainDate(other);
     return this._inner.equals(otherInner);
   }
@@ -563,6 +584,7 @@ class PlainDate {
   }
 
   toString(options?: any): string {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     if (options !== undefined) validateOptions(options);
     const dc = options ? mapDisplayCalendar(options.calendarName) : undefined;
     return this._inner.toString(dc);

@@ -118,7 +118,14 @@ function collectTests(dirs, filter) {
           // For dirs outside built-ins/Temporal, check Temporal feature flag
           if (!full.includes('built-ins/Temporal')) {
             const src = fs.readFileSync(full, 'utf8');
-            if (!/features:.*Temporal/.test(src)) continue;
+            // Check if test has Temporal feature - handle both inline and multi-line YAML
+            const frontmatterMatch = src.match(/\/\*---\n([\s\S]*?)---\*\//);
+            if (frontmatterMatch) {
+              const fm = frontmatterMatch[1];
+              if (!/Temporal/.test(fm)) continue;
+            } else {
+              continue;
+            }
           }
           results.push({ path: full, rel });
         }
@@ -383,11 +390,14 @@ function runTest(testFile, Temporal) {
     return { status: 'skip', reason: `assert.throws shim error: ${String(shimErr?.message || shimErr).split('\n')[0]}` };
   }
 
-  // Run test
-  const isOnlyStrict = meta.flags && meta.flags.includes('onlyStrict');
-  const prefix = isOnlyStrict ? '"use strict";\n' : '';
+  // Run test in strict mode by default.
+  // Temporal built-in tests use let/const at top level, so dual-mode
+  // (strict + sloppy) execution in the same VM context causes
+  // "already declared" errors. Running in strict mode is sufficient
+  // for Temporal API conformance testing.
+  const isNoStrict = meta.flags && meta.flags.includes('noStrict');
+  const prefix = isNoStrict ? '' : '"use strict";\n';
   const testCode = prefix + source;
-
   const err = runInCtx(testCode, context, testFile.rel);
 
   if (err === null) {
@@ -407,7 +417,7 @@ function runTest(testFile, Temporal) {
     return { status: 'pass' };
   }
 
-  // Format error message
+  // Unexpected error — test failed
   let msg, name;
   if (err && typeof err === 'object') {
     msg = err.message || String(err);

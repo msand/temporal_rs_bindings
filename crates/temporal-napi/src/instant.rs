@@ -2,6 +2,7 @@ use napi_derive::napi;
 
 use crate::duration::Duration;
 use crate::options::*;
+use crate::time_zone::TimeZone;
 
 #[napi]
 pub struct Instant {
@@ -108,10 +109,14 @@ impl Instant {
     }
 
     #[napi]
-    pub fn to_string(&self, options: Option<ToStringRoundingOptions>) -> napi::Result<String> {
+    pub fn to_string(
+        &self,
+        options: Option<ToStringRoundingOptions>,
+        time_zone: Option<&TimeZone>,
+    ) -> napi::Result<String> {
         self.inner
             .to_ixdtf_string_with_provider(
-                None,
+                time_zone.map(|tz| tz.inner),
                 options.unwrap_or_default().into(),
                 provider()?,
             )

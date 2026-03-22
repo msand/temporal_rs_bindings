@@ -70,7 +70,7 @@ export interface ZdtStringParts {
 
 // Range info for Intl formatting
 export interface RangeInfo {
-  ms: any;
+  ms: number | undefined;
   isoFields: ISOFields | null | undefined;
   isTemporal: boolean;
 }

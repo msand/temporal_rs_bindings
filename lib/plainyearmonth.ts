@@ -348,15 +348,19 @@ class PlainYearMonth {
   }
 
   get year() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return this._inner.year;
   }
   get month() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return this._inner.month;
   }
   get monthCode() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return this._inner.monthCode;
   }
   get era() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     const calId = getRealCalendarId(this);
     const v = this._inner.era;
     if (v === null) return undefined;
@@ -370,6 +374,7 @@ class PlainYearMonth {
     ).era;
   }
   get eraYear() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     const calId = getRealCalendarId(this);
     const v = this._inner.eraYear;
     if (v === null) return undefined;
@@ -383,21 +388,27 @@ class PlainYearMonth {
     ).eraYear;
   }
   get daysInYear() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return this._inner.daysInYear;
   }
   get daysInMonth() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return this._inner.daysInMonth;
   }
   get monthsInYear() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return this._inner.monthsInYear;
   }
   get inLeapYear() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return this._inner.inLeapYear;
   }
   get calendarId() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return getRealCalendarId(this);
   }
   get calendar() {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     return getRealCalendarId(this);
   }
 
@@ -503,6 +514,7 @@ class PlainYearMonth {
   }
 
   add(durationArg: any, options?: any): any {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -513,6 +525,7 @@ class PlainYearMonth {
   }
 
   subtract(durationArg: any, options?: any): any {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -523,6 +536,7 @@ class PlainYearMonth {
   }
 
   until(other: any, options?: any): Duration {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     const otherInner = toNapiPlainYearMonth(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -545,6 +559,7 @@ class PlainYearMonth {
   }
 
   since(other: any, options?: any): Duration {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     const otherInner = toNapiPlainYearMonth(other);
     const settings = convertDifferenceSettings(options);
     const calId = getRealCalendarId(this);
@@ -565,6 +580,7 @@ class PlainYearMonth {
   }
 
   equals(other: any): boolean {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     const otherInner = toNapiPlainYearMonth(other);
     return this._inner.equals(otherInner);
   }
@@ -590,6 +606,7 @@ class PlainYearMonth {
   }
 
   toString(options?: any): string {
+    requireBranding(this, NapiPlainYearMonth, 'Temporal.PlainYearMonth');
     if (options !== undefined) validateOptions(options);
     const dc = options ? mapDisplayCalendar(options.calendarName) : undefined;
     return this._inner.toString(dc);

@@ -489,15 +489,19 @@ class PlainMonthDay {
   }
 
   get monthCode() {
+    requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     return this._inner.monthCode;
   }
   get day() {
+    requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     return this._inner.day;
   }
   get calendarId() {
+    requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     return getRealCalendarId(this);
   }
   get calendar() {
+    requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     return getRealCalendarId(this);
   }
 
@@ -587,6 +591,7 @@ class PlainMonthDay {
   }
 
   equals(other: any): boolean {
+    requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     const otherInner = toNapiPlainMonthDay(other);
     return this._inner.equals(otherInner);
   }
@@ -630,6 +635,7 @@ class PlainMonthDay {
   }
 
   toString(options?: any): string {
+    requireBranding(this, NapiPlainMonthDay, 'Temporal.PlainMonthDay');
     if (options !== undefined) validateOptions(options);
     const dc = options ? mapDisplayCalendar(options.calendarName) : undefined;
     return this._inner.toString(dc);

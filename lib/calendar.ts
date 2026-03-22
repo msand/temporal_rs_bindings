@@ -159,6 +159,9 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
       }
     }
     if (probe.monthsInYear !== 13) {
+      if (_chineseDangiLeapMonthCache.size > 10000) {
+        _chineseDangiLeapMonthCache.clear();
+      }
       _chineseDangiLeapMonthCache.set(cacheKey, 0);
       return 0;
     }
@@ -174,6 +177,9 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
           lastMonth = pd.month;
           if (pd.monthCode.endsWith('L')) {
             const base = parseInt(pd.monthCode.slice(1, 3), 10);
+            if (_chineseDangiLeapMonthCache.size > 10000) {
+              _chineseDangiLeapMonthCache.clear();
+            }
             _chineseDangiLeapMonthCache.set(cacheKey, base);
             return base;
           }
@@ -181,9 +187,15 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
         if (pd.year > calYear && pd.month >= 2) break;
       } catch {}
     }
+    if (_chineseDangiLeapMonthCache.size > 10000) {
+      _chineseDangiLeapMonthCache.clear();
+    }
     _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   } catch {
+    if (_chineseDangiLeapMonthCache.size > 10000) {
+      _chineseDangiLeapMonthCache.clear();
+    }
     _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   }

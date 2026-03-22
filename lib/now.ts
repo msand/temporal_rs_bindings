@@ -1,7 +1,7 @@
 // Temporal.Now namespace and setLength/toStringTag setup extracted from temporal.ts
 
 import { binding } from './binding';
-import { wrapInstant, wrapZonedDateTime, wrapPlainDateTime, wrapPlainDate, wrapPlainTime } from './helpers';
+import { call, wrapInstant, wrapZonedDateTime, wrapPlainDateTime, wrapPlainDate, wrapPlainTime } from './helpers';
 import { toNapiTimeZone } from './convert';
 import { Duration } from './duration';
 import { PlainDate } from './plaindate';
@@ -203,26 +203,26 @@ function _defineNowMethod(name: string, fn: any): void {
 // Methods created via concise method syntax are non-constructable
 const _nowMethods: Record<string, (...args: any[]) => any> = {
   instant() {
-    return wrapInstant(binding.nowInstant());
+    return wrapInstant(call(() => binding.nowInstant()));
   },
   timeZoneId() {
-    return binding.nowTimeZone().id;
+    return call(() => binding.nowTimeZone().id);
   },
   zonedDateTimeISO(timeZone) {
     const tz = timeZone !== undefined ? toNapiTimeZone(timeZone) : undefined;
-    return wrapZonedDateTime(binding.nowZonedDateTimeIso(tz));
+    return wrapZonedDateTime(call(() => binding.nowZonedDateTimeIso(tz)));
   },
   plainDateTimeISO(timeZone) {
     const tz = timeZone !== undefined ? toNapiTimeZone(timeZone) : undefined;
-    return wrapPlainDateTime(binding.nowPlainDateTimeIso(tz));
+    return wrapPlainDateTime(call(() => binding.nowPlainDateTimeIso(tz)));
   },
   plainDateISO(timeZone) {
     const tz = timeZone !== undefined ? toNapiTimeZone(timeZone) : undefined;
-    return wrapPlainDate(binding.nowPlainDateIso(tz));
+    return wrapPlainDate(call(() => binding.nowPlainDateIso(tz)));
   },
   plainTimeISO(timeZone) {
     const tz = timeZone !== undefined ? toNapiTimeZone(timeZone) : undefined;
-    return wrapPlainTime(binding.nowPlainTimeIso(tz));
+    return wrapPlainTime(call(() => binding.nowPlainTimeIso(tz)));
   },
 };
 

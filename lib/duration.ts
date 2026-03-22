@@ -112,46 +112,60 @@ class Duration {
   }
 
   get years() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.years;
   }
   get months() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.months;
   }
   get weeks() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.weeks;
   }
   get days() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.days;
   }
   get hours() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.hours;
   }
   get minutes() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.minutes;
   }
   get seconds() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.seconds;
   }
   get milliseconds() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.milliseconds;
   }
   get microseconds() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.microseconds;
   }
   get nanoseconds() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.nanoseconds;
   }
   get sign() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.sign;
   }
   get blank() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return this._inner.isZero;
   }
 
   negated() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return wrapDuration(this._inner.negated());
   }
   abs() {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     return wrapDuration(this._inner.abs());
   }
 
@@ -228,6 +242,7 @@ class Duration {
   }
 
   round(options: any): Duration {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     if (options === undefined) throw new TypeError('options parameter is required');
     if (typeof options === 'string') {
       const obj = Object.create(null);
@@ -358,6 +373,7 @@ class Duration {
   }
 
   total(options: any): number {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     if (options === undefined) throw new TypeError('options parameter is required');
     if (typeof options === 'string') {
       const obj = Object.create(null);
@@ -381,6 +397,7 @@ class Duration {
   }
 
   toString(options?: any): string {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     if (options === undefined) return this._inner.toString();
     validateOptions(options);
     // Per spec: read options in alphabetical order, each exactly once

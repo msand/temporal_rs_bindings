@@ -89,21 +89,37 @@ impl Duration {
         self.inner.days() as f64
     }
 
+    /// Hours component as f64.
+    ///
+    /// **Precision note:** The inner value is i64. Values beyond ±2^53 will
+    /// lose precision when returned as f64.
     #[napi(getter)]
     pub fn hours(&self) -> f64 {
         self.inner.hours() as f64
     }
 
+    /// Minutes component as f64.
+    ///
+    /// **Precision note:** The inner value is i64. Values beyond ±2^53 will
+    /// lose precision when returned as f64.
     #[napi(getter)]
     pub fn minutes(&self) -> f64 {
         self.inner.minutes() as f64
     }
 
+    /// Seconds component as f64.
+    ///
+    /// **Precision note:** The inner value is i64. Values beyond ±2^53 will
+    /// lose precision when returned as f64.
     #[napi(getter)]
     pub fn seconds(&self) -> f64 {
         self.inner.seconds() as f64
     }
 
+    /// Milliseconds component as f64.
+    ///
+    /// **Precision note:** The inner value is i64. Values beyond ±2^53 will
+    /// lose precision when returned as f64.
     #[napi(getter)]
     pub fn milliseconds(&self) -> f64 {
         self.inner.milliseconds() as f64
