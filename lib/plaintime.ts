@@ -350,6 +350,7 @@ class PlainTime {
       opts.second = 'numeric';
     }
     // Remove date-related options since this is time-only
+    // Per spec/test262: these should be silently ignored, not rejected
     delete opts.year;
     delete opts.month;
     delete opts.day;

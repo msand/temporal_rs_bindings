@@ -281,7 +281,8 @@ function _temporalToEpochMsLocal(temporalObj: any): number | undefined {
     if (m) {
       d.setUTCFullYear(parseInt(m[1]!, 10), parseInt(m[2]!, 10) - 1, parseInt(m[3]!, 10));
     } else {
-      d.setUTCFullYear(inner.year, inner.month - 1, inner.day);
+      // Cannot determine ISO fields — inner.year/month/day are calendar values for non-ISO calendars
+      return undefined;
     }
     // Use noon UTC to avoid timezone-induced date shifts
     d.setUTCHours(12, 0, 0, 0);

@@ -90,6 +90,7 @@ export function _isTemporalPlainMonthDay(arg: any): arg is { _inner: NapiPlainMo
 // ─── Helper: round a value to a given increment with rounding mode ──
 
 export function _roundToIncrement(value: number, increment: number, mode: string): number {
+  if (increment === 0) throw new RangeError('roundingIncrement must not be zero');
   const quotient = value / increment;
   let rounded;
   switch (mode) {
@@ -453,10 +454,12 @@ export function rejectPropertyBagInfinity(
 
 export function toInteger(val: any): any {
   if (val === undefined) return undefined;
-  if (typeof val === 'number') return val;
   if (typeof val === 'bigint') throw new TypeError('Cannot convert a BigInt value to a number');
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a number');
-  return Number(val);
+  const n = +val;
+  if (n !== n) throw new RangeError('NaN is not a valid integer'); // reject NaN
+  if (!_isFinite(n)) throw new RangeError(`${n} is not a finite number`);
+  return _trunc(n);
 }
 
 // ToIntegerIfIntegral per spec: rejects BigInt, Symbol, and non-integral numbers
@@ -532,9 +535,9 @@ export function validateWithFields(fields: any, recognizedFields: string[] | nul
 export function rejectTooManyFractionalSeconds(str: any): void {
   if (typeof str !== 'string') return;
   // Check for fractional seconds with more than 9 digits in time portion
-  // Match patterns like :SS.dddddddddd or :SS,dddddddddd
-  const match = str.match(/:\d{2}[.,](\d{10,})/);
-  if (match) {
+  // Match patterns like :SS.dddddddddd or :SS,dddddddddd (separated)
+  // and HHMMSS.dddddddddd (unseparated)
+  if (/:\d{2}[.,]\d{10,}/.test(str) || /T?\d{6}[.,]\d{10,}/.test(str)) {
     throw new RangeError('no more than 9 decimal places are allowed');
   }
 }
@@ -774,9 +777,14 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
   const isoStr = s + 'P' + datePart + (timePart ? 'T' + timePart : '');
   try {
     return new _classes['Duration'](call(() => NapiDuration.from(isoStr)));
-  } catch (e) {
-    // Only fall back to original for NAPI parse errors; rethrow unexpected errors
-    if (e instanceof RangeError) return dur;
+  } catch (e: any) {
+    // Only fall back for NAPI ISO string parse errors; rethrow genuine validation errors
+    const msg = e && e.message ? e.message : '';
+    if (
+      e instanceof RangeError &&
+      (msg.includes('parse') || msg.includes('Parse') || msg.includes('invalid') || msg.includes('Invalid'))
+    )
+      return dur;
     throw e;
   }
 }

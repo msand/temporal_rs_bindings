@@ -729,9 +729,8 @@ export function calendarDateToISO(
   }
 
   // Final fallback: return the ISO year with calendar month/day as approximate ISO values.
-  // For ISO-aligned calendars (coptic, ethiopic, etc.) this is reasonable.
-  // For non-aligned calendars (hebrew, islamic, chinese, dangi) this may be imprecise
-  // at extreme date ranges, but NAPI will handle the final validation.
+  // This path is reached for extreme date ranges where iterative construction fails.
+  // NAPI will handle the final validation.
   return { isoYear: isoYear, isoMonth: calMonth as number, isoDay: calDay as number };
 }
 

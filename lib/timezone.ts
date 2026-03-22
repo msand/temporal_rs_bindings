@@ -7,6 +7,9 @@ import {
 } from './binding';
 import { call, computeEpochNanoseconds, isoDateToEpochDays, epochDaysToISO } from './helpers';
 
+// Common regex for fixed-offset timezone IDs (e.g., "+05:30", "+05:30:00")
+const OFFSET_TZ_RE = /^[+-]\d{2}:\d{2}(:\d{2})?$/;
+
 // Late-bound class reference to break circular dependency
 export const _tzClasses: Record<string, any> = {};
 
@@ -112,7 +115,7 @@ export function getLocalPartsFromEpoch(epochMs: number, tzId: string): LocalPart
   }
   // For fixed-offset timezones, compute local time using BigInt arithmetic
   // to handle cases where local ms is outside Date's valid range
-  if (/^[+-]\d{2}:\d{2}(:\d{2})?$/.test(tzId)) {
+  if (OFFSET_TZ_RE.test(tzId)) {
     const sign = tzId[0] === '+' ? 1 : -1;
     const h = parseInt(tzId.substring(1, 3), 10);
     const m = parseInt(tzId.substring(4, 6), 10);
@@ -198,7 +201,7 @@ export function _resolveLocalToEpochMs(
   tzId: string,
   disambiguation: string,
 ): { epochMs: number; offsetStr: string } {
-  if (tzId === 'UTC' || /^[+-]\d{2}:\d{2}(:\d{2})?$/.test(tzId)) {
+  if (tzId === 'UTC' || OFFSET_TZ_RE.test(tzId)) {
     const d = new Date(0);
     d.setUTCFullYear(isoYear, isoMonth - 1, isoDay);
     d.setUTCHours(hour, minute, second, ms);
@@ -257,45 +260,43 @@ export function _resolveLocalToEpochMs(
     if (disambiguation === 'reject') {
       throw new RangeError('Invalid local time (falls in DST gap); use disambiguation option');
     }
-    // For gap: find the transition boundary
-    // The gap is between two offsets.
-    // "earlier" -> use pre-gap offset (local time maps before the gap, i.e. earlier UTC time)
-    // "compatible"/"later" -> use post-gap offset (local time maps after the gap, i.e. later UTC time)
-    // Actually spec says: earlier = clamp to pre-transition wall-clock, compatible/later = clamp to post-transition
-    // With the pre-gap offset, epochMs = localAsUtcMs - preGapOffset
-    // With the post-gap offset, epochMs = localAsUtcMs - postGapOffset
-    // The pre-gap offset is larger (more positive / less negative), so the epoch is smaller (earlier in UTC)
-    // The post-gap offset is smaller, so the epoch is larger
-    // "earlier" wants the pre-transition instant, "later"/"compatible" wants the post-transition instant
+    // For gap: find the transition boundary.
+    // Per spec:
+    //   "earlier" = clamp to pre-transition wall-clock (latest instant BEFORE gap)
+    //   "compatible"/"later" = clamp to post-transition wall-clock (earliest instant AFTER gap)
+    //
+    // For a spring-forward gap (e.g., America/New_York EST->EDT):
+    //   beforeOffset = offset 1 day before gap = EST = -18000000ms (-05:00)
+    //   afterOffset  = offset 1 day after gap  = EDT = -14400000ms (-04:00)
+    //
+    // epochMs = localAsUtcMs - offset, so:
+    //   Using beforeOffset (-18000000): larger epoch (later in UTC) = pre-transition instant
+    //   Using afterOffset  (-14400000): smaller epoch (earlier in UTC) = post-transition instant
+    //
+    // "earlier" wants the SMALLER epoch (post-transition offset → afterOffset)
+    // "later"/"compatible" wants the LARGER epoch (pre-transition offset → beforeOffset)
 
-    // Find pre-gap and post-gap offsets more robustly
-    // Look at a range around the target time
-    const before = _getOffsetMs(localAsUtcMs - estOffset - 86400000, tzId); // 1 day before
-    const after = _getOffsetMs(localAsUtcMs - estOffset + 86400000, tzId); // 1 day after
+    const beforeOffset = _getOffsetMs(localAsUtcMs - estOffset - 86400000, tzId); // 1 day before
+    const afterOffset = _getOffsetMs(localAsUtcMs - estOffset + 86400000, tzId); // 1 day after
 
-    let preGapOffset, postGapOffset;
-    if (before > after || (before === after && estOffset > offset1)) {
-      // Clock sprang forward: before offset is "bigger" (more ahead of UTC or less behind)
-      // Wait, this is confusing. Let's think differently.
-      // In a spring-forward gap at America/Vancouver:
-      // Before gap: offset -08:00 (PST), After gap: offset -07:00 (PDT)
-      // -07:00 > -08:00 in terms of milliseconds (-7*3600000 > -8*3600000)
-      // So after > before
-      preGapOffset = before; // -08:00 = -28800000
-      postGapOffset = after; // -07:00 = -25200000
-    } else {
-      preGapOffset = after;
-      postGapOffset = before;
-    }
+    // "earlier" uses afterOffset (gives smaller epoch = earlier UTC instant)
+    // "later"/"compatible" uses beforeOffset (gives larger epoch = later UTC instant)
+    // Determine which is which: the offset that produces the smaller epoch is the "earlier" one
+    const epochWithBefore = localAsUtcMs - beforeOffset;
+    const epochWithAfter = localAsUtcMs - afterOffset;
 
     if (disambiguation === 'earlier') {
-      // Use pre-gap offset: the latest instant before the gap
-      const epochMs = localAsUtcMs - preGapOffset;
-      return { epochMs, offsetStr: _formatOffsetMs(preGapOffset) };
+      // Use whichever offset produces the earlier (smaller) epoch
+      if (epochWithBefore <= epochWithAfter) {
+        return { epochMs: epochWithBefore, offsetStr: _formatOffsetMs(beforeOffset) };
+      }
+      return { epochMs: epochWithAfter, offsetStr: _formatOffsetMs(afterOffset) };
     }
-    // compatible/later: use post-gap offset: the earliest instant after the gap
-    const epochMs = localAsUtcMs - postGapOffset;
-    return { epochMs, offsetStr: _formatOffsetMs(postGapOffset) };
+    // compatible/later: use whichever offset produces the later (larger) epoch
+    if (epochWithBefore >= epochWithAfter) {
+      return { epochMs: epochWithBefore, offsetStr: _formatOffsetMs(beforeOffset) };
+    }
+    return { epochMs: epochWithAfter, offsetStr: _formatOffsetMs(afterOffset) };
   }
 
   if (candidates.length === 1) {
@@ -364,7 +365,7 @@ export function _findTimeZoneTransition(zdt: any, dir: string): any {
   const tzId = zdt.timeZoneId;
   if (tzId === 'UTC') return null; // UTC has no transitions
   // Fixed-offset timezones have no transitions
-  if (/^[+-]\d{2}:\d{2}(:\d{2})?$/.test(tzId) || /^Etc\/GMT[+-]\d+$/.test(tzId)) return null;
+  if (OFFSET_TZ_RE.test(tzId) || /^Etc\/GMT[+-]\d+$/.test(tzId)) return null;
 
   const epochNs = zdt.epochNanoseconds;
   const epochMs = Number(epochNs / 1000000n);
@@ -834,7 +835,7 @@ export function bigintNsToZdtString(epochNs: bigint, tzId: string, calId?: strin
   let offset;
   if (tzId === 'UTC') {
     offset = '+00:00';
-  } else if (/^[+-]\d{2}:\d{2}(:\d{2})?$/.test(tzId)) {
+  } else if (OFFSET_TZ_RE.test(tzId)) {
     offset = tzId;
   } else {
     // Compute offset from local parts (already computed above)

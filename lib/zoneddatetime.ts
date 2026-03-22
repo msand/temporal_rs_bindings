@@ -179,10 +179,10 @@ class ZonedDateTime {
         } catch (midErr) {
           // Only fall back for RangeErrors; rethrow unexpected errors
           if (!(midErr instanceof RangeError)) throw midErr;
-          // Last resort: construct at the nearest representable boundary
-          // For named timezones at extreme epochs, the local wall-clock time may exceed
-          // the ISO date range even though the instant is valid. Compute the actual offset
-          // using Intl.DateTimeFormat and build the string with the correct offset.
+          // Last resort: for extreme epoch values where the local wall-clock time
+          // exceeds representable range, try to construct at the boundary.
+          // NOTE: This may produce a ZDT whose local time differs from the
+          // requested epoch, but is the best approximation possible.
           try {
             const isFixedOffset = FIXED_OFFSET_TZ_RE.test(tzId);
             if (isFixedOffset) {
@@ -194,18 +194,12 @@ class ZonedDateTime {
               const calStr = calId !== 'iso8601' ? `[u-ca=${calId}]` : '';
               this._inner = call(() => NapiZonedDateTime.from(boundary + calStr));
             } else {
-              // Named timezone: compute the actual offset at a nearby representable epoch,
-              // then use a representable ISO date near the boundary with that offset.
-              // We need an epoch ms within Date range where _getOffsetMs works.
               const msNum = Number(epochNanoseconds / 1000000n);
               const safeMs =
-                epochNanoseconds < 0n
-                  ? Math.max(msNum, -8639999900000000) // safely within range
-                  : Math.min(msNum, 8639999900000000);
+                epochNanoseconds < 0n ? Math.max(msNum, -8639999900000000) : Math.min(msNum, 8639999900000000);
               const offsetMs = _getOffsetMs(safeMs, tzId);
               const offset = _formatOffsetMs(offsetMs);
               const calStr = calId !== 'iso8601' ? `[u-ca=${calId}]` : '';
-              // Use a safe date near the boundary
               const boundary =
                 epochNanoseconds < 0n
                   ? `-271821-04-20T00:00:00${offset}[${tzId}]${calStr}`
@@ -514,6 +508,9 @@ class ZonedDateTime {
       if (calSupportsEras) {
         const _era = arg.era;
         const _eraYear = arg.eraYear;
+        if ((_era !== undefined) !== (_eraYear !== undefined)) {
+          throw new TypeError('era and eraYear must be provided together');
+        }
         if (_era !== undefined) era = _era;
         if (_eraYear !== undefined) eraYear = toIntegerIfIntegral(_eraYear);
       }

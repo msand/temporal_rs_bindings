@@ -557,21 +557,24 @@ class PlainDateTime {
         throw new RangeError('Time field value out of range with overflow: reject');
       }
     }
+    // Constrain time fields to valid ranges
+    let ch = _trunc(hour),
+      cmi = _trunc(minute),
+      cs = _trunc(second),
+      cms = _trunc(millisecond),
+      cus = _trunc(microsecond),
+      cns = _trunc(nanosecond);
+    if (overflow !== 'Reject') {
+      ch = Math.max(0, Math.min(ch, 23));
+      cmi = Math.max(0, Math.min(cmi, 59));
+      cs = Math.max(0, Math.min(cs, 59));
+      cms = Math.max(0, Math.min(cms, 999));
+      cus = Math.max(0, Math.min(cus, 999));
+      cns = Math.max(0, Math.min(cns, 999));
+    }
     const iso = calendarDateToISO(targetYear, _trunc(month), finalDay, calId);
     const result = call(
-      () =>
-        new NapiPlainDateTime(
-          iso.isoYear,
-          iso.isoMonth,
-          iso.isoDay,
-          hour,
-          minute,
-          second,
-          millisecond,
-          microsecond,
-          nanosecond,
-          cal,
-        ),
+      () => new NapiPlainDateTime(iso.isoYear, iso.isoMonth, iso.isoDay, ch, cmi, cs, cms, cus, cns, cal),
     );
     // For reject mode, verify the resulting date matches the requested values
     if (overflow === 'Reject') {

@@ -116,19 +116,21 @@ export function toNapiCalendar(cal: any): NapiCalendar {
   }
   if (typeof cal === 'object') {
     // Handle Temporal objects used as calendar (extract calendarId)
+    // Use _isTemporalX helpers to avoid triggering Proxy traps on _inner
     if (
-      cal._inner instanceof NapiPlainDate ||
-      cal._inner instanceof NapiPlainDateTime ||
-      cal._inner instanceof NapiPlainYearMonth ||
-      cal._inner instanceof NapiPlainMonthDay ||
-      cal._inner instanceof NapiZonedDateTime
+      _isTemporalPlainDate(cal) ||
+      _isTemporalPlainDateTime(cal) ||
+      _isTemporalPlainYearMonth(cal) ||
+      _isTemporalPlainMonthDay(cal) ||
+      _isTemporalZonedDateTime(cal)
     ) {
       const calId = cal._inner.calendar.id;
       return call(() => new NapiCalendar(calId));
     }
-    if (cal._inner instanceof NapiCalendar) return cal._inner;
+    if (cal != null && typeof cal === 'object' && _wrapperSet.has(cal) && cal._inner instanceof NapiCalendar)
+      return cal._inner;
     // Handle Duration instances (wrong type)
-    if (cal._inner instanceof NapiDuration) {
+    if (_isTemporalDuration(cal)) {
       throw new TypeError('Duration is not a valid calendar');
     }
     // Per spec: plain objects without Temporal inner should throw TypeError
@@ -636,9 +638,10 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
     if (monthVal === undefined && _monthCode === undefined)
       throw new TypeError('Required property month or monthCode is missing');
     if (dayVal === undefined) throw new TypeError('Required property day is missing or undefined');
-    const calYear = resolvedYear ?? 0;
-    let month = monthVal ?? 1;
-    let day = dayVal ?? 1;
+    // These are guaranteed non-undefined by the checks above
+    const calYear = resolvedYear;
+    let month = monthVal!;
+    let day = dayVal!;
     const hour = hourVal ?? 0;
     const minute = minuteVal ?? 0;
     const second = secondVal ?? 0;
@@ -914,7 +917,7 @@ export function extractRelativeTo(rt: any): {
     const _day = rt.day;
     const _dayVal = _day !== undefined ? toIntegerIfIntegral(_day) : undefined;
     if (_dayVal !== undefined) rejectInfinity(_dayVal, 'day');
-    // Per spec: read era/eraYear in alphabetical order (between day and hour), only for calendars with eras
+    // Per spec: read era/eraYear in alphabetical order, only for calendars with eras
     let _era, _eraYearVal;
     if (_calSupportsEras) {
       _era = rt.era;

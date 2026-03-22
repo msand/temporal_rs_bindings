@@ -25,6 +25,10 @@ impl HostClock for BrowserHostSystem {
         // js_sys::Date::now() returns milliseconds since Unix epoch as f64.
         let ms = js_sys::Date::now();
         let ns = (ms as i128) * 1_000_000;
+        if ns.abs() > 8_640_000_000_000_000_000_000i128 {
+            return Err(temporal_rs::TemporalError::range()
+                .with_message("current time is outside the supported epoch nanosecond range"));
+        }
         Ok(EpochNanoseconds(ns))
     }
 }
