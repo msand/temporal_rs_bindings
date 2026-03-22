@@ -305,6 +305,7 @@ class PlainDate {
     const monthRaw = _month !== undefined ? toInteger(_month) : undefined;
     const _monthCode = fields.monthCode;
     const monthCodeStr = _monthCode !== undefined ? toPrimitiveAndRequireString(_monthCode, 'monthCode') : undefined;
+    if (monthCodeStr !== undefined) validateMonthCodeSyntax(monthCodeStr);
     const _year = fields.year;
     const yearRaw = _year !== undefined ? toInteger(_year) : undefined;
     // Era handling (only for calendars that support eras, and only if era/eraYear explicitly provided)
@@ -357,6 +358,10 @@ class PlainDate {
     // Per spec: validate clearly invalid field values BEFORE options are read
     const td = _trunc(day);
     if (td < 1) throw new RangeError(`day ${td} out of range`);
+    if (monthRaw !== undefined) {
+      const tm = _trunc(monthRaw);
+      if (tm < 1) throw new RangeError(`month ${tm} out of range`);
+    }
     // Per spec: read overflow option AFTER basic field validation but BEFORE algorithmic validation
     const overflow = extractOverflow(options);
     // Resolve era/eraYear to year first so we know the target year for monthCode resolution
@@ -582,7 +587,8 @@ class PlainDate {
     const calId = this.calendarId;
     // Per spec: for Chinese/Dangi, toPlainMonthDay must apply Table 6 constraining
     // (e.g. M01L day 30 → M01 day 30 with correct reference year)
-    if (calId === 'chinese' || calId === 'dangi') {
+    if (!ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
+      // Non-ISO-aligned calendars: use from() to properly resolve reference year
       return PlainMonthDay.from({ calendar: calId, monthCode: this.monthCode, day: this.day });
     }
     const cal = toNapiCalendar(calId);

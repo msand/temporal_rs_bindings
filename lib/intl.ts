@@ -281,7 +281,7 @@ function _temporalToEpochMsLocal(temporalObj: any): number | undefined {
     const d = new Date(0);
     // Extract ISO fields from toString to get the actual ISO year/month/day
     const str = inner.toString();
-    const m = str.match(/^(-?\d+|\+\d+)-(\d{2})-(\d{2})/);
+    const m = str.match(/^(-?\d+|\+?\d+)-(\d{2})-(\d{2})/);
     if (m) {
       d.setUTCFullYear(parseInt(m[1]!, 10), parseInt(m[2]!, 10) - 1, parseInt(m[3]!, 10));
     } else {

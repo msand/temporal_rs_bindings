@@ -93,6 +93,7 @@ export const CALENDAR_ISO_OFFSETS: Record<string, number> = {
   iso8601: 0,
   coptic: 284,
   ethiopic: 8,
+  ethiopian: 8,
   ethioaa: -5492,
   indian: 78,
   persian: 621,
@@ -179,13 +180,13 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
     }
     // Scan through the year to find which month code has 'L'
     // Start from approximate beginning of the Chinese year
-    // Use isoDateToEpochDays to avoid Date.UTC's year 0-99 mapping to 1900-1999
-    const startMs = isoDateToEpochDays(isoYear, 1, 20) * 86400000;
+    // Use isoDateToEpochDays + epochDaysToISO to avoid Date constructor's year 0-99 quirks
+    const startEpochDays = isoDateToEpochDays(isoYear, 1, 20);
     let lastMonth = 0;
     for (let day = 0; day < 400; day++) {
-      const d = new Date(startMs + day * 86400000);
+      const isoDate = epochDaysToISO(startEpochDays + day);
       try {
-        const pd = new NapiPlainDate(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), cal);
+        const pd = new NapiPlainDate(isoDate.year, isoDate.month, isoDate.day, cal);
         if (pd.year === calYear && pd.month !== lastMonth) {
           lastMonth = pd.month;
           if (pd.monthCode.endsWith('L')) {
@@ -346,6 +347,7 @@ export const VALID_ERAS: Record<string, Set<string>> = {
   roc: new Set(['roc', 'broc', 'minguo', 'before-roc']),
   coptic: new Set(['coptic', 'coptic-inverse', 'era1', 'era0', 'am']),
   ethiopic: new Set(['ethiopic', 'ethioaa', 'am', 'aa']),
+  ethiopian: new Set(['ethiopic', 'ethioaa', 'am', 'aa']),
   ethioaa: new Set(['aa', 'ethioaa']),
   hebrew: new Set(['am']),
   indian: new Set(['saka', 'shaka']),
@@ -514,7 +516,11 @@ export function getCalendarId(calArg: any): string {
     if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(calArg)) {
       throw new RangeError(`${calArg} is not a valid calendar identifier`);
     }
-    return calArg;
+    // Reject calendar IDs that are only valid for Intl.DateTimeFormat, not Temporal
+    if (REJECTED_CALENDAR_IDS.has(canonCal)) {
+      throw new RangeError(`${calArg} is not a valid Temporal calendar identifier`);
+    }
+    return canonCal;
   }
   if (calArg && typeof calArg === 'object' && calArg.id) return calArg.id;
   return 'iso8601';
@@ -708,10 +714,10 @@ export function calendarDateToISO(
     // Fallback
   }
 
-  // Final fallback: return the ISO year with calendar month/day.
-  // This is only valid for ISO-aligned calendars (coptic, ethiopic, etc.) where
-  // calendar months roughly correspond to ISO months. For non-aligned calendars,
-  // this would be incorrect, but the scanning loop above should have found the result.
+  // Final fallback: return the ISO year with calendar month/day as approximate ISO values.
+  // For ISO-aligned calendars (coptic, ethiopic, etc.) this is reasonable.
+  // For non-aligned calendars (hebrew, islamic, chinese, dangi) this may be imprecise
+  // at extreme date ranges, but NAPI will handle the final validation.
   return { isoYear: isoYear, isoMonth: calMonth as number, isoDay: calDay as number };
 }
 

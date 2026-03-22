@@ -426,6 +426,7 @@ class PlainDateTime {
     const monthRaw = _month !== undefined ? toInteger(_month) : undefined;
     const _monthCode = fields.monthCode;
     const monthCodeStr = _monthCode !== undefined ? toPrimitiveAndRequireString(_monthCode, 'monthCode') : undefined;
+    if (monthCodeStr !== undefined) validateMonthCodeSyntax(monthCodeStr);
     const _nanosecond = fields.nanosecond;
     const nanosecond = _nanosecond !== undefined ? toInteger(_nanosecond) : this.nanosecond;
     const _second = fields.second;
@@ -535,6 +536,25 @@ class PlainDateTime {
           );
         }
         finalDay = Math.min(finalDay, dim);
+      }
+    }
+    // Validate time fields in reject mode
+    if (overflow === 'Reject') {
+      if (
+        hour < 0 ||
+        hour > 23 ||
+        minute < 0 ||
+        minute > 59 ||
+        second < 0 ||
+        second > 59 ||
+        millisecond < 0 ||
+        millisecond > 999 ||
+        microsecond < 0 ||
+        microsecond > 999 ||
+        nanosecond < 0 ||
+        nanosecond > 999
+      ) {
+        throw new RangeError('Time field value out of range with overflow: reject');
       }
     }
     const iso = calendarDateToISO(targetYear, _trunc(month), finalDay, calId);
@@ -777,7 +797,7 @@ class PlainDateTime {
       disambiguationStr,
     );
     const epochNs = BigInt(resolved.epochMs) * 1000000n + BigInt(inner.microsecond) * 1000n + BigInt(inner.nanosecond);
-    const zdtStr = bigintNsToZdtString(epochNs, tz.id, this.calendarId !== 'iso8601' ? this.calendarId : 'iso8601');
+    const zdtStr = bigintNsToZdtString(epochNs, tz.id, this.calendarId);
     return wrapZonedDateTime(
       call(() => NapiZonedDateTime.from(zdtStr)),
       getRealCalendarId(this),

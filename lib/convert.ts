@@ -132,7 +132,7 @@ export function toNapiCalendar(cal: any): NapiCalendar {
       throw new TypeError('Duration is not a valid calendar');
     }
     if (cal.id !== undefined) return call(() => new NapiCalendar(String(cal.id)));
-    if (cal.calendarId !== undefined) return call(() => new NapiCalendar(cal.calendarId));
+    if (cal.calendarId !== undefined) return call(() => new NapiCalendar(String(cal.calendarId)));
     if (cal.calendar !== undefined) return toNapiCalendar(cal.calendar);
   }
   throw new TypeError('Invalid calendar');
@@ -460,13 +460,13 @@ export function toNapiPlainDateTime(arg: any): NapiPlainDateTimeT {
     const _day = arg.day;
     const day = toInteger(_day);
     const _hour = arg.hour;
-    const hour = toInteger(_hour);
+    const hour = toIntegerWithTruncation(_hour);
     const _microsecond = arg.microsecond;
-    const microsecond = toInteger(_microsecond);
+    const microsecond = toIntegerWithTruncation(_microsecond);
     const _millisecond = arg.millisecond;
-    const millisecond = toInteger(_millisecond);
+    const millisecond = toIntegerWithTruncation(_millisecond);
     const _minute = arg.minute;
-    const minute = toInteger(_minute);
+    const minute = toIntegerWithTruncation(_minute);
     const _month = arg.month;
     const monthRaw = toInteger(_month);
     const _monthCode = arg.monthCode;
@@ -474,9 +474,9 @@ export function toNapiPlainDateTime(arg: any): NapiPlainDateTimeT {
     // Per spec: validate monthCode syntax immediately after coercing, before reading subsequent fields
     if (monthCodeStr !== undefined) validateMonthCodeSyntax(monthCodeStr);
     const _nanosecond = arg.nanosecond;
-    const nanosecond = toInteger(_nanosecond);
+    const nanosecond = toIntegerWithTruncation(_nanosecond);
     const _second = arg.second;
-    const second = toInteger(_second);
+    const second = toIntegerWithTruncation(_second);
     const _year = arg.year;
     const yearVal = toInteger(_year);
     // Resolve era/eraYear for calendars that support them
@@ -591,13 +591,13 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
     const _day = arg.day;
     const dayVal = toIntegerIfIntegral(_day);
     const _hour = arg.hour;
-    const hourVal = toIntegerIfIntegral(_hour);
+    const hourVal = toIntegerWithTruncation(_hour);
     const _microsecond = arg.microsecond;
-    const microsecondVal = toIntegerIfIntegral(_microsecond);
+    const microsecondVal = toIntegerWithTruncation(_microsecond);
     const _millisecond = arg.millisecond;
-    const millisecondVal = toIntegerIfIntegral(_millisecond);
+    const millisecondVal = toIntegerWithTruncation(_millisecond);
     const _minute = arg.minute;
-    const minuteVal = toIntegerIfIntegral(_minute);
+    const minuteVal = toIntegerWithTruncation(_minute);
     const _month = arg.month;
     const monthRaw = toIntegerIfIntegral(_month);
     const _monthCode = arg.monthCode;
@@ -605,7 +605,7 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
     // Per spec: validate monthCode syntax immediately after coercing
     if (monthCodeStr !== undefined) validateMonthCodeSyntax(monthCodeStr);
     const _nanosecond = arg.nanosecond;
-    const nanosecondVal = toIntegerIfIntegral(_nanosecond);
+    const nanosecondVal = toIntegerWithTruncation(_nanosecond);
     const _offset = arg.offset;
     // Per spec: coerce offset with ToPrimitiveAndRequireString
     let offsetProp;
@@ -613,7 +613,7 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
       offsetProp = toPrimitiveAndRequireString(_offset, 'offset');
     }
     const _second = arg.second;
-    const secondVal = toIntegerIfIntegral(_second);
+    const secondVal = toIntegerWithTruncation(_second);
     const _timeZone = arg.timeZone;
     const _year = arg.year;
     const yearVal = toIntegerIfIntegral(_year);

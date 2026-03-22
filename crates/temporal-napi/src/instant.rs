@@ -137,7 +137,7 @@ impl Instant {
     #[napi]
     pub fn value_of(&self) -> napi::Result<()> {
         Err(napi::Error::from_reason(
-            "Use compare() or equals() to compare Instant values",
+            "TypeError: Use compare() or equals() to compare Instant values",
         ))
     }
 }

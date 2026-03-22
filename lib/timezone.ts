@@ -172,21 +172,7 @@ export function getLocalPartsFromEpoch(epochMs: number, tzId: string): LocalPart
 
 export function getUtcOffsetString(epochMs: number, tzId: string): string {
   if (tzId === 'UTC') return '+00:00';
-  const parts = getLocalPartsFromEpoch(epochMs, tzId);
-  const localYear = parts._fullYear;
-  const localMonth = parseInt(parts.month, 10) - 1;
-  const localDay = parseInt(parts.day, 10);
-  const localHour = parseInt(parts.hour, 10);
-  const localMinute = parseInt(parts.minute, 10);
-  const localSecond = parseInt(parts.second, 10);
-  // Date.UTC with year < 100 has special handling, use setUTCFullYear to avoid it
-  // Leave localHour as-is (may be 24); setUTCHours(24,...) correctly rolls to next day
-  const localAsUtcDate = new Date(0);
-  localAsUtcDate.setUTCFullYear(localYear, localMonth, localDay);
-  localAsUtcDate.setUTCHours(localHour, localMinute, localSecond, 0);
-  const localAsUtc = localAsUtcDate.getTime();
-  const offsetMs = localAsUtc - Math.floor(epochMs / 1000) * 1000;
-  return _formatOffsetMs(offsetMs);
+  return _formatOffsetMs(_getOffsetMs(epochMs, tzId));
 }
 
 // Helper: resolve a local datetime to an epoch ms in a given timezone with disambiguation

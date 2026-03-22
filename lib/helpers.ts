@@ -363,20 +363,25 @@ export function parseOffsetStringToNs(str: string): any {
   return sign * (h * 3600000000000n + min * 60000000000n + sec * 1000000000n + frac);
 }
 
+// Normalize a fixed-offset timezone ID to colon-separated form for parsing
+function _normalizeOffsetTz(tzId: string): string {
+  if (tzId.includes(':')) return tzId;
+  // +HH -> +HH:00, +HHMM -> +HH:MM
+  return tzId.substring(0, 3) + ':' + (tzId.substring(3) || '00');
+}
+
 // Parse a fixed-offset timezone ID (e.g. "+05:30", "+05:30:00") to milliseconds
 export function parseOffsetTzToMs(tzId: string): number {
-  const ns = parseOffsetStringToNs(
-    tzId.includes(':') ? tzId : tzId.substring(0, 3) + ':' + (tzId.substring(3) || '00'),
-  );
-  return ns !== undefined ? Number(ns / 1000000n) : 0;
+  const ns = parseOffsetStringToNs(_normalizeOffsetTz(tzId));
+  if (ns === undefined) throw new RangeError(`Invalid offset timezone: ${tzId}`);
+  return Number(ns / 1000000n);
 }
 
 // Parse a fixed-offset timezone ID to BigInt nanoseconds
 export function parseOffsetTzToNs(tzId: string): bigint {
-  const ns = parseOffsetStringToNs(
-    tzId.includes(':') ? tzId : tzId.substring(0, 3) + ':' + (tzId.substring(3) || '00'),
-  );
-  return ns ?? 0n;
+  const ns = parseOffsetStringToNs(_normalizeOffsetTz(tzId));
+  if (ns === undefined) throw new RangeError(`Invalid offset timezone: ${tzId}`);
+  return ns;
 }
 
 // Get the actual UTC offset in nanoseconds for a timezone at a given epoch ms
@@ -704,6 +709,7 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
 
   // Compute the rounding increment in nanoseconds
   const INCREMENTS: number[] = [1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10];
+  if (precision < 0 || precision >= INCREMENTS.length) return dur;
   const increment = INCREMENTS[precision]!;
 
   // Apply rounding
@@ -789,8 +795,10 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
   const isoStr = s + 'P' + datePart + (timePart ? 'T' + timePart : '');
   try {
     return new _classes['Duration'](call(() => NapiDuration.from(isoStr)));
-  } catch {
-    return dur;
+  } catch (e) {
+    // Only fall back to original for NAPI parse errors; rethrow unexpected errors
+    if (e instanceof RangeError) return dur;
+    throw e;
   }
 }
 

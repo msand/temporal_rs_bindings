@@ -243,7 +243,7 @@ impl Duration {
     #[napi]
     pub fn value_of(&self) -> napi::Result<()> {
         Err(napi::Error::from_reason(
-            "Use compare() to compare Duration values",
+            "TypeError: Use compare() to compare Duration values",
         ))
     }
 }

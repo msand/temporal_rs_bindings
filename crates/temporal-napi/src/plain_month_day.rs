@@ -76,7 +76,7 @@ impl PlainMonthDay {
     #[napi]
     pub fn value_of(&self) -> napi::Result<()> {
         Err(napi::Error::from_reason(
-            "Use equals() to compare PlainMonthDay values",
+            "TypeError: Use equals() to compare PlainMonthDay values",
         ))
     }
 }

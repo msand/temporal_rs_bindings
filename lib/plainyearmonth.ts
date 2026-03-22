@@ -423,6 +423,7 @@ class PlainYearMonth {
     const monthRaw = _month !== undefined ? toInteger(_month) : undefined;
     const _monthCode = fields.monthCode;
     const monthCodeStr = _monthCode !== undefined ? toPrimitiveAndRequireString(_monthCode, 'monthCode') : undefined;
+    if (monthCodeStr !== undefined) validateMonthCodeSyntax(monthCodeStr);
     const _year = fields.year;
     const yearRaw = _year !== undefined ? toInteger(_year) : undefined;
     // Read era/eraYear for calendars that support them

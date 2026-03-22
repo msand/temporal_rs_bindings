@@ -105,6 +105,8 @@ import { _hasDateTimeOptions, _origFormatGetter, _temporalToEpochMs } from './in
 //  Module-level constants (avoid per-call allocation)
 // ═══════════════════════════════════════════════════════════════
 
+const FIXED_OFFSET_TZ_RE = /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/;
+
 const ZDT_TOSTRING_UNIT_ALIAS: Record<string, string> = {
   minutes: 'minute',
   seconds: 'second',
@@ -182,7 +184,7 @@ class ZonedDateTime {
           // the ISO date range even though the instant is valid. Compute the actual offset
           // using Intl.DateTimeFormat and build the string with the correct offset.
           try {
-            const isFixedOffset = /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(tzId);
+            const isFixedOffset = FIXED_OFFSET_TZ_RE.test(tzId);
             if (isFixedOffset) {
               const offset = tzId.length <= 3 ? tzId + ':00' : tzId;
               const boundary =
@@ -228,7 +230,7 @@ class ZonedDateTime {
   _checkLocalTimeInRange(): void {
     if (this._epochNs !== undefined) {
       const tzId = this._tzId || this.timeZoneId;
-      if (tzId && tzId !== 'UTC' && /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(tzId)) {
+      if (tzId && tzId !== 'UTC' && FIXED_OFFSET_TZ_RE.test(tzId)) {
         const epochMs = Number(this._epochNs / 1000000n);
         const offsetMs = parseOffsetTzToMs(tzId);
         // The start-of-day computation needs to find midnight of the local day,
@@ -601,7 +603,7 @@ class ZonedDateTime {
         second = Math.min(second, 59);
         millisecond = Math.min(millisecond, 999);
         microsecond = Math.min(microsecond, 999);
-        nanosecond = Math.max(0, Math.min(nanosecond, 999));
+        nanosecond = Math.min(nanosecond, 999);
       }
       // Build ISO string and parse
       const pad2 = (n: any) => String(n).padStart(2, '0');
@@ -1152,7 +1154,7 @@ class ZonedDateTime {
       localDay = this.day;
     if (this._epochNs !== undefined) {
       const tzId = this._tzId || this.timeZoneId;
-      if (tzId && /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(tzId)) {
+      if (tzId && FIXED_OFFSET_TZ_RE.test(tzId)) {
         const offsetNs = parseOffsetTzToNs(tzId);
         const localNs = this._epochNs + offsetNs;
         const nsPerDay = 86400000000000n;
@@ -1350,7 +1352,7 @@ class ZonedDateTime {
     // to get the correct local date/time.
     if (this._epochNs !== undefined) {
       const tzId = this._tzId || this.timeZoneId;
-      if (tzId && /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(tzId)) {
+      if (tzId && FIXED_OFFSET_TZ_RE.test(tzId)) {
         const offsetNs = parseOffsetTzToNs(tzId);
         const localNs = this._epochNs + offsetNs;
         // Convert nanoseconds to date/time components
