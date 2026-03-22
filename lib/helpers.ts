@@ -722,7 +722,7 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
       if (remainder * 2 < increment) return lower;
       if (remainder * 2 > increment) return upper;
       // Tie: pick even
-      return ((lower / increment) | 0) % 2 === 0 ? lower : upper;
+      return Math.trunc(lower / increment) % 2 === 0 ? lower : upper;
     },
   };
 

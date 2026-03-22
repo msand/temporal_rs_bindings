@@ -266,9 +266,9 @@ function _temporalToEpochMsLocal(temporalObj: any): number | undefined {
     // Interpret as UTC for formatting purposes (the DTF will apply its timezone)
     const d = new Date(0);
     d.setUTCFullYear(
-      (inner as any).isoYear || inner.year,
-      ((inner as any).isoMonth || inner.month) - 1,
-      (inner as any).isoDay || inner.day,
+      (inner as any).isoYear ?? inner.year,
+      ((inner as any).isoMonth ?? inner.month) - 1,
+      (inner as any).isoDay ?? inner.day,
     );
     d.setUTCHours(inner.hour, inner.minute, inner.second, inner.millisecond);
     return d.getTime();

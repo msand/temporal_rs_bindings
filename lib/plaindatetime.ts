@@ -765,16 +765,9 @@ class PlainDateTime {
   toZonedDateTime(timeZone: any, options: any) {
     requireBranding(this, NapiPlainDateTime, 'Temporal.PlainDateTime');
     if (options !== undefined) validateOptions(options);
-    let tz, disambiguation;
-    if (typeof timeZone === 'string') {
-      tz = toNapiTimeZone(timeZone);
-    } else if (typeof timeZone === 'object' && timeZone !== null && !timeZone.id && timeZone.timeZone) {
-      // options-style argument: { timeZone, disambiguation }
-      tz = toNapiTimeZone(timeZone.timeZone);
-      disambiguation = timeZone.disambiguation;
-    } else {
-      tz = toNapiTimeZone(timeZone);
-    }
+    let disambiguation;
+    // Per spec: timeZone is processed via ToTemporalTimeZoneIdentifier
+    const tz = toNapiTimeZone(timeZone);
     if (options !== undefined) {
       const _d = options.disambiguation;
       if (_d !== undefined) disambiguation = _d;
