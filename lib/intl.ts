@@ -17,17 +17,21 @@ import { _isTemporalDuration } from './helpers';
 import { Instant } from './instant';
 import { Duration } from './duration';
 
-// Augment ImportMeta for Node.js ESM
+// Augment Intl with DurationFormat if not already declared by the TS lib
 declare global {
-  // Intl.DurationFormat is not yet in TS libs
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Intl {
-    class DurationFormat {
-      constructor(locales?: string | string[], options?: Record<string, unknown>);
+    // Use interface + var pattern to avoid duplicate identifier errors
+    // when the TS lib already declares DurationFormat
+    interface DurationFormat {
       format(duration: Record<string, unknown> | string): string;
       formatToParts(duration: Record<string, unknown> | string): Array<{ type: string; value: string }>;
       resolvedOptions(): Record<string, unknown>;
     }
+    // eslint-disable-next-line no-var
+    var DurationFormat: {
+      new (locales?: string | string[], options?: Record<string, unknown>): DurationFormat;
+    };
   }
 }
 
