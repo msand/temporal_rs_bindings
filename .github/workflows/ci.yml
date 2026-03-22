@@ -169,6 +169,9 @@ jobs:
       - name: Build NAPI (needed for type imports)
         run: npx napi build --platform --cargo-cwd crates/temporal-napi
 
+      - name: Build TS (needed for test type imports)
+        run: npx tsup
+
       - name: Typecheck
         run: npm run typecheck
 
