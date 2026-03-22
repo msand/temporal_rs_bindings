@@ -165,16 +165,16 @@ export function getLocalPartsFromEpoch(epochMs: number, tzId: string): LocalPart
   // Convert era-based year to astronomical year
   const eraYear = parseInt(parts.year, 10);
   const era = parts['era'];
-  if (
-    era &&
-    (era === 'BC' ||
-      era === 'B' ||
-      era === 'v. Chr.' ||
-      era === 'av. J.-C.' ||
-      era === 'a.C.' ||
-      era.toLowerCase() === 'bce' ||
-      era.toLowerCase() === 'bc')
-  ) {
+  // Check for NOT-AD instead of listing all possible BC strings across locales/engines.
+  // The DTF uses 'en-US' locale, so era should be 'AD'/'A'/'BC'/'B', but engines vary.
+  const isAD =
+    !era ||
+    era === 'AD' ||
+    era === 'A' ||
+    era === 'Anno Domini' ||
+    era.toLowerCase() === 'ce' ||
+    era.toLowerCase() === 'ad';
+  if (era && !isAD) {
     // BC year: 1 BC = year 0, 2 BC = year -1, etc.
     parts._fullYear = -(eraYear - 1);
   } else {
@@ -228,6 +228,11 @@ export function _resolveLocalToEpochMs(
   guess.setUTCFullYear(isoYear, isoMonth - 1, isoDay);
   guess.setUTCHours(hour, minute, second, ms);
   const localAsUtcMs = guess.getTime();
+
+  // Guard against NaN for extreme dates beyond Date range
+  if (localAsUtcMs !== localAsUtcMs) {
+    throw new RangeError('Local time is out of representable range');
+  }
 
   // Candidate 1: use the offset at (localAsUtcMs - estimated_offset)
   const estOffset = _getOffsetMs(localAsUtcMs, tzId);

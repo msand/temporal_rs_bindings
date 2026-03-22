@@ -22,6 +22,9 @@ import {
 } from './binding';
 import { mapOverflow } from './enums';
 
+// Common regex for fixed-offset timezone IDs with optional fractional seconds
+const OFFSET_TZ_WITH_FRAC_RE = /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d{1,9})?)?)?$/;
+
 // ─── Late-bound class constructors ────────────────────────────
 // Set by the class modules after they're defined.
 // This breaks the circular dependency between helpers and class definitions.
@@ -137,8 +140,7 @@ export function _roundToIncrement(value: number, increment: number, mode: string
       break;
     }
     default:
-      rounded = Math.round(quotient);
-      break;
+      throw new RangeError(`Invalid rounding mode: ${mode}`);
   }
   return rounded * increment;
 }
@@ -392,7 +394,7 @@ export function parseOffsetTzToNs(tzId: string): bigint {
 // Get the actual UTC offset in nanoseconds for a timezone at a given epoch ms
 export function _getOffsetNsAtEpoch(epochMs: number, tzId: string): bigint {
   if (tzId === 'UTC') return 0n;
-  if (/^[+-]\d{2}(:\d{2}(:\d{2}(\.\d{1,9})?)?)?$/.test(tzId)) {
+  if (OFFSET_TZ_WITH_FRAC_RE.test(tzId)) {
     return parseOffsetTzToNs(tzId);
   }
   const offsetStr = getUtcOffsetString(epochMs, tzId);

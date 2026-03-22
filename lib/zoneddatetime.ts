@@ -944,6 +944,7 @@ class ZonedDateTime {
     const monthRaw = _month !== undefined ? toIntegerWithTruncation(_month) : undefined;
     const _monthCode = fields.monthCode;
     const monthCodeStr = _monthCode !== undefined ? toPrimitiveAndRequireString(_monthCode, 'monthCode') : undefined;
+    if (monthCodeStr !== undefined) validateMonthCodeSyntax(monthCodeStr);
     const _nanosecond = fields.nanosecond;
     const nanosecondVal = _nanosecond !== undefined ? toIntegerWithTruncation(_nanosecond) : this.nanosecond;
     const _offset = fields.offset;
@@ -1298,6 +1299,10 @@ class ZonedDateTime {
     if (_rm !== undefined) opts.roundingMode = mapRoundingMode(_rm);
     const _su = options.smallestUnit;
     if (_su !== undefined) opts.smallestUnit = mapUnit(_su);
+    // Per spec: smallestUnit is required for ZonedDateTime.round
+    if (opts.smallestUnit === undefined) {
+      throw new RangeError('smallestUnit is required for ZonedDateTime.prototype.round');
+    }
     this._checkLocalTimeInRange();
     return wrapZonedDateTime(
       call(() => this._inner.round(opts)),

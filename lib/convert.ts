@@ -154,13 +154,13 @@ export function toNapiTimeZone(tz: any): NapiTimeZone {
   }
   if (tz instanceof NapiTimeZone) return tz;
   if (typeof tz === 'string') return call(() => new NapiTimeZone(tz));
-  if (typeof tz === 'object' && tz._inner instanceof NapiTimeZone) return tz._inner;
-  if (typeof tz === 'object' && tz._inner instanceof NapiZonedDateTime) {
+  // Use _wrapperSet guard to avoid triggering Proxy traps on _inner
+  if (typeof tz === 'object' && _wrapperSet.has(tz) && tz._inner instanceof NapiTimeZone) return tz._inner;
+  if (_isTemporalZonedDateTime(tz)) {
     // Temporal.ZonedDateTime can be used as a timeZone (extract its timeZone)
     return tz._inner.timeZone;
   }
   // Per spec: plain objects without Temporal inner should throw TypeError
-  throw new TypeError('Invalid time zone');
   throw new TypeError('Invalid time zone');
 }
 
