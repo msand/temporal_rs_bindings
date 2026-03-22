@@ -91,12 +91,12 @@ class PlainDateTime {
       const y = toIntegerWithTruncation(year);
       const mo = toIntegerWithTruncation(month);
       const d = toIntegerWithTruncation(day);
-      const h = toIntegerWithTruncation(hour) || 0;
-      const mi = toIntegerWithTruncation(minute) || 0;
-      const s = toIntegerWithTruncation(second) || 0;
-      const ms = toIntegerWithTruncation(millisecond) || 0;
-      const us = toIntegerWithTruncation(microsecond) || 0;
-      const ns = toIntegerWithTruncation(nanosecond) || 0;
+      const h = toIntegerWithTruncation(hour) ?? 0;
+      const mi = toIntegerWithTruncation(minute) ?? 0;
+      const s = toIntegerWithTruncation(second) ?? 0;
+      const ms = toIntegerWithTruncation(millisecond) ?? 0;
+      const us = toIntegerWithTruncation(microsecond) ?? 0;
+      const ns = toIntegerWithTruncation(nanosecond) ?? 0;
       // Validate ISO date and time range (constructor always rejects)
       rejectISODateRange(y, mo, d);
       if (
@@ -233,12 +233,12 @@ class PlainDateTime {
         throw new RangeError('month and day must be positive integers');
       }
       // Handle leap second: second:60 should reject or constrain
-      let s = second || 0;
-      let h = hour || 0,
-        mi = minute || 0;
-      let ms = millisecond || 0,
-        us = microsecond || 0,
-        ns = nanosecond || 0;
+      let s = second ?? 0;
+      let h = hour ?? 0,
+        mi = minute ?? 0;
+      let ms = millisecond ?? 0,
+        us = microsecond ?? 0,
+        ns = nanosecond ?? 0;
       if (overflow === 'Reject') {
         if (
           h < 0 ||
@@ -260,7 +260,7 @@ class PlainDateTime {
         // Constrain: clamp all time fields to valid ranges
         h = Math.max(0, Math.min(h, 23));
         mi = Math.max(0, Math.min(mi, 59));
-        s = Math.max(0, Math.min(s === 60 ? 59 : s, 59));
+        s = Math.max(0, Math.min(s, 59));
         ms = Math.max(0, Math.min(ms, 999));
         us = Math.max(0, Math.min(us, 999));
         ns = Math.max(0, Math.min(ns, 999));
@@ -278,7 +278,7 @@ class PlainDateTime {
           const dim = calendarDaysInMonth(resolvedYear, constrainedMonth, calId);
           if (dim) constrainedDay = Math.max(1, Math.min(constrainedDay, dim));
           else constrainedDay = Math.max(1, Math.min(constrainedDay, 30));
-        } else if (!ISO_MONTH_ALIGNED_CALENDARS.has(calId)) {
+        } else {
           const maxM = _getMaxMonthForCalendarYear(calId, resolvedYear);
           constrainedMonth = Math.max(1, Math.min(month, maxM));
           const dim = calendarDaysInMonth(resolvedYear, constrainedMonth, calId);
@@ -477,7 +477,7 @@ class PlainDateTime {
     }
     // Per spec: validate field values
     rejectPropertyBagInfinity(
-      { year: year || 0, day, hour, minute, second, millisecond, microsecond, nanosecond },
+      { year: year ?? 0, day, hour, minute, second, millisecond, microsecond, nanosecond },
       'year',
       'day',
       'hour',
@@ -761,9 +761,10 @@ class PlainDateTime {
     }
     // Use disambiguation to resolve ambiguous/gap local times
     const inner = this._inner;
-    const isoYear = (inner as any).isoYear || inner.year;
-    const isoMonth = (inner as any).isoMonth || inner.month;
-    const isoDay = (inner as any).isoDay || inner.day;
+    const isoFields = _extractISOFromNapiDT(inner);
+    const isoYear = isoFields.year;
+    const isoMonth = isoFields.month;
+    const isoDay = isoFields.day;
     const resolved = _resolveLocalToEpochMs(
       isoYear,
       isoMonth,

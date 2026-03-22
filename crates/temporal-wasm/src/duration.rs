@@ -239,8 +239,6 @@ impl Duration {
 
     #[wasm_bindgen(js_name = "valueOf")]
     pub fn value_of(&self) -> Result<(), JsValue> {
-        Err(JsValue::from_str(
-            "Use compare() to compare Duration values",
-        ))
+        Err(js_sys::Error::new("Use compare() to compare Duration values").into())
     }
 }

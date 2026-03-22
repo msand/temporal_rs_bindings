@@ -363,11 +363,27 @@ export function parseOffsetStringToNs(str: string): any {
   return sign * (h * 3600000000000n + min * 60000000000n + sec * 1000000000n + frac);
 }
 
+// Parse a fixed-offset timezone ID (e.g. "+05:30", "+05:30:00") to milliseconds
+export function parseOffsetTzToMs(tzId: string): number {
+  const ns = parseOffsetStringToNs(
+    tzId.includes(':') ? tzId : tzId.substring(0, 3) + ':' + (tzId.substring(3) || '00'),
+  );
+  return ns !== undefined ? Number(ns / 1000000n) : 0;
+}
+
+// Parse a fixed-offset timezone ID to BigInt nanoseconds
+export function parseOffsetTzToNs(tzId: string): bigint {
+  const ns = parseOffsetStringToNs(
+    tzId.includes(':') ? tzId : tzId.substring(0, 3) + ':' + (tzId.substring(3) || '00'),
+  );
+  return ns ?? 0n;
+}
+
 // Get the actual UTC offset in nanoseconds for a timezone at a given epoch ms
 export function _getOffsetNsAtEpoch(epochMs: number, tzId: string): bigint {
   if (tzId === 'UTC') return 0n;
-  if (/^[+-]\d{2}:\d{2}(:\d{2})?$/.test(tzId)) {
-    return parseOffsetStringToNs(tzId.length <= 6 ? tzId + ':00' : tzId) || 0n;
+  if (/^[+-]\d{2}(:\d{2}(:\d{2}(\.\d{1,9})?)?)?$/.test(tzId)) {
+    return parseOffsetTzToNs(tzId);
   }
   const offsetStr = getUtcOffsetString(epochMs, tzId);
   return parseOffsetStringToNs(offsetStr) || 0n;
@@ -668,7 +684,7 @@ export function formatDurationString(dur: any, precision: any): string {
   }
 
   if (!datePart && !timePart) {
-    return `${sign}PT0S`;
+    return 'PT0S'; // Zero duration has no sign per spec
   }
   if (timePart) {
     return `${sign}P${datePart}T${timePart}`;
@@ -717,7 +733,7 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
       if (remainder * 2 < increment) return lower;
       if (remainder * 2 > increment) return upper;
       // Tie: pick even
-      return (lower / increment) % 2 === 0 ? lower : upper;
+      return ((lower / increment) | 0) % 2 === 0 ? lower : upper;
     },
   };
 
@@ -874,7 +890,9 @@ export function epochDaysToISO(epochDays: number): { year: number; month: number
 export function _isoDaysInMonth(year: number, month: number): number {
   const isLeap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
   const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  return daysInMonth[month - 1]! || 31;
+  const result = daysInMonth[month - 1];
+  if (result === undefined) throw new RangeError(`Invalid month: ${month}`);
+  return result;
 }
 
 // Mapping from fractional-second digit count to rounding unit and increment

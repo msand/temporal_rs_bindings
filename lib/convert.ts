@@ -300,12 +300,12 @@ export function _parseDurationForInstant(arg: any): { dur: NapiDurationT; totalN
     if (yv || mov || wv || dv) {
       throw new RangeError('Instant.add/subtract does not accept date components');
     }
-    const hVal = hv || 0;
-    const mVal = mv || 0;
-    const sVal = sv || 0;
-    const msVal = msv || 0;
-    const usVal = usv || 0;
-    const nsVal = nsv || 0;
+    const hVal = hv ?? 0;
+    const mVal = mv ?? 0;
+    const sVal = sv ?? 0;
+    const msVal = msv ?? 0;
+    const usVal = usv ?? 0;
+    const nsVal = nsv ?? 0;
     // Convert to BigInt for precision
     const totalNs =
       BigInt(hVal) * 3600000000000n +
@@ -424,12 +424,12 @@ export function toNapiPlainTime(arg: any): NapiPlainTimeT {
     return call(
       () =>
         new NapiPlainTime(
-          hourVal || 0,
-          minuteVal || 0,
-          secondVal || 0,
-          millisecondVal || 0,
-          microsecondVal || 0,
-          nanosecondVal || 0,
+          hourVal ?? 0,
+          minuteVal ?? 0,
+          secondVal ?? 0,
+          millisecondVal ?? 0,
+          microsecondVal ?? 0,
+          nanosecondVal ?? 0,
         ),
     );
   }
@@ -637,12 +637,12 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
     if (monthVal === undefined && _monthCode === undefined)
       throw new TypeError('Required property month or monthCode is missing');
     if (dayVal === undefined) throw new TypeError('Required property day is missing or undefined');
-    const calYear = resolvedYear || 0;
-    let month = monthVal || 1;
-    let day = dayVal || 1;
-    const hour = hourVal || 0;
-    const minute = minuteVal || 0;
-    const second = secondVal || 0;
+    const calYear = resolvedYear ?? 0;
+    let month = monthVal ?? 1;
+    let day = dayVal ?? 1;
+    const hour = hourVal ?? 0;
+    const minute = minuteVal ?? 0;
+    const second = secondVal ?? 0;
     // Reject Infinity values
     rejectPropertyBagInfinity(
       { year: calYear, month, day, hour, minute, second },
@@ -690,9 +690,9 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
       }
     }
     let str = `${padYear(year)}-${pad2(isoMonth)}-${pad2(isoDay)}T${pad2(hour)}:${pad2(minute)}:${pad2(second)}`;
-    if (millisecondVal || microsecondVal || nanosecondVal) {
-      const pad3 = (n: any) => String(n || 0).padStart(3, '0');
-      const frac = pad3(millisecondVal || 0) + pad3(microsecondVal || 0) + pad3(nanosecondVal || 0);
+    if ((millisecondVal ?? 0) || (microsecondVal ?? 0) || (nanosecondVal ?? 0)) {
+      const pad3 = (n: any) => String(n ?? 0).padStart(3, '0');
+      const frac = pad3(millisecondVal ?? 0) + pad3(microsecondVal ?? 0) + pad3(nanosecondVal ?? 0);
       str += '.' + frac.replace(/0+$/, '');
     }
     // Validate offset property if present (already coerced to string as offsetProp)
@@ -705,7 +705,7 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
     }
     // Per spec: for property bags, offset must match exactly (no fuzzy minute-rounding)
     // But during DST overlaps, both offsets are valid
-    if (offsetProp !== undefined && isValidOffsetString(offsetProp)) {
+    if (offsetProp !== undefined) {
       const providedOffsetNs = parseOffsetStringToNs(offsetProp);
       if (providedOffsetNs !== undefined) {
         let offsetMatches = false;
@@ -740,7 +740,10 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
 export function toNapiInstant(arg: any): NapiInstantT {
   if (arg instanceof NapiInstant) return arg;
   if (_isTemporalInstant(arg)) return arg._inner;
-  if (typeof arg === 'string') return call(() => NapiInstant.from(arg));
+  if (typeof arg === 'string') {
+    rejectTooManyFractionalSeconds(arg);
+    return call(() => NapiInstant.from(arg));
+  }
   // Per spec, Instant only accepts strings and ZonedDateTime
   if (arg !== null && arg !== undefined && (typeof arg === 'object' || typeof arg === 'function')) {
     // ZonedDateTime argument: extract instant

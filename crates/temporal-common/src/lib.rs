@@ -18,8 +18,9 @@ pub fn f64_to_i64(v: f64) -> Result<i64, String> {
     if v.fract() != 0.0 {
         return Err("RangeError: Duration field value must be an integer".into());
     }
-    // i64::MAX as f64 rounds up to 2^63, which overflows i64.
-    // Use strict less-than to avoid the boundary value that saturates.
+    // i64::MAX (2^63 - 1) as f64 rounds up to 2^63, which overflows i64.
+    // Use >= for upper bound to exclude the rounded-up value.
+    // i64::MIN (-2^63) is exactly representable as f64, so < (not <=) is correct.
     if v >= (i64::MAX as f64) || v < (i64::MIN as f64) {
         return Err("RangeError: Duration field value is out of range".into());
     }

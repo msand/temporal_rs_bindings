@@ -176,8 +176,6 @@ impl PlainDate {
 
     #[wasm_bindgen(js_name = "valueOf")]
     pub fn value_of(&self) -> Result<(), JsValue> {
-        Err(JsValue::from_str(
-            "Use compare() or equals() to compare PlainDate values",
-        ))
+        Err(js_sys::Error::new("Use compare() or equals() to compare PlainDate values").into())
     }
 }

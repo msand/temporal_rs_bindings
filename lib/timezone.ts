@@ -176,11 +176,11 @@ export function getUtcOffsetString(epochMs: number, tzId: string): string {
   const localYear = parts._fullYear;
   const localMonth = parseInt(parts.month, 10) - 1;
   const localDay = parseInt(parts.day, 10);
-  let localHour = parseInt(parts.hour, 10);
-  if (localHour === 24) localHour = 0;
+  const localHour = parseInt(parts.hour, 10);
   const localMinute = parseInt(parts.minute, 10);
   const localSecond = parseInt(parts.second, 10);
   // Date.UTC with year < 100 has special handling, use setUTCFullYear to avoid it
+  // Leave localHour as-is (may be 24); setUTCHours(24,...) correctly rolls to next day
   const localAsUtcDate = new Date(0);
   localAsUtcDate.setUTCFullYear(localYear, localMonth, localDay);
   localAsUtcDate.setUTCHours(localHour, localMinute, localSecond, 0);
@@ -345,10 +345,10 @@ export function _getOffsetMs(epochMs: number, tzId: string): number {
   const localYear = parts._fullYear;
   const localMonth = parseInt(parts.month, 10) - 1;
   const localDay = parseInt(parts.day, 10);
-  let localHour = parseInt(parts.hour, 10);
-  if (localHour === 24) localHour = 0;
+  const localHour = parseInt(parts.hour, 10);
   const localMinute = parseInt(parts.minute, 10);
   const localSecond = parseInt(parts.second, 10);
+  // Leave localHour as-is (may be 24); setUTCHours(24,...) correctly rolls to next day
   const localAsUtcDate = new Date(0);
   localAsUtcDate.setUTCFullYear(localYear, localMonth, localDay);
   localAsUtcDate.setUTCHours(localHour, localMinute, localSecond, 0);
@@ -457,11 +457,13 @@ export function _findTimeZoneTransition(zdt: any, dir: string): any {
     if (lo === -1) return null; // No transition found
 
     // Binary search between lo and hi to find exact transition point
+    const loOffset = _getOffsetMs(lo, tzId);
     while (hi - lo > 1) {
       const mid = Math.floor((lo + hi) / 2);
       const midOffset = _getOffsetMs(mid, tzId);
-      if (midOffset === _getOffsetMs(lo, tzId)) {
+      if (midOffset === loOffset) {
         lo = mid;
+        // loOffset stays the same since midOffset === loOffset
       } else {
         hi = mid;
       }
@@ -808,8 +810,7 @@ export function bigintNsToZdtString(epochNs: bigint, tzId: string, calId?: strin
   const year = parts._fullYear;
   const month = parts.month;
   const day = parts.day;
-  let hour = parseInt(parts.hour, 10);
-  if (hour === 24) hour = 0;
+  const hour = parseInt(parts.hour, 10);
   const minute = parts.minute;
   const second = parts.second;
   const ms = (parts.fractionalSecond || '000').padEnd(3, '0');
@@ -835,8 +836,14 @@ export function bigintNsToZdtString(epochNs: bigint, tzId: string, calId?: strin
     localAsUtcDate.setUTCFullYear(year, parseInt(month, 10) - 1, parseInt(day, 10));
     localAsUtcDate.setUTCHours(hour, parseInt(minute, 10), parseInt(second, 10), 0);
     const localAsUtc = localAsUtcDate.getTime();
-    const offsetMs = localAsUtc - Math.floor(msNum / 1000) * 1000;
-    offset = _formatOffsetMs(offsetMs);
+    if (isNaN(localAsUtc)) {
+      const localEpochDays = isoDateToEpochDays(year, parseInt(month, 10), parseInt(day, 10));
+      const localTotalMs =
+        localEpochDays * 86400000 + hour * 3600000 + parseInt(minute, 10) * 60000 + parseInt(second, 10) * 1000;
+      offset = _formatOffsetMs(localTotalMs - Math.floor(msNum / 1000) * 1000);
+    } else {
+      offset = _formatOffsetMs(localAsUtc - Math.floor(msNum / 1000) * 1000);
+    }
   }
   const calPart = calId && calId !== 'iso8601' ? '[u-ca=' + calId + ']' : '';
   return (

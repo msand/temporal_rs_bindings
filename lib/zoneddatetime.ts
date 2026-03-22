@@ -30,6 +30,8 @@ import {
   computeEpochNanoseconds,
   isValidOffsetString,
   parseOffsetStringToNs,
+  parseOffsetTzToMs,
+  parseOffsetTzToNs,
   _getOffsetNsAtEpoch,
   _roundToIncrement,
   formatFractionalSeconds,
@@ -100,6 +102,19 @@ import {
 import { _hasDateTimeOptions, _origFormatGetter, _temporalToEpochMs } from './intl';
 
 // ═══════════════════════════════════════════════════════════════
+//  Module-level constants (avoid per-call allocation)
+// ═══════════════════════════════════════════════════════════════
+
+const ZDT_TOSTRING_UNIT_ALIAS: Record<string, string> = {
+  minutes: 'minute',
+  seconds: 'second',
+  milliseconds: 'millisecond',
+  microseconds: 'microsecond',
+  nanoseconds: 'nanosecond',
+};
+const ZDT_TOSTRING_VALID_UNITS = new Set(['minute', 'second', 'millisecond', 'microsecond', 'nanosecond']);
+
+// ═══════════════════════════════════════════════════════════════
 //  ZonedDateTime
 // ═══════════════════════════════════════════════════════════════
 
@@ -167,7 +182,7 @@ class ZonedDateTime {
           // the ISO date range even though the instant is valid. Compute the actual offset
           // using Intl.DateTimeFormat and build the string with the correct offset.
           try {
-            const isFixedOffset = /^[+-]\d{2}(:\d{2})?$/.test(tzId);
+            const isFixedOffset = /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(tzId);
             if (isFixedOffset) {
               const offset = tzId.length <= 3 ? tzId + ':00' : tzId;
               const boundary =
@@ -213,12 +228,9 @@ class ZonedDateTime {
   _checkLocalTimeInRange(): void {
     if (this._epochNs !== undefined) {
       const tzId = this._tzId || this.timeZoneId;
-      if (tzId && tzId !== 'UTC' && /^[+-]\d{2}(:\d{2})?$/.test(tzId)) {
+      if (tzId && tzId !== 'UTC' && /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(tzId)) {
         const epochMs = Number(this._epochNs / 1000000n);
-        const sign = tzId[0] === '+' ? 1 : -1;
-        const h = parseInt(tzId.substring(1, 3), 10);
-        const m = tzId.length > 3 ? parseInt(tzId.substring(4, 6), 10) : 0;
-        const offsetMs = sign * (h * 3600000 + m * 60000);
+        const offsetMs = parseOffsetTzToMs(tzId);
         // The start-of-day computation needs to find midnight of the local day,
         // which could be up to 24h before/after the local time.
         // Use a tighter check: the LOCAL midnight must be representable as an Instant.
@@ -525,13 +537,13 @@ class ZonedDateTime {
       }
       const year = fields.year;
       if (month === undefined) month = 1;
-      let day = dayVal || 1;
-      let hour = hourVal || 0;
-      let minute = minuteVal || 0;
-      let second = secondVal || 0;
-      let millisecond = millisecondVal || 0;
-      let microsecond = microsecondVal || 0;
-      let nanosecond = nanosecondVal || 0;
+      let day = dayVal ?? 1;
+      let hour = hourVal ?? 0;
+      let minute = minuteVal ?? 0;
+      let second = secondVal ?? 0;
+      let millisecond = millisecondVal ?? 0;
+      let microsecond = microsecondVal ?? 0;
+      let nanosecond = nanosecondVal ?? 0;
       // Per spec: Infinity/-Infinity always rejected regardless of overflow
       rejectPropertyBagInfinity(
         { year, month, day, hour, minute, second, millisecond, microsecond, nanosecond },
@@ -1140,11 +1152,8 @@ class ZonedDateTime {
       localDay = this.day;
     if (this._epochNs !== undefined) {
       const tzId = this._tzId || this.timeZoneId;
-      if (tzId && /^[+-]\d{2}(:\d{2})?$/.test(tzId)) {
-        const sign = tzId[0] === '+' ? 1n : -1n;
-        const h = BigInt(parseInt(tzId.substring(1, 3), 10));
-        const m = tzId.length > 3 ? BigInt(parseInt(tzId.substring(4, 6), 10)) : 0n;
-        const offsetNs = sign * (h * 3600000000000n + m * 60000000000n);
+      if (tzId && /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(tzId)) {
+        const offsetNs = parseOffsetTzToNs(tzId);
         const localNs = this._epochNs + offsetNs;
         const nsPerDay = 86400000000000n;
         let epochDays = localNs / nsPerDay;
@@ -1155,7 +1164,7 @@ class ZonedDateTime {
         localDay = isoDate.day;
         // Check if the resulting epoch ns would be in range
         const newLocalMs = Date.UTC(localYear, localMonth - 1, localDay, t.hour, t.minute, t.second);
-        const offsetMs = Number(offsetNs / 1000000n);
+        const offsetMs = parseOffsetTzToMs(tzId);
         const newEpochMs = newLocalMs - offsetMs;
         const limit = 8640000000000000;
         if (newEpochMs < -limit || newEpochMs > limit) {
@@ -1341,11 +1350,8 @@ class ZonedDateTime {
     // to get the correct local date/time.
     if (this._epochNs !== undefined) {
       const tzId = this._tzId || this.timeZoneId;
-      if (tzId && /^[+-]\d{2}(:\d{2})?$/.test(tzId)) {
-        const sign = tzId[0] === '+' ? 1n : -1n;
-        const h = BigInt(parseInt(tzId.substring(1, 3), 10));
-        const m = tzId.length > 3 ? BigInt(parseInt(tzId.substring(4, 6), 10)) : 0n;
-        const offsetNs = sign * (h * 3600000000000n + m * 60000000000n);
+      if (tzId && /^[+-]\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(tzId)) {
+        const offsetNs = parseOffsetTzToNs(tzId);
         const localNs = this._epochNs + offsetNs;
         // Convert nanoseconds to date/time components
         const nsPerDay = 86400000000000n;
@@ -1474,16 +1480,8 @@ class ZonedDateTime {
         : 'Trunc';
     let smallestUnit;
     if (suStr !== undefined) {
-      const UNIT_ALIAS: Record<string, string> = {
-        minutes: 'minute',
-        seconds: 'second',
-        milliseconds: 'millisecond',
-        microseconds: 'microsecond',
-        nanoseconds: 'nanosecond',
-      };
-      const canonical = UNIT_ALIAS[suStr] || suStr;
-      const VALID_UNITS = new Set(['minute', 'second', 'millisecond', 'microsecond', 'nanosecond']);
-      if (!VALID_UNITS.has(canonical)) {
+      const canonical = ZDT_TOSTRING_UNIT_ALIAS[suStr] || suStr;
+      if (!ZDT_TOSTRING_VALID_UNITS.has(canonical)) {
         throw new RangeError(`Invalid smallestUnit for ZonedDateTime.toString: ${suStr}`);
       }
       smallestUnit = canonical;

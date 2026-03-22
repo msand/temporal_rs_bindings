@@ -20,6 +20,7 @@ import {
   rejectInfinity,
   rejectTooManyFractionalSeconds,
   rejectISODateRange,
+  _isoDaysInMonth,
 } from './helpers';
 import { _hasDateTimeOptions, _temporalToEpochMs, _origFormatGetter } from './intl';
 import { mapDisplayCalendar } from './enums';
@@ -42,6 +43,19 @@ import {
 } from './calendar';
 
 import type { PlainDate } from './plaindate';
+
+// Module-level constants (avoid per-call allocation)
+const YEAR_REQUIRED_CALENDARS = new Set([
+  'chinese',
+  'dangi',
+  'hebrew',
+  'islamic-civil',
+  'islamic-tbla',
+  'islamic-umalqura',
+  'islamic-rgsa',
+]);
+const LEAP_MONTHS_WITH_30_DAYS = new Set([3, 4, 5, 6, 7]);
+const NONEXISTENT_LEAP_MONTHS = new Set([1, 12]); // never occur in accurate range
 
 /** Estimate the ISO year from a calendar year for range checking. */
 function _estimateIsoYear(calYear: number, calId: string): number {
@@ -151,15 +165,6 @@ class PlainMonthDay {
       // - When month is provided without monthCode, year is needed to resolve the ordinal month
       // - When month and monthCode both provided, year is needed to check if they agree
       // Missing year TypeError must come before month/monthCode conflict RangeError
-      const YEAR_REQUIRED_CALENDARS = new Set([
-        'chinese',
-        'dangi',
-        'hebrew',
-        'islamic-civil',
-        'islamic-tbla',
-        'islamic-umalqura',
-        'islamic-rgsa',
-      ]);
       if (YEAR_REQUIRED_CALENDARS.has(mdFromCalId) && yearVal === undefined && month !== undefined && hasMonthCode) {
         // Both month and monthCode provided but no year - year is needed to check agreement
         throw new TypeError(`year is required for PlainMonthDay with calendar '${mdFromCalId}'`);
@@ -235,21 +240,8 @@ class PlainMonthDay {
         } else {
           // Constrain: clamp month and day to valid range using the provided year
           if (checkMonth > 12) checkMonth = 12;
-          const daysInMonth = [
-            31,
-            checkYear % 4 === 0 && (checkYear % 100 !== 0 || checkYear % 400 === 0) ? 29 : 28,
-            31,
-            30,
-            31,
-            30,
-            31,
-            31,
-            30,
-            31,
-            30,
-            31,
-          ];
-          if (checkDay > daysInMonth[checkMonth - 1]!) checkDay = daysInMonth[checkMonth - 1]!;
+          const maxDay = _isoDaysInMonth(checkYear, checkMonth);
+          if (checkDay > maxDay) checkDay = maxDay;
         }
         // Always use 1972 as reference year for ISO calendar
         return new PlainMonthDay(call(() => new NapiPlainMonthDay(checkMonth, checkDay, cal, 1972)));
@@ -332,8 +324,6 @@ class PlainMonthDay {
       // M01L and M12L never occur at all in the accurate calculation range.
       if (isLeapMonthCode && (mdFromCalId === 'chinese' || mdFromCalId === 'dangi')) {
         const leapMonthNum = parseInt(targetMonthCode.slice(1, 3), 10);
-        const LEAP_MONTHS_WITH_30_DAYS = new Set([3, 4, 5, 6, 7]);
-        const NONEXISTENT_LEAP_MONTHS = new Set([1, 12]); // never occur in accurate range
         if (NONEXISTENT_LEAP_MONTHS.has(leapMonthNum)) {
           // Per spec: M01L and M12L never occur. Constrain to non-leap, or reject.
           if (overflow === 'Reject') {
@@ -551,9 +541,7 @@ class PlainMonthDay {
     }
     if (month === undefined) {
       effectiveMonthCode = this.monthCode;
-      const code = this.monthCode;
-      const m = code.match(/^M(\d{2})L?$/);
-      if (m) month = parseInt(m[1]!, 10);
+      month = monthCodeToMonth(this.monthCode, calId);
     }
     if (effectiveMonthCode === undefined) effectiveMonthCode = this.monthCode;
     // For ISO calendar, apply overflow using year (if provided) to constrain day
@@ -565,21 +553,8 @@ class PlainMonthDay {
         rejectISODateRange(yearForOverflow, constrainedMonth, constrainedDay);
       } else {
         if (constrainedMonth > 12) constrainedMonth = 12;
-        const daysInMonth = [
-          31,
-          yearForOverflow % 4 === 0 && (yearForOverflow % 100 !== 0 || yearForOverflow % 400 === 0) ? 29 : 28,
-          31,
-          30,
-          31,
-          30,
-          31,
-          31,
-          30,
-          31,
-          30,
-          31,
-        ];
-        if (constrainedDay > daysInMonth[constrainedMonth - 1]!) constrainedDay = daysInMonth[constrainedMonth - 1]!;
+        const maxDay = _isoDaysInMonth(yearForOverflow, constrainedMonth);
+        if (constrainedDay > maxDay) constrainedDay = maxDay;
       }
       return new PlainMonthDay(call(() => new NapiPlainMonthDay(constrainedMonth, constrainedDay, cal, 1972)));
     }

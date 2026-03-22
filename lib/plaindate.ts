@@ -353,7 +353,7 @@ class PlainDate {
     ) {
       throw new TypeError('At least one recognized property must be provided');
     }
-    rejectPropertyBagInfinity({ year: year || 0, day }, 'year', 'day');
+    rejectPropertyBagInfinity({ year: year ?? 0, day }, 'year', 'day');
     // Per spec: validate clearly invalid field values BEFORE options are read
     const td = _trunc(day);
     if (td < 1) throw new RangeError(`day ${td} out of range`);

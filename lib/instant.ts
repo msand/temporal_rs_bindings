@@ -31,6 +31,16 @@ import {
 } from './convert';
 import { bigintNsToZdtString } from './timezone';
 
+// Module-level constants (avoid per-call allocation)
+const INSTANT_UNIT_ALIAS: Record<string, string> = {
+  minutes: 'minute',
+  seconds: 'second',
+  milliseconds: 'millisecond',
+  microseconds: 'microsecond',
+  nanoseconds: 'nanosecond',
+};
+const INSTANT_TOSTRING_UNITS = new Set<string>(['minute', 'second', 'millisecond', 'microsecond', 'nanosecond']);
+
 // ═══════════════════════════════════════════════════════════════
 //  Instant
 // ═══════════════════════════════════════════════════════════════
@@ -84,11 +94,12 @@ class Instant {
     if (_isTemporalZonedDateTime(arg) || (arg && arg._inner instanceof NapiZonedDateTime)) {
       return new Instant(arg._inner.toInstant());
     }
-    // Per spec: other objects - call toString() and try to parse
+    // Per spec: other objects/functions - call toString() and try to parse
     if (arg !== null && arg !== undefined && (typeof arg === 'object' || typeof arg === 'function')) {
       const str = String(arg);
       return new Instant(call(() => NapiInstant.from(str)));
     }
+    // Non-object primitives (undefined, null, boolean, number, bigint, symbol)
     throw new TypeError(`Cannot convert ${arg === null ? 'null' : typeof arg} to Instant`);
   }
 
@@ -202,15 +213,7 @@ class Instant {
     // Now validate smallestUnit after all reads
     let smallestUnit;
     if (suStr !== undefined) {
-      const UNIT_ALIAS = {
-        minutes: 'minute',
-        seconds: 'second',
-        milliseconds: 'millisecond',
-        microseconds: 'microsecond',
-        nanoseconds: 'nanosecond',
-      };
-      const canonical = (UNIT_ALIAS as any)[suStr] || suStr;
-      const INSTANT_TOSTRING_UNITS = new Set<string>(['minute', 'second', 'millisecond', 'microsecond', 'nanosecond']);
+      const canonical = INSTANT_UNIT_ALIAS[suStr] || suStr;
       if (!INSTANT_TOSTRING_UNITS.has(canonical)) {
         throw new RangeError(`Invalid smallestUnit for Instant.toString: ${suStr}`);
       }

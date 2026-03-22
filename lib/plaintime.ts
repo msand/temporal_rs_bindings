@@ -32,12 +32,12 @@ class PlainTime {
     if (hour instanceof NapiPlainTime) {
       this._inner = hour;
     } else {
-      const h = toIntegerWithTruncation(hour) || 0;
-      const mi = toIntegerWithTruncation(minute) || 0;
-      const s = toIntegerWithTruncation(second) || 0;
-      const ms = toIntegerWithTruncation(millisecond) || 0;
-      const us = toIntegerWithTruncation(microsecond) || 0;
-      const ns = toIntegerWithTruncation(nanosecond) || 0;
+      const h = toIntegerWithTruncation(hour) ?? 0;
+      const mi = toIntegerWithTruncation(minute) ?? 0;
+      const s = toIntegerWithTruncation(second) ?? 0;
+      const ms = toIntegerWithTruncation(millisecond) ?? 0;
+      const us = toIntegerWithTruncation(microsecond) ?? 0;
+      const ns = toIntegerWithTruncation(nanosecond) ?? 0;
       // Per spec: constructor always rejects out-of-range values
       if (
         h < 0 ||
@@ -155,7 +155,7 @@ class PlainTime {
         // Constrain: clamp all time fields to valid ranges
         h = Math.max(0, Math.min(h, 23));
         mi = Math.max(0, Math.min(mi, 59));
-        s = Math.max(0, Math.min(s === 60 ? 59 : s, 59));
+        s = Math.max(0, Math.min(s, 59));
         ms = Math.max(0, Math.min(ms, 999));
         us = Math.max(0, Math.min(us, 999));
         ns = Math.max(0, Math.min(ns, 999));

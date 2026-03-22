@@ -54,8 +54,6 @@ class Duration {
   ) {
     if (years instanceof NapiDuration) {
       this._inner = years;
-    } else if (years !== undefined && typeof years === 'object' && years !== null && years instanceof Duration) {
-      this._inner = years._inner;
     } else if (years === undefined || (years === null && months === undefined)) {
       this._inner = call(() => new NapiDuration());
     } else {

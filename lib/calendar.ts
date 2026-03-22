@@ -52,7 +52,7 @@ export const CALENDAR_ALIASES: Record<string, string> = {
 };
 
 export function canonicalizeCalendarId(id: any): string {
-  const lower = typeof id === 'string' ? id.toLowerCase() : id;
+  const lower = typeof id === 'string' ? id.toLowerCase() : String(id).toLowerCase();
   return CALENDAR_ALIASES[lower] || lower;
 }
 
@@ -179,7 +179,8 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
     }
     // Scan through the year to find which month code has 'L'
     // Start from approximate beginning of the Chinese year
-    const startMs = Date.UTC(isoYear, 0, 20);
+    // Use isoDateToEpochDays to avoid Date.UTC's year 0-99 mapping to 1900-1999
+    const startMs = isoDateToEpochDays(isoYear, 1, 20) * 86400000;
     let lastMonth = 0;
     for (let day = 0; day < 400; day++) {
       const d = new Date(startMs + day * 86400000);
@@ -201,8 +202,7 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
     _chineseDangiLeapMonthCache.set(cacheKey, 0);
     return 0;
   } catch {
-    _evictLeapMonthCache();
-    _chineseDangiLeapMonthCache.set(cacheKey, 0);
+    // Don't cache errors -- they may be transient (NAPI startup, etc.)
     return 0;
   }
 }
@@ -312,7 +312,8 @@ export function isMonthCodeValidForYear(
     const leapBase = getChineseDangiLeapMonth(targetYear, calendarId);
     return leapBase === monthNum;
   }
-  return true;
+  // Non-Hebrew, non-Chinese/Dangi calendars don't have leap months
+  return false;
 }
 
 // ─── Helper: resolve month from month/monthCode ───────────────
@@ -465,18 +466,10 @@ export function resolveEraYear(fields: any, calendarId: string): any {
         } else {
           fields.year = fields.eraYear;
         }
-      } else if (calendarId === 'persian') {
-        if (fields.era === 'ap') {
-          fields.year = fields.eraYear;
-        } else {
-          fields.year = fields.eraYear;
-        }
-      } else if (calendarId === 'indian') {
-        if (fields.era === 'saka') {
-          fields.year = fields.eraYear;
-        } else {
-          fields.year = fields.eraYear;
-        }
+      } else if (calendarId === 'persian' || calendarId === 'indian') {
+        // Persian (era 'ap') and Indian (era 'saka') calendars:
+        // eraYear maps directly to year regardless of era value
+        fields.year = fields.eraYear;
       } else {
         // For other calendars, just use eraYear as year
         fields.year = fields.eraYear;
@@ -715,7 +708,10 @@ export function calendarDateToISO(
     // Fallback
   }
 
-  // Final fallback: return the year-only conversion (used by exotic calendars like ethiopic/coptic)
+  // Final fallback: return the ISO year with calendar month/day.
+  // This is only valid for ISO-aligned calendars (coptic, ethiopic, etc.) where
+  // calendar months roughly correspond to ISO months. For non-aligned calendars,
+  // this would be incorrect, but the scanning loop above should have found the result.
   return { isoYear: isoYear, isoMonth: calMonth as number, isoDay: calDay as number };
 }
 
