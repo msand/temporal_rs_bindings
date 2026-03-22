@@ -10,6 +10,7 @@ pub struct Instant {
 
 #[napi]
 impl Instant {
+    /// Construct from epoch nanoseconds as BigInt.
     #[napi(constructor)]
     pub fn new(epoch_nanoseconds: napi::bindgen_prelude::BigInt) -> napi::Result<Self> {
         let (ns, lossless) = epoch_nanoseconds.get_i128();
@@ -20,12 +21,14 @@ impl Instant {
         Ok(Self { inner })
     }
 
+    /// Parse from an ISO 8601 string.
     #[napi(factory)]
     pub fn from(s: String) -> napi::Result<Self> {
         let inner = temporal_rs::Instant::from_utf8(s.as_bytes()).map_err(to_napi_error)?;
         Ok(Self { inner })
     }
 
+    /// Construct from epoch milliseconds.
     #[napi(factory)]
     pub fn from_epoch_milliseconds(ms: i64) -> napi::Result<Self> {
         let inner = temporal_rs::Instant::from_epoch_milliseconds(ms).map_err(to_napi_error)?;

@@ -214,6 +214,16 @@ npm run build:wasm
 
 This produces a `wasm-pkg/` directory with ES module + TypeScript definitions usable via bundlers (webpack, vite, etc).
 
+### WASM Limitations
+
+The WASM bindings have some differences from the native Node.js (NAPI) bindings due to `wasm-bindgen` constraints:
+
+- **Epoch nanosecond precision:** `Instant` and `ZonedDateTime` constructors accept `f64` (JS `number`) for epoch nanoseconds, which loses precision beyond ±2^53 (~104 days from Unix epoch in nanoseconds). For full nanosecond precision, use `Instant.from()` or `ZonedDateTime.from()` with ISO string arguments. The NAPI bindings use `BigInt` and have no precision loss.
+- **`epochNanoseconds` getter:** Returns `number` (f64) in WASM vs `bigint` in NAPI. Use `epochMilliseconds` for a safe numeric value, or `toString()` for full nanosecond fidelity.
+- **`toString()` display options:** `ZonedDateTime.toString()` and `Instant.toString()` in WASM do not accept display/rounding options (calendarName, timeZoneName, fractionalSecondDigits, etc.). The NAPI bindings support these options for `PlainDateTime.toString()` but not yet for `ZonedDateTime`/`Instant`.
+
+The pre-built `wasm-pkg/` is included in the npm package for convenience. If you only use the Node.js API (`import from 'temporal_rs'`), the WASM artifacts are unused.
+
 ## Development
 
 ```bash

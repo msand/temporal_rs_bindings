@@ -309,7 +309,8 @@ describe('PlainTime', () => {
   });
 
   it('constrains invalid time by default', () => {
-    // PlainTime.new uses Constrain overflow by default
+    // NOTE: This tests the raw NAPI binding behavior which constrains by default.
+    // The TC39 spec conformance layer (Temporal.PlainTime) rejects out-of-range values instead.
     const t = new PlainTime(25, 0, 0);
     expect(t.hour).toBe(23); // constrained to max hour
   });

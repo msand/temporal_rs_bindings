@@ -11,6 +11,7 @@ pub struct PlainDate {
 
 #[napi]
 impl PlainDate {
+    /// Construct from ISO year, month, day, and optional calendar.
     #[napi(constructor)]
     pub fn new(year: i32, month: u8, day: u8, calendar: Option<&Calendar>) -> napi::Result<Self> {
         let cal = calendar

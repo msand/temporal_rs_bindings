@@ -54,6 +54,21 @@ pub fn make_relative_to(
 // IANA timezone provider from the `icu` crate. Despite the "_for_testing" suffix in its
 // name (an upstream naming convention), it is the correct provider for production use.
 
+/// Macro to generate a `From` impl mapping a local enum's variants to `temporal_rs` enum variants.
+/// Both enums must have identical variant names.
+#[macro_export]
+macro_rules! impl_temporal_enum_from {
+    ($local:ty => $temporal:ty { $($variant:ident),+ $(,)? }) => {
+        impl From<$local> for $temporal {
+            fn from(value: $local) -> Self {
+                match value {
+                    $( <$local>::$variant => Self::$variant, )+
+                }
+            }
+        }
+    };
+}
+
 /// Return a reference to a lazily-initialised, process-wide timezone provider.
 ///
 /// This avoids creating a new provider on every timezone operation.

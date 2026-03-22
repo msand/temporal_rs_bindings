@@ -16,6 +16,7 @@ pub struct ZonedDateTime {
 
 #[napi]
 impl ZonedDateTime {
+    /// Construct from epoch nanoseconds (BigInt), timezone, and optional calendar.
     #[napi(constructor)]
     pub fn new(
         epoch_nanoseconds: napi::bindgen_prelude::BigInt,
@@ -37,6 +38,7 @@ impl ZonedDateTime {
         Ok(Self { inner })
     }
 
+    /// Parse from an IXDTF string.
     #[napi(factory)]
     pub fn from(s: String) -> napi::Result<Self> {
         let inner = temporal_rs::ZonedDateTime::from_utf8_with_provider(

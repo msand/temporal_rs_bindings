@@ -85,21 +85,37 @@ export declare function nowPlainTimeIso(timeZone?: TimeZone | undefined | null):
 export declare class Calendar {
   /** Creates a new Calendar from a calendar identifier string (e.g. "iso8601", "gregorian", "japanese"). */
   constructor(id: string)
+  /** Create an ISO 8601 calendar. */
   static iso(): Calendar
+  /** Create a Gregorian calendar. */
   static gregorian(): Calendar
+  /** Create a Japanese calendar. */
   static japanese(): Calendar
+  /** Create a Buddhist calendar. */
   static buddhist(): Calendar
+  /** Create a Chinese calendar. */
   static chinese(): Calendar
+  /** Create a Coptic calendar. */
   static coptic(): Calendar
+  /** Create a Dangi (Korean) calendar. */
   static dangi(): Calendar
+  /** Create an Ethiopian calendar. */
   static ethiopian(): Calendar
+  /** Create an Ethiopian Amete Alem calendar. */
   static ethiopianAmeteAlem(): Calendar
+  /** Create a Hebrew calendar. */
   static hebrew(): Calendar
+  /** Create an Indian calendar. */
   static indian(): Calendar
+  /** Create a Hijri Tabular (Friday epoch) calendar. */
   static hijriTabularFriday(): Calendar
+  /** Create a Hijri Tabular (Thursday epoch) calendar. */
   static hijriTabularThursday(): Calendar
+  /** Create a Hijri Umm al-Qura calendar. */
   static hijriUmmAlQura(): Calendar
+  /** Create a Persian calendar. */
   static persian(): Calendar
+  /** Create a Republic of China (Minguo) calendar. */
   static roc(): Calendar
   get id(): string
   get isIso(): boolean
@@ -118,6 +134,7 @@ export declare class TimeZone {
   toString(): string
 }
 export declare class PlainDate {
+  /** Construct from ISO year, month, day, and optional calendar. */
   constructor(year: number, month: number, day: number, calendar?: Calendar | undefined | null)
   static from(s: string): PlainDate
   get year(): number
@@ -207,7 +224,9 @@ export declare class PlainDateTime {
   valueOf(): void
 }
 export declare class ZonedDateTime {
+  /** Construct from epoch nanoseconds (BigInt), timezone, and optional calendar. */
   constructor(epochNanoseconds: bigint, timezone: TimeZone, calendar?: Calendar | undefined | null)
+  /** Parse from an IXDTF string. */
   static from(s: string): ZonedDateTime
   static fromEpochMilliseconds(ms: number, timezone: TimeZone, calendar?: Calendar | undefined | null): ZonedDateTime
   get year(): number
@@ -257,8 +276,11 @@ export declare class ZonedDateTime {
   valueOf(): void
 }
 export declare class Instant {
+  /** Construct from epoch nanoseconds as BigInt. */
   constructor(epochNanoseconds: bigint)
+  /** Parse from an ISO 8601 string. */
   static from(s: string): Instant
+  /** Construct from epoch milliseconds. */
   static fromEpochMilliseconds(ms: number): Instant
   get epochMilliseconds(): number
   get epochNanoseconds(): bigint
@@ -275,7 +297,9 @@ export declare class Instant {
 }
 export declare class Duration {
   /**
-   * Constructor accepts f64 for all fields (matching JS Number type).
+   * Construct with individual date/time components (all optional, default 0).
+   *
+   * Accepts f64 for all fields (matching JS Number type).
    * Microseconds and nanoseconds are converted to i128 to preserve
    * precision for values exceeding i64 range.
    */

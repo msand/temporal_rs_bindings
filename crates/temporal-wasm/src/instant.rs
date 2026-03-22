@@ -10,6 +10,12 @@ pub struct Instant {
 
 #[wasm_bindgen]
 impl Instant {
+    /// Construct from epoch nanoseconds.
+    ///
+    /// **Precision note:** wasm-bindgen does not natively support BigInt parameters,
+    /// so this constructor accepts f64. Values beyond ±2^53 (~104 days of nanoseconds
+    /// from epoch) will lose sub-nanosecond precision. For full precision, construct
+    /// via `Instant.from()` with an ISO string instead.
     #[wasm_bindgen(constructor)]
     pub fn new(epoch_nanoseconds: f64) -> Result<Instant, JsValue> {
         let inner =
@@ -37,6 +43,11 @@ impl Instant {
         self.inner.epoch_milliseconds() as f64
     }
 
+    /// Epoch nanoseconds as f64.
+    ///
+    /// **Precision note:** Returns f64 due to wasm-bindgen limitations.
+    /// Values beyond ±2^53 lose precision. Use `epochMilliseconds` for
+    /// a safe numeric value, or `toString()` for full nanosecond fidelity.
     #[wasm_bindgen(getter, js_name = "epochNanoseconds")]
     pub fn epoch_nanoseconds(&self) -> f64 {
         self.inner.as_i128() as f64

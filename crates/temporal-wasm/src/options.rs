@@ -19,14 +19,9 @@ pub enum Overflow {
     Reject,
 }
 
-impl From<Overflow> for temporal_rs::options::Overflow {
-    fn from(value: Overflow) -> Self {
-        match value {
-            Overflow::Constrain => Self::Constrain,
-            Overflow::Reject => Self::Reject,
-        }
-    }
-}
+temporal_common::impl_temporal_enum_from!(Overflow => temporal_rs::options::Overflow {
+    Constrain, Reject,
+});
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Deserialize)]
@@ -37,16 +32,9 @@ pub enum Disambiguation {
     Reject,
 }
 
-impl From<Disambiguation> for temporal_rs::options::Disambiguation {
-    fn from(value: Disambiguation) -> Self {
-        match value {
-            Disambiguation::Compatible => Self::Compatible,
-            Disambiguation::Earlier => Self::Earlier,
-            Disambiguation::Later => Self::Later,
-            Disambiguation::Reject => Self::Reject,
-        }
-    }
-}
+temporal_common::impl_temporal_enum_from!(Disambiguation => temporal_rs::options::Disambiguation {
+    Compatible, Earlier, Later, Reject,
+});
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Deserialize)]
@@ -57,16 +45,9 @@ pub enum OffsetDisambiguation {
     Reject,
 }
 
-impl From<OffsetDisambiguation> for temporal_rs::options::OffsetDisambiguation {
-    fn from(value: OffsetDisambiguation) -> Self {
-        match value {
-            OffsetDisambiguation::Use => Self::Use,
-            OffsetDisambiguation::Prefer => Self::Prefer,
-            OffsetDisambiguation::Ignore => Self::Ignore,
-            OffsetDisambiguation::Reject => Self::Reject,
-        }
-    }
-}
+temporal_common::impl_temporal_enum_from!(OffsetDisambiguation => temporal_rs::options::OffsetDisambiguation {
+    Use, Prefer, Ignore, Reject,
+});
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Deserialize)]
@@ -82,21 +63,9 @@ pub enum RoundingMode {
     HalfEven,
 }
 
-impl From<RoundingMode> for temporal_rs::options::RoundingMode {
-    fn from(value: RoundingMode) -> Self {
-        match value {
-            RoundingMode::Ceil => Self::Ceil,
-            RoundingMode::Floor => Self::Floor,
-            RoundingMode::Expand => Self::Expand,
-            RoundingMode::Trunc => Self::Trunc,
-            RoundingMode::HalfCeil => Self::HalfCeil,
-            RoundingMode::HalfFloor => Self::HalfFloor,
-            RoundingMode::HalfExpand => Self::HalfExpand,
-            RoundingMode::HalfTrunc => Self::HalfTrunc,
-            RoundingMode::HalfEven => Self::HalfEven,
-        }
-    }
-}
+temporal_common::impl_temporal_enum_from!(RoundingMode => temporal_rs::options::RoundingMode {
+    Ceil, Floor, Expand, Trunc, HalfCeil, HalfFloor, HalfExpand, HalfTrunc, HalfEven,
+});
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Deserialize)]
@@ -114,23 +83,9 @@ pub enum Unit {
     Year,
 }
 
-impl From<Unit> for temporal_rs::options::Unit {
-    fn from(value: Unit) -> Self {
-        match value {
-            Unit::Auto => Self::Auto,
-            Unit::Nanosecond => Self::Nanosecond,
-            Unit::Microsecond => Self::Microsecond,
-            Unit::Millisecond => Self::Millisecond,
-            Unit::Second => Self::Second,
-            Unit::Minute => Self::Minute,
-            Unit::Hour => Self::Hour,
-            Unit::Day => Self::Day,
-            Unit::Week => Self::Week,
-            Unit::Month => Self::Month,
-            Unit::Year => Self::Year,
-        }
-    }
-}
+temporal_common::impl_temporal_enum_from!(Unit => temporal_rs::options::Unit {
+    Auto, Nanosecond, Microsecond, Millisecond, Second, Minute, Hour, Day, Week, Month, Year,
+});
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Deserialize)]
@@ -141,16 +96,9 @@ pub enum DisplayCalendar {
     Critical,
 }
 
-impl From<DisplayCalendar> for temporal_rs::options::DisplayCalendar {
-    fn from(value: DisplayCalendar) -> Self {
-        match value {
-            DisplayCalendar::Auto => Self::Auto,
-            DisplayCalendar::Always => Self::Always,
-            DisplayCalendar::Never => Self::Never,
-            DisplayCalendar::Critical => Self::Critical,
-        }
-    }
-}
+temporal_common::impl_temporal_enum_from!(DisplayCalendar => temporal_rs::options::DisplayCalendar {
+    Auto, Always, Never, Critical,
+});
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Deserialize)]
@@ -159,14 +107,9 @@ pub enum DisplayOffset {
     Never,
 }
 
-impl From<DisplayOffset> for temporal_rs::options::DisplayOffset {
-    fn from(value: DisplayOffset) -> Self {
-        match value {
-            DisplayOffset::Auto => Self::Auto,
-            DisplayOffset::Never => Self::Never,
-        }
-    }
-}
+temporal_common::impl_temporal_enum_from!(DisplayOffset => temporal_rs::options::DisplayOffset {
+    Auto, Never,
+});
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Deserialize)]
@@ -176,15 +119,9 @@ pub enum DisplayTimeZone {
     Critical,
 }
 
-impl From<DisplayTimeZone> for temporal_rs::options::DisplayTimeZone {
-    fn from(value: DisplayTimeZone) -> Self {
-        match value {
-            DisplayTimeZone::Auto => Self::Auto,
-            DisplayTimeZone::Never => Self::Never,
-            DisplayTimeZone::Critical => Self::Critical,
-        }
-    }
-}
+temporal_common::impl_temporal_enum_from!(DisplayTimeZone => temporal_rs::options::DisplayTimeZone {
+    Auto, Never, Critical,
+});
 
 // ==== Option Structs (serde-deserializable for JsValue) ====
 

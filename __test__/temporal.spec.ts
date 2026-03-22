@@ -292,3 +292,53 @@ describe('Temporal.Now', () => {
     expect(d instanceof Temporal.PlainDate).toBe(true);
   });
 });
+
+// ─── BigInt precision ─────────────────────────────────────
+
+describe('BigInt epochNanoseconds precision', () => {
+  it('Instant round-trips large BigInt epochNanoseconds', () => {
+    const ns = 1710500000000000000n; // ~2024-03-15 in nanoseconds
+    const inst = new Temporal.Instant(ns);
+    expect(inst.epochNanoseconds).toBe(ns);
+  });
+
+  it('Instant round-trips negative BigInt epochNanoseconds', () => {
+    const ns = -8640000000000000000000n; // minimum representable
+    const inst = new Temporal.Instant(ns);
+    expect(inst.epochNanoseconds).toBe(ns);
+  });
+
+  it('ZonedDateTime round-trips BigInt epochNanoseconds', () => {
+    const ns = 1710500000123456789n;
+    const zdt = new Temporal.ZonedDateTime(ns, 'UTC');
+    expect(zdt.epochNanoseconds).toBe(ns);
+  });
+
+  it('Instant rejects number as epochNanoseconds', () => {
+    expect(() => new Temporal.Instant(0)).toThrow(TypeError);
+  });
+
+  it('Instant rejects out-of-range BigInt', () => {
+    expect(() => new Temporal.Instant(9000000000000000000000n)).toThrow(RangeError);
+  });
+});
+
+// ─── Error type correctness ──────────────────────────────
+
+describe('Error type mapping', () => {
+  it('PlainDate.from throws RangeError for invalid date', () => {
+    expect(() => Temporal.PlainDate.from('2024-13-01')).toThrow(RangeError);
+  });
+
+  it('PlainDate constructor throws RangeError for invalid month', () => {
+    expect(() => new Temporal.PlainDate(2024, 13, 1)).toThrow(RangeError);
+  });
+
+  it('Duration.from throws RangeError for invalid string', () => {
+    expect(() => Temporal.Duration.from('not-a-duration')).toThrow(RangeError);
+  });
+
+  it('PlainDate.from throws TypeError for null', () => {
+    expect(() => Temporal.PlainDate.from(null as any)).toThrow(TypeError);
+  });
+});

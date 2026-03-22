@@ -28,7 +28,9 @@ fn f64_to_i128(v: f64) -> napi::Result<i128> {
 
 #[napi]
 impl Duration {
-    /// Constructor accepts f64 for all fields (matching JS Number type).
+    /// Construct with individual date/time components (all optional, default 0).
+    ///
+    /// Accepts f64 for all fields (matching JS Number type).
     /// Microseconds and nanoseconds are converted to i128 to preserve
     /// precision for values exceeding i64 range.
     #[napi(constructor)]
