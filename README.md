@@ -283,7 +283,7 @@ This package wraps [temporal_rs](https://github.com/boa-dev/temporal) (the Rust 
 - **NAPI-RS** for native Node.js addons with auto-generated TypeScript definitions
 - **wasm-bindgen** for browser-compatible WASM builds
 
-A TypeScript spec conformance layer (`lib/temporal.ts`) bridges the gap between the NAPI binding surface and the TC39 Temporal specification. It is compiled via [tsup](https://tsup.egoist.dev/) to both ESM (`.mjs`) and CJS (`.js`) with type declarations, providing:
+A modular TypeScript spec conformance layer (`lib/`) bridges the gap between the NAPI binding surface and the TC39 Temporal specification. It is compiled via [tsup](https://tsup.egoist.dev/) to both ESM (`.mjs`) and CJS (`.js`) with type declarations, providing:
 
 - `Temporal` namespace with all types and `Temporal.Now`
 - Property bag arguments for `from()`, `with()`, `add()`, `subtract()`

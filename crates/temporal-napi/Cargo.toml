@@ -10,7 +10,6 @@ crate-type = ["cdylib"]
 [dependencies]
 temporal_rs = { workspace = true }
 temporal-common = { path = "../temporal-common" }
-timezone_provider = { workspace = true, features = ["zoneinfo64"] }
 napi = { version = "2", features = ["napi9", "serde-json"] }
 napi-derive = "2"
 

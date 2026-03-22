@@ -1,7 +1,7 @@
 // Temporal.Now namespace and setLength/toStringTag setup extracted from temporal.ts
 
 import { binding } from './binding';
-import { call, wrapInstant, wrapZonedDateTime, wrapPlainDateTime, wrapPlainDate, wrapPlainTime } from './helpers';
+import { wrapInstant, wrapZonedDateTime, wrapPlainDateTime, wrapPlainDate, wrapPlainTime } from './helpers';
 import { toNapiTimeZone } from './convert';
 import { Duration } from './duration';
 import { PlainDate } from './plaindate';

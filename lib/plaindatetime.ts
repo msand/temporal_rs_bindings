@@ -1,11 +1,4 @@
-import {
-  NapiPlainDate,
-  NapiPlainTime,
-  NapiPlainDateTime,
-  NapiZonedDateTime,
-  NapiDuration,
-  type NapiPlainDateTimeT,
-} from './binding';
+import { NapiPlainDate, NapiPlainDateTime, NapiZonedDateTime, NapiDuration, type NapiPlainDateTimeT } from './binding';
 
 import {
   call,
@@ -39,8 +32,6 @@ import {
   toStringOption,
 } from './helpers';
 
-import { mapDisplayCalendar } from './enums';
-
 import {
   toNapiCalendar,
   toNapiDuration,
@@ -66,7 +57,6 @@ import {
   _getMaxMonthForCalendarYear,
   monthCodeToMonth,
   calendarDateDifference,
-  THIRTEEN_MONTH_CALENDARS,
 } from './calendar';
 
 import { _extractISOFromNapiDT, _resolveLocalToEpochMs, bigintNsToZdtString } from './timezone';

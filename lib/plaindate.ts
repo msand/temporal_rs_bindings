@@ -34,7 +34,6 @@ import {
   extractOverflow,
   rejectInfinity,
   _isoDaysInMonth,
-  isoDateToEpochDays,
   wrapPlainMonthDay,
   wrapPlainDateTime,
   wrapPlainYearMonth,
@@ -65,7 +64,6 @@ import {
   _getMaxMonthForCalendarYear,
   _getMonthCodeForOrdinal,
   THIRTEEN_MONTH_CALENDARS,
-  USE_JS_DIFF_CALENDARS,
   ISO_MONTH_ALIGNED_CALENDARS,
   monthCodeToMonth,
 } from './calendar';

@@ -41,7 +41,6 @@ import {
   isValidOffsetString,
   parseOffsetStringToNs,
   validateOptions,
-  extractOverflow,
   _trunc,
   coerceRoundingIncrement,
   resolveFractionalSecondDigits,
@@ -49,20 +48,16 @@ import {
   isoDateToEpochDays,
   wrapError,
 } from './helpers';
-import { mapUnit, mapRoundingMode, mapOverflow, mapDisplayCalendar } from './enums';
+import { mapUnit, mapRoundingMode, mapDisplayCalendar } from './enums';
 import {
   VALID_CALENDAR_IDS,
   REJECTED_CALENDAR_IDS,
   canonicalizeCalendarId,
-  rejectISOStringAsCalendar,
   VALID_ERAS,
   getCalendarId,
   calendarDateToISO,
   resolveMonth,
   resolveEraYear,
-  monthCodeToMonth,
-  isMonthCodeValidForYear,
-  calendarDaysInMonth,
   _setToNapiCalendar,
 } from './calendar';
 import {

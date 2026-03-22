@@ -34,12 +34,10 @@ import {
   calendarDaysInMonth,
   _getMaxMonthForCalendarYear,
   _getMonthCodeForOrdinal,
-  THIRTEEN_MONTH_CALENDARS,
   isHebrewLeapYear,
   getChineseDangiLeapMonth,
   ISO_MONTH_ALIGNED_CALENDARS,
   _defaultCalendarRefYear,
-  isMonthCodeValidForYear,
   monthCodeToMonth,
 } from './calendar';
 

@@ -37,7 +37,6 @@ import {
   resolveEraYear,
   calendarDateToISO,
   isMonthCodeValidForYear,
-  calendarDaysInMonth,
   _getMaxMonthForCalendarYear,
   _getMonthCodeForOrdinal,
   calendarDateDifference,

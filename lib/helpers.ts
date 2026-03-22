@@ -3,8 +3,6 @@
 // except through the late-bound `_classes` record.
 
 import {
-  NapiCalendar,
-  NapiTimeZone,
   NapiPlainDate,
   NapiPlainTime,
   NapiPlainDateTime,

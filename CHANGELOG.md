@@ -1,5 +1,24 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- Split monolithic `lib/temporal.ts` (10k lines) into 17 focused modules
+- Created shared `temporal-common` Rust crate to deduplicate code between NAPI and WASM
+- NAPI `epochNanoseconds` constructor/getter now uses BigInt (was Number with precision loss)
+- Timezone provider cached via `OnceLock` instead of created per-operation
+- Cache eviction uses LRU-style partial eviction instead of full clear
+
+### Fixed
+- `f64_to_i64` now rejects values outside i64 range instead of silently saturating
+- NAPI BigInt constructors now check `lossless` flag and reject overflows
+- WASM Duration methods (`negated`, `abs`, `add`, `subtract`, `round`, `total`, `compare`) now have `#[wasm_bindgen]` attributes (were invisible to JS)
+- WASM `from_epoch_milliseconds` now validates for NaN/Infinity
+- Lint and format scripts now cover all 17 module files (were only targeting entry point)
+- Removed ~100 lines of dead duplicate code from helpers.ts
+- Removed unused imports across class files
+- Pinned `temporal_rs` git dependency to exact commit rev
+
 ## [0.1.6] - 2026-03-21
 
 ### Fixed

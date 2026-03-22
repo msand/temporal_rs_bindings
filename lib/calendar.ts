@@ -2,26 +2,8 @@
 // Contains calendar ID validation, month code parsing, era resolution,
 // calendar-to-ISO conversion, and calendar date difference calculations.
 
-import {
-  NapiCalendar,
-  NapiPlainDate,
-  NapiDuration,
-  NapiPlainDateTime,
-  NapiPlainYearMonth,
-  NapiPlainMonthDay,
-  NapiZonedDateTime,
-  type NapiPlainDateT,
-  type NapiPlainYearMonthT,
-} from './binding';
-import {
-  call,
-  _trunc,
-  toInteger,
-  rejectInfinity,
-  toPrimitiveAndRequireString,
-  isoDateToEpochDays,
-  epochDaysToISO,
-} from './helpers';
+import { NapiPlainDate, NapiDuration, type NapiPlainDateT, type NapiPlainYearMonthT } from './binding';
+import { _trunc, toInteger, rejectInfinity, isoDateToEpochDays, epochDaysToISO } from './helpers';
 import type { CalendarISOResult, CalendarDateDiffResult } from './binding';
 
 // Lazy import to break circular dependency with convert.ts

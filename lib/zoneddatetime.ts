@@ -1,12 +1,4 @@
-import {
-  NapiPlainDate,
-  NapiPlainTime,
-  NapiPlainDateTime,
-  NapiZonedDateTime,
-  NapiInstant,
-  NapiDuration,
-  type NapiZonedDateTimeT,
-} from './binding';
+import { NapiPlainDate, NapiPlainDateTime, NapiZonedDateTime, NapiDuration, type NapiZonedDateTimeT } from './binding';
 
 import {
   call,
@@ -16,7 +8,6 @@ import {
   _isTemporalPlainDateTime,
   _isTemporalPlainTime,
   toIntegerWithTruncation,
-  toInteger,
   toIntegerIfIntegral,
   requireBranding,
   validateOptions,
@@ -36,15 +27,12 @@ import {
   getRealCalendarId,
   resolveEraForCalendar,
   extractOverflow,
-  rejectInfinity,
   computeEpochNanoseconds,
-  bigintNsToISOString,
   isValidOffsetString,
   parseOffsetStringToNs,
   _getOffsetNsAtEpoch,
   _roundToIncrement,
   formatFractionalSeconds,
-  isoDateToEpochDays,
   rejectTooManyFractionalSeconds,
   wrapError,
   toStringOption,
@@ -57,7 +45,6 @@ import {
 import {
   mapUnit,
   mapRoundingMode,
-  mapDisplayCalendar,
   mapOverflow,
   ROUNDING_MODE_MAP,
   OVERFLOW_MAP,
@@ -75,7 +62,6 @@ import {
   toNapiPlainTime,
   toNapiZonedDateTime,
   convertDifferenceSettings,
-  convertRoundingOptions,
 } from './convert';
 
 import {
@@ -83,7 +69,6 @@ import {
   rejectISOStringAsCalendar,
   getCalendarId,
   VALID_ERAS,
-  resolveMonth,
   resolveEraYear,
   calendarDateToISO,
   calendarDateDifference,
@@ -95,8 +80,6 @@ import {
 } from './calendar';
 
 import {
-  getLocalPartsFromEpoch,
-  getUtcOffsetString,
   _resolveLocalToEpochMs,
   _getOffsetMs,
   _findTimeZoneTransition,

@@ -13,7 +13,6 @@ import {
   _classes,
   formatFractionalSeconds,
   _roundToIncrement,
-  wrapError,
   _isFinite,
   _trunc,
   wrapZonedDateTime,

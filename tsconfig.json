@@ -19,6 +19,6 @@
     "forceConsistentCasingInFileNames": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["lib/temporal.ts"],
+  "include": ["lib/**/*.ts"],
   "exclude": ["node_modules", "test262", "target"]
 }

@@ -569,7 +569,6 @@ dependencies = [
  "napi-derive",
  "temporal-common",
  "temporal_rs",
- "timezone_provider",
 ]
 
 [[package]]
@@ -581,7 +580,6 @@ dependencies = [
  "serde-wasm-bindgen",
  "temporal-common",
  "temporal_rs",
- "timezone_provider",
  "wasm-bindgen",
 ]
 

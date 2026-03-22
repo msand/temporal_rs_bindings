@@ -4,15 +4,8 @@ import {
   type NapiZonedDateTimeT,
   type LocalParts,
   type ZdtStringParts,
-  type ISOFields,
 } from './binding';
-import {
-  call,
-  bigintNsToISOString,
-  computeEpochNanoseconds,
-  isoDateToEpochDays,
-  parseOffsetStringToNs,
-} from './helpers';
+import { call, computeEpochNanoseconds, isoDateToEpochDays } from './helpers';
 
 // Late-bound class reference to break circular dependency
 export const _tzClasses: Record<string, any> = {};
@@ -368,7 +361,7 @@ export function _getOffsetMs(epochMs: number, tzId: string): number {
 }
 
 // Helper: find the next or previous timezone transition via binary search
-export function _findTimeZoneTransition(zdt: any, dir: string): any | null {
+export function _findTimeZoneTransition(zdt: any, dir: string): any {
   const tzId = zdt.timeZoneId;
   if (tzId === 'UTC') return null; // UTC has no transitions
   // Fixed-offset timezones have no transitions
