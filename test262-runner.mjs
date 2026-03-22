@@ -400,7 +400,10 @@ function runTest(testFile, Temporal) {
 
   // Test threw an error
   if (isNegative) {
-    // Accept any throw for negative tests
+    const thrownName = err?.constructor?.name || err?.name;
+    if (expectedError && thrownName !== expectedError) {
+      return { status: 'fail', reason: `Expected ${expectedError} but got ${thrownName}: ${err?.message || err}` };
+    }
     return { status: 'pass' };
   }
 
@@ -437,9 +440,17 @@ async function main() {
   console.log('Loading temporal_rs conformance layer...');
   const { Temporal } = await import('./lib/temporal.mjs');
 
+  const writeFailures = args.includes('--write-failures');
+
   console.log('Collecting test files...');
   const tests = collectTests(TEMPORAL_TEST_DIRS, filter);
   console.log(`Found ${tests.length} tests${filter ? ` (filter: "${filter}")` : ''}\n`);
+
+  // Ensure the failures file is always written (even if empty) when --write-failures is used,
+  // so that CI scripts that depend on the file existing won't break on early exit.
+  if (writeFailures) {
+    fs.writeFileSync('test262-failures.txt', '');
+  }
 
   let pass = 0, fail = 0, skip = 0, xfail = 0, xpass = 0;
   const failures = [];
@@ -530,7 +541,7 @@ async function main() {
     for (const t of unexpectedPasses) console.log(`  ${t}`);
   }
 
-  if (args.includes('--write-failures')) {
+  if (writeFailures) {
     const failFile = 'test262-failures.txt';
     const lines = failures.map(f => f.test).sort();
     fs.writeFileSync(failFile, lines.length > 0 ? lines.join('\n') + '\n' : '');

@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 use crate::duration::Duration;
 use crate::options::*;
 
-#[wasm_bindgen]
+#[wasm_bindgen(inspectable)]
 pub struct PlainTime {
     pub(crate) inner: temporal_rs::PlainTime,
 }

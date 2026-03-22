@@ -23,7 +23,7 @@ pub fn now_instant() -> napi::Result<Instant> {
 pub fn now_time_zone() -> napi::Result<TimeZone> {
     let provider = provider()?;
     let inner = local_now()
-        .time_zone_with_provider(&provider)
+        .time_zone_with_provider(provider)
         .map_err(to_napi_error)?;
     Ok(TimeZone { inner })
 }
@@ -33,7 +33,7 @@ pub fn now_zoned_date_time_iso(time_zone: Option<&TimeZone>) -> napi::Result<Zon
     let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = local_now()
-        .zoned_date_time_iso_with_provider(tz, &provider)
+        .zoned_date_time_iso_with_provider(tz, provider)
         .map_err(to_napi_error)?;
     Ok(ZonedDateTime { inner })
 }
@@ -43,7 +43,7 @@ pub fn now_plain_date_time_iso(time_zone: Option<&TimeZone>) -> napi::Result<Pla
     let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = local_now()
-        .plain_date_time_iso_with_provider(tz, &provider)
+        .plain_date_time_iso_with_provider(tz, provider)
         .map_err(to_napi_error)?;
     Ok(PlainDateTime { inner })
 }
@@ -53,7 +53,7 @@ pub fn now_plain_date_iso(time_zone: Option<&TimeZone>) -> napi::Result<PlainDat
     let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = local_now()
-        .plain_date_iso_with_provider(tz, &provider)
+        .plain_date_iso_with_provider(tz, provider)
         .map_err(to_napi_error)?;
     Ok(PlainDate { inner })
 }
@@ -63,7 +63,7 @@ pub fn now_plain_time_iso(time_zone: Option<&TimeZone>) -> napi::Result<PlainTim
     let provider = provider()?;
     let tz = time_zone.map(|t| t.inner);
     let inner = local_now()
-        .plain_time_iso_with_provider(tz, &provider)
+        .plain_time_iso_with_provider(tz, provider)
         .map_err(to_napi_error)?;
     Ok(PlainTime { inner })
 }

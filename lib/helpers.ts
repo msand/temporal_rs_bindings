@@ -373,7 +373,8 @@ export function _getOffsetNsAtEpoch(epochMs: number, tzId: string): bigint {
 
 // Validate monthCode syntax only (not calendar-specific validity)
 // Checks that the format is M01-M99 or M01L-M99L (L suffix for leap months)
-export function validateMonthCodeSyntax(monthCode: any): void {
+// Returns the parsed month number and isLeap flag for callers that need them.
+export function validateMonthCodeSyntax(monthCode: any): { monthNum: number; isLeap: boolean } {
   if (typeof monthCode === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   if (typeof monthCode === 'bigint') throw new TypeError('Cannot convert a BigInt value to a string');
   let str;
@@ -391,6 +392,7 @@ export function validateMonthCodeSyntax(monthCode: any): void {
   if (!m) throw new RangeError(`Invalid monthCode: ${str}`);
   const monthNum = parseInt(m[1]!, 10);
   if (monthNum < 1) throw new RangeError(`Invalid monthCode: ${str}`);
+  return { monthNum, isLeap: m[2] === 'L' };
 }
 
 // ─── Helper: extract overflow from options ────────────────────

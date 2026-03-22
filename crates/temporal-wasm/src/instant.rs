@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 use crate::duration::Duration;
 use crate::options::*;
 
-#[wasm_bindgen]
+#[wasm_bindgen(inspectable)]
 pub struct Instant {
     pub(crate) inner: temporal_rs::Instant,
 }
@@ -18,8 +18,8 @@ impl Instant {
     /// via `Instant.from()` with an ISO string instead.
     #[wasm_bindgen(constructor)]
     pub fn new(epoch_nanoseconds: f64) -> Result<Instant, JsValue> {
-        let inner =
-            temporal_rs::Instant::try_new(epoch_nanoseconds as i128).map_err(to_js_error)?;
+        let ns = temporal_common::f64_to_i128(epoch_nanoseconds).map_err(|e| JsValue::from_str(&e))?;
+        let inner = temporal_rs::Instant::try_new(ns).map_err(to_js_error)?;
         Ok(Self { inner })
     }
 
@@ -31,10 +31,8 @@ impl Instant {
 
     #[wasm_bindgen(js_name = "fromEpochMilliseconds")]
     pub fn from_epoch_milliseconds(ms: f64) -> Result<Instant, JsValue> {
-        if ms.is_nan() || ms.is_infinite() {
-            return Err(JsValue::from_str("RangeError: epochMilliseconds must be finite"));
-        }
-        let inner = temporal_rs::Instant::from_epoch_milliseconds(ms as i64).map_err(to_js_error)?;
+        let ms_i64 = temporal_common::f64_to_i64(ms).map_err(|e| JsValue::from_str(&e))?;
+        let inner = temporal_rs::Instant::from_epoch_milliseconds(ms_i64).map_err(to_js_error)?;
         Ok(Self { inner })
     }
 
@@ -106,12 +104,13 @@ impl Instant {
     }
 
     #[wasm_bindgen(js_name = "toString")]
-    pub fn to_string(&self) -> Result<String, JsValue> {
+    pub fn to_string(&self, options: JsValue) -> Result<String, JsValue> {
         let p = provider()?;
+        let opts = deserialize_to_string_rounding_options(options)?;
         self.inner
             .to_ixdtf_string_with_provider(
                 None,
-                temporal_rs::options::ToStringRoundingOptions::default(),
+                opts,
                 p,
             )
             .map_err(to_js_error)

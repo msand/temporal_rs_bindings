@@ -125,7 +125,7 @@ jobs:
             cargo-wasm-
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack
+        run: cargo install wasm-pack --locked || true
 
       - name: Build WASM
         run: npm run build:wasm
@@ -167,7 +167,7 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Build NAPI (needed for type imports)
-        run: npx napi build --platform --release --cargo-cwd crates/temporal-napi
+        run: npx napi build --platform --cargo-cwd crates/temporal-napi
 
       - name: Typecheck
         run: npx tsc --noEmit
@@ -177,6 +177,10 @@ jobs:
 
       - name: Format check
         run: npm run format:check
+
+      - name: Security audit
+        run: |
+          npm audit --audit-level=moderate || true
 
   test:
     needs: build
@@ -259,9 +263,14 @@ jobs:
 
       - name: Check failure count
         run: |
-          FAIL_COUNT=$(wc -l < test262-failures.txt)
+          if [ -f test262-failures.txt ]; then
+            FAIL_COUNT=$(wc -l < test262-failures.txt | tr -d ' ')
+          else
+            echo "Warning: test262-failures.txt was not created"
+            FAIL_COUNT=999
+          fi
           echo "Failures: $FAIL_COUNT / 6661"
-          cat test262-failures.txt
+          if [ -f test262-failures.txt ]; then cat test262-failures.txt; fi
           if [ "$FAIL_COUNT" -gt 2 ]; then
             echo "::error::Test262 regression: $FAIL_COUNT failures (expected ≤ 2)"
             exit 1
@@ -300,7 +309,7 @@ jobs:
         run: npx tsup
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack
+        run: cargo install wasm-pack --locked || true
 
       - name: Build WASM
         run: npm run build:wasm

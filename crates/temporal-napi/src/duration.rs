@@ -109,19 +109,21 @@ impl Duration {
         self.inner.milliseconds() as f64
     }
 
+    /// Note: returns f64 per TC39 Temporal spec. Precision loss possible for values > 2^53.
     #[napi(getter)]
     pub fn microseconds(&self) -> f64 {
         self.inner.microseconds() as f64
     }
 
+    /// Note: returns f64 per TC39 Temporal spec. Precision loss possible for values > 2^53.
     #[napi(getter)]
     pub fn nanoseconds(&self) -> f64 {
         self.inner.nanoseconds() as f64
     }
 
     #[napi(getter)]
-    pub fn sign(&self) -> i8 {
-        self.inner.sign() as i8
+    pub fn sign(&self) -> i32 {
+        self.inner.sign() as i32
     }
 
     #[napi(getter)]

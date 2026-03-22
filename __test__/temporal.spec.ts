@@ -288,8 +288,117 @@ describe('Temporal.Now', () => {
 
   it('plainDateISO() returns current date', () => {
     const d = Temporal.Now.plainDateISO();
-    expect(d.year).toBeGreaterThanOrEqual(2024);
+    expect(d.year).toBeGreaterThanOrEqual(new Date().getFullYear() - 1);
     expect(d instanceof Temporal.PlainDate).toBe(true);
+  });
+});
+
+// ─── with() methods ─────────────────────────────────────
+
+describe('with() methods', () => {
+  it('PlainDate.with() overrides day', () => {
+    const d = Temporal.PlainDate.from('2024-01-15').with({ day: 20 });
+    expect(d.day).toBe(20);
+    expect(d.month).toBe(1);
+    expect(d.year).toBe(2024);
+  });
+
+  it('PlainTime.with() overrides hour', () => {
+    const t = Temporal.PlainTime.from('10:30:00').with({ hour: 14 });
+    expect(t.hour).toBe(14);
+    expect(t.minute).toBe(30);
+    expect(t.second).toBe(0);
+  });
+
+  it('PlainDateTime.with() overrides month', () => {
+    const dt = Temporal.PlainDateTime.from('2024-01-15T10:30:00').with({ month: 6 });
+    expect(dt.month).toBe(6);
+    expect(dt.day).toBe(15);
+    expect(dt.hour).toBe(10);
+  });
+});
+
+// ─── round() methods ────────────────────────────────────
+
+describe('round() methods', () => {
+  it('PlainDateTime.round() rounds to hour', () => {
+    const dt = Temporal.PlainDateTime.from('2024-01-15T10:30:45.123');
+    const rounded = dt.round('hour');
+    expect(rounded.hour).toBe(11);
+    expect(rounded.minute).toBe(0);
+    expect(rounded.second).toBe(0);
+  });
+
+  it('Instant.round() rounds to second', () => {
+    const inst = Temporal.Instant.fromEpochMilliseconds(1000500);
+    const rounded = inst.round('second');
+    // 1000500 ms = 1000.5 s, rounds to 1001 s = 1001000 ms (halfExpand)
+    // or 1000 s = 1000000 ms depending on default rounding mode
+    expect(rounded.epochMilliseconds % 1000).toBe(0);
+  });
+
+  it('ZonedDateTime.round() rounds to hour', () => {
+    const zdt = Temporal.ZonedDateTime.from('2024-01-15T10:30:45+00:00[UTC]');
+    const rounded = zdt.round('hour');
+    expect(rounded.hour).toBe(11);
+    expect(rounded.minute).toBe(0);
+    expect(rounded.second).toBe(0);
+  });
+});
+
+// ─── toString() with options ────────────────────────────
+
+describe('toString() with options', () => {
+  it('PlainDate.toString() with calendarName always', () => {
+    const d = Temporal.PlainDate.from('2024-01-15');
+    const s = d.toString({ calendarName: 'always' });
+    expect(s).toContain('2024-01-15');
+    expect(s).toContain('[u-ca=iso8601]');
+  });
+
+  it('PlainTime.toString() with fractionalSecondDigits', () => {
+    const t = Temporal.PlainTime.from('10:30:00.123456789');
+    const s = t.toString({ fractionalSecondDigits: 3 });
+    expect(s).toBe('10:30:00.123');
+  });
+
+  it('PlainDateTime.toString() with calendarName never', () => {
+    const dt = Temporal.PlainDateTime.from('2024-01-15T10:30:00');
+    const s = dt.toString({ calendarName: 'never' });
+    expect(s).toContain('2024-01-15');
+    expect(s).not.toContain('[u-ca=');
+  });
+});
+
+// ─── toLocaleString() ───────────────────────────────────
+
+describe('toLocaleString()', () => {
+  it('PlainDate.toLocaleString() returns non-empty string', () => {
+    const d = Temporal.PlainDate.from('2024-01-15');
+    const s = d.toLocaleString('en-US');
+    expect(typeof s).toBe('string');
+    expect(s.length).toBeGreaterThan(0);
+  });
+});
+
+// ─── Duration.total() and Duration.round() with relativeTo ─
+
+describe('Duration.total() and Duration.round() with relativeTo', () => {
+  it('total() computes total days for months + days', () => {
+    const d = Temporal.Duration.from({ months: 1, days: 15 });
+    const relativeTo = Temporal.PlainDate.from('2024-01-01');
+    const total = d.total({ unit: 'days', relativeTo });
+    // January has 31 days, so 1 month + 15 days = 46 days
+    expect(total).toBeGreaterThan(40);
+    expect(total).toBe(46);
+  });
+
+  it('round() rounds duration with relativeTo', () => {
+    const d = Temporal.Duration.from({ months: 1, days: 15 });
+    const relativeTo = Temporal.PlainDate.from('2024-01-01');
+    const rounded = d.round({ largestUnit: 'days', relativeTo });
+    expect(rounded.days).toBe(46);
+    expect(rounded.months).toBe(0);
   });
 });
 

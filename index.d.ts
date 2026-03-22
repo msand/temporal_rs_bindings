@@ -271,7 +271,7 @@ export declare class ZonedDateTime {
   toPlainDateTime(): PlainDateTime
   withCalendar(calendar: Calendar): ZonedDateTime
   withTimeZone(timezone: TimeZone): ZonedDateTime
-  toString(): string
+  toString(options?: ToStringRoundingOptions | undefined | null): string
   toJson(): string
   valueOf(): void
 }
@@ -291,7 +291,7 @@ export declare class Instant {
   round(options: RoundingOptions): Instant
   equals(other: Instant): boolean
   static compare(one: Instant, two: Instant): number
-  toString(): string
+  toString(options?: ToStringRoundingOptions | undefined | null): string
   toJson(): string
   valueOf(): void
 }
@@ -313,7 +313,9 @@ export declare class Duration {
   get minutes(): number
   get seconds(): number
   get milliseconds(): number
+  /** Note: returns f64 per TC39 Temporal spec. Precision loss possible for values > 2^53. */
   get microseconds(): number
+  /** Note: returns f64 per TC39 Temporal spec. Precision loss possible for values > 2^53. */
   get nanoseconds(): number
   get sign(): number
   get isZero(): boolean

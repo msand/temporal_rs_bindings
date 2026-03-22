@@ -3,7 +3,14 @@
 // calendar-to-ISO conversion, and calendar date difference calculations.
 
 import { NapiPlainDate, NapiDuration, type NapiPlainDateT, type NapiPlainYearMonthT } from './binding';
-import { _trunc, toInteger, rejectInfinity, isoDateToEpochDays, epochDaysToISO } from './helpers';
+import {
+  _trunc,
+  toInteger,
+  rejectInfinity,
+  isoDateToEpochDays,
+  epochDaysToISO,
+  validateMonthCodeSyntax,
+} from './helpers';
 import type { CalendarISOResult, CalendarDateDiffResult } from './binding';
 
 // Lazy import to break circular dependency with convert.ts
@@ -184,32 +191,9 @@ export function getChineseDangiLeapMonth(calYear: number, calId: string): number
 
 export function monthCodeToMonth(monthCode: any, calendarId?: string, targetYear?: number): any {
   if (monthCode === undefined) return undefined;
-  // Per spec, monthCode uses ToPrimitiveAndRequireString:
-  // 1. If symbol or bigint, throw TypeError
-  // 2. If string, use directly
-  // 3. If object, call ToPrimitive(hint:string) then RequireString on result
-  // 4. If other primitive (number, boolean, null), throw TypeError
-  if (typeof monthCode === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
-  if (typeof monthCode === 'bigint') throw new TypeError('Cannot convert a BigInt value to a string');
-  let str;
-  if (typeof monthCode === 'string') {
-    str = monthCode;
-  } else if (typeof monthCode === 'object' || typeof monthCode === 'function') {
-    // ToPrimitive with string hint → calls toString()
-    const prim = monthCode.toString !== undefined ? monthCode.toString() : String(monthCode);
-    if (typeof prim !== 'string') throw new TypeError('monthCode must be a string');
-    str = prim;
-  } else {
-    // number, boolean, null etc → TypeError
-    throw new TypeError(`monthCode must be a string`);
-  }
-  if (!str) throw new RangeError('Invalid monthCode: empty string');
-  const m = str.match(/^M(\d{2})(L?)$/);
-  if (!m) throw new RangeError(`Invalid monthCode: ${str}`);
-  const monthNum = parseInt(m[1]!, 10);
-  const isLeap = m[2] === 'L';
-  // Validate month number: must be >= 1
-  if (monthNum < 1) throw new RangeError(`Invalid monthCode: ${str}`);
+  // Use validateMonthCodeSyntax to parse and validate the monthCode format
+  const { monthNum, isLeap } = validateMonthCodeSyntax(monthCode);
+  const str = typeof monthCode === 'string' ? monthCode : String(monthCode);
   // For non-13-month calendars, month must be <= 12 and no leap suffix
   if (calendarId && !THIRTEEN_MONTH_CALENDARS.has(calendarId)) {
     if (monthNum > 12) throw new RangeError(`Invalid monthCode for ${calendarId} calendar: ${str}`);
@@ -515,7 +499,10 @@ export function getCalendarId(calArg: any): string {
     ) {
       return 'iso8601';
     }
-    // Might be a bare calendar ID not in our set (pass through)
+    // Validate that the string looks like a valid calendar identifier (lowercase ASCII, hyphens, digits)
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(calArg)) {
+      throw new RangeError(`${calArg} is not a valid calendar identifier`);
+    }
     return calArg;
   }
   if (calArg && typeof calArg === 'object' && calArg.id) return calArg.id;
@@ -710,7 +697,7 @@ export function calendarDateToISO(
     // Fallback
   }
 
-  // Final fallback: return the year-only conversion (better than nothing)
+  // Final fallback: return the year-only conversion (used by exotic calendars like ethiopic/coptic)
   return { isoYear: isoYear, isoMonth: calMonth as number, isoDay: calDay as number };
 }
 

@@ -659,7 +659,10 @@ class PlainYearMonth {
         opts.month = 'numeric';
       }
       const dtf = new Intl.DateTimeFormat(locales, opts);
-      return _origFormatGetter!.call(dtf)(ms);
+      if (_origFormatGetter) {
+        return _origFormatGetter.call(dtf)(ms);
+      }
+      return dtf.format(ms);
     }
     return this.toString();
   }

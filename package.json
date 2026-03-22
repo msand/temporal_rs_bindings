@@ -14,8 +14,8 @@
     },
     "./native": {
       "types": "./index.d.ts",
-      "import": "./index.js",
-      "require": "./index.js"
+      "require": "./index.js",
+      "default": "./index.js"
     },
     "./wasm": {
       "types": "./wasm-pkg/temporal_wasm.d.ts",
@@ -43,14 +43,14 @@
     "build:wasm": "wasm-pack build crates/temporal-wasm --target bundler --out-dir ../../wasm-pkg && rm -f wasm-pkg/.gitignore",
     "format": "prettier --write 'lib/**/*.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json' '__test__/*.ts'",
     "format:check": "prettier --check 'lib/**/*.ts' 'tsup.config.ts' 'eslint.config.mjs' '*.json' '!package-lock.json' '__test__/*.ts'",
-    "lint": "eslint 'lib/**/*.ts' tsup.config.ts eslint.config.mjs",
-    "lint:fix": "eslint 'lib/**/*.ts' tsup.config.ts eslint.config.mjs --fix",
+    "lint": "eslint 'lib/**/*.ts' '__test__/**/*.ts' tsup.config.ts eslint.config.mjs",
+    "lint:fix": "eslint 'lib/**/*.ts' '__test__/**/*.ts' tsup.config.ts eslint.config.mjs --fix",
     "prepublishOnly": "tsup",
     "test": "vitest run",
     "test262": "node test262-runner.mjs",
     "test262:failing": "node test262-runner.mjs --failing",
     "test262:verbose": "node test262-runner.mjs -v",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "version": "./scripts/bump-version.sh"
   },
   "files": [

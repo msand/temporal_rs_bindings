@@ -423,7 +423,14 @@ export function toNapiPlainTime(arg: any): NapiPlainTimeT {
     }
     return call(
       () =>
-        new NapiPlainTime(hourVal || 0, minuteVal || 0, secondVal || 0, millisecondVal, microsecondVal, nanosecondVal),
+        new NapiPlainTime(
+          hourVal || 0,
+          minuteVal || 0,
+          secondVal || 0,
+          millisecondVal || 0,
+          microsecondVal || 0,
+          nanosecondVal || 0,
+        ),
     );
   }
   throw new TypeError('Invalid PlainTime argument');

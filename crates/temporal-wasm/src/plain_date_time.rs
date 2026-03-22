@@ -6,7 +6,7 @@ use crate::options::*;
 use crate::plain_date::PlainDate;
 use crate::plain_time::PlainTime;
 
-#[wasm_bindgen]
+#[wasm_bindgen(inspectable)]
 pub struct PlainDateTime {
     pub(crate) inner: temporal_rs::PlainDateTime,
 }

@@ -22,7 +22,7 @@ fn f64_to_i128(v: f64) -> Result<i128, JsValue> {
     temporal_common::f64_to_i128(v).map_err(|e| JsValue::from_str(&e))
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(inspectable)]
 pub struct Duration {
     pub(crate) inner: temporal_rs::Duration,
 }
@@ -105,19 +105,29 @@ impl Duration {
         self.inner.milliseconds() as f64
     }
 
+    /// Microseconds component as f64.
+    ///
+    /// **Precision note:** The inner value is i128. Values beyond ±2^53 will
+    /// lose precision when returned as f64. For full precision, use `toString()`
+    /// or construct via an ISO 8601 duration string.
     #[wasm_bindgen(getter)]
     pub fn microseconds(&self) -> f64 {
         self.inner.microseconds() as f64
     }
 
+    /// Nanoseconds component as f64.
+    ///
+    /// **Precision note:** The inner value is i128. Values beyond ±2^53 will
+    /// lose precision when returned as f64. For full precision, use `toString()`
+    /// or construct via an ISO 8601 duration string.
     #[wasm_bindgen(getter)]
     pub fn nanoseconds(&self) -> f64 {
         self.inner.nanoseconds() as f64
     }
 
     #[wasm_bindgen(getter)]
-    pub fn sign(&self) -> i8 {
-        self.inner.sign() as i8
+    pub fn sign(&self) -> i32 {
+        self.inner.sign() as i32
     }
 
     #[wasm_bindgen(getter, js_name = "isZero")]

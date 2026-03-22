@@ -415,6 +415,7 @@ class PlainDate {
   }
 
   add(durationArg: any, options?: any): any {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -422,6 +423,7 @@ class PlainDate {
   }
 
   subtract(durationArg: any, options?: any): any {
+    requireBranding(this, NapiPlainDate, 'Temporal.PlainDate');
     const dur = toNapiDuration(durationArg);
     const overflow = extractOverflow(options);
     const calId = getRealCalendarId(this);
@@ -616,7 +618,10 @@ class PlainDate {
       delete opts.fractionalSecondDigits;
       delete opts.dayPeriod;
       const dtf = new Intl.DateTimeFormat(locales, opts);
-      return _origFormatGetter!.call(dtf)(d.getTime());
+      if (_origFormatGetter) {
+        return _origFormatGetter.call(dtf)(d.getTime());
+      }
+      return dtf.format(d.getTime());
     }
     return this.toString();
   }

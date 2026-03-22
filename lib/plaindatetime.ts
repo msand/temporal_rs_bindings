@@ -134,7 +134,7 @@ class PlainDateTime {
       if (calMatch) r._calId = canonicalizeCalendarId(calMatch[1]);
       return r;
     }
-    validateOptions(options);
+    if (options !== undefined) validateOptions(options);
     if (_isTemporalPlainDateTime(arg)) {
       if (options !== undefined) extractOverflow(options);
       const r = new PlainDateTime(arg._inner);
@@ -767,7 +767,10 @@ class PlainDateTime {
       opts.second = 'numeric';
     }
     const dtf = new Intl.DateTimeFormat(locales, opts);
-    return _origFormatGetter!.call(dtf)(d.getTime());
+    if (_origFormatGetter) {
+      return _origFormatGetter.call(dtf)(d.getTime());
+    }
+    return dtf.format(d.getTime());
   }
 
   valueOf() {

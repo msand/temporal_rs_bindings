@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 use crate::calendar::Calendar;
 use crate::options::*;
 
-#[wasm_bindgen]
+#[wasm_bindgen(inspectable)]
 pub struct PlainMonthDay {
     pub(crate) inner: temporal_rs::PlainMonthDay,
 }

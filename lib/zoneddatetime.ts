@@ -148,7 +148,9 @@ class ZonedDateTime {
           if (_napiZdtCache.size >= _CACHE_MAX) _evictOldest(_napiZdtCache, _CACHE_EVICT);
           _napiZdtCache.set(cacheKey, this._inner);
         }
-      } catch {
+      } catch (outerErr) {
+        // Only fall back for RangeErrors (out-of-range dates); rethrow unexpected errors
+        if (!(outerErr instanceof RangeError)) throw outerErr;
         // For extreme epoch values where the local time is out of representable range,
         // try an alternative approach: use UTC string with the timezone annotation.
         // The NAPI should be able to handle the UTC instant even if the local
@@ -157,7 +159,9 @@ class ZonedDateTime {
           const utcStr = bigintNsToZdtString(epochNanoseconds, 'UTC', calId);
           const fallbackStr = utcStr.replace('[UTC]', '[' + tzId + ']');
           this._inner = call(() => NapiZonedDateTime.from(fallbackStr));
-        } catch {
+        } catch (midErr) {
+          // Only fall back for RangeErrors; rethrow unexpected errors
+          if (!(midErr instanceof RangeError)) throw midErr;
           // Last resort: construct at the nearest representable boundary
           // For named timezones at extreme epochs, the local wall-clock time may exceed
           // the ISO date range even though the instant is valid. Compute the actual offset
@@ -878,6 +882,7 @@ class ZonedDateTime {
   }
 
   with(fields: any, options?: any): any {
+    requireBranding(this, NapiZonedDateTime, 'Temporal.ZonedDateTime');
     validateWithFields(fields, null, 'ZonedDateTime');
     const calId = this.calendarId;
     const calValidEras = VALID_ERAS[calId];

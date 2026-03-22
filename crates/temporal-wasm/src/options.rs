@@ -7,7 +7,7 @@ use temporal_rs::options::RoundingIncrement;
 use wasm_bindgen::prelude::*;
 
 pub(crate) fn to_js_error(e: temporal_rs::TemporalError) -> JsValue {
-    JsValue::from_str(&format!("{e}"))
+    js_sys::Error::new(&format!("{e}")).into()
 }
 
 // ==== Enum Wrappers ====

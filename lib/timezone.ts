@@ -412,7 +412,7 @@ export function _findTimeZoneTransition(zdt: any, dir: string): any {
 
     let lo = -1,
       hi = -1;
-    // Tier 1: 7-day steps for first 2 years
+    // Tier 1: 6-day steps for first 2 years
     let probeMs = clampedStart + 6 * 86400000;
     while (probeMs <= tier1End) {
       const probeOffset = _getOffsetMs(probeMs, tzId);
@@ -504,14 +504,14 @@ export function _findTimeZoneTransition(zdt: any, dir: string): any {
       searchFromOffset = _getOffsetMs(searchFromMs, tzId);
     }
 
-    // Sweep backward: tiered 7-day then 90-day steps
+    // Sweep backward: tiered 6-day then 90-day steps
     const minMs = Math.max(searchFromMs - 200 * 365.25 * 86400000, MIN_EPOCH_MS);
     const tier1End = Math.max(searchFromMs - 2 * 365.25 * 86400000, minMs);
     let prevMs = searchFromMs;
     let prevOffset = searchFromOffset;
     let lo = -1,
       hi = -1;
-    // Tier 1: 7-day steps for first 2 years back
+    // Tier 1: 6-day steps for first 2 years back
     let probeMs = searchFromMs - 6 * 86400000;
     while (probeMs >= tier1End) {
       const probeOffset = _getOffsetMs(probeMs, tzId);

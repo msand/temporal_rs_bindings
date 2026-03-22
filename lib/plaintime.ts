@@ -240,11 +240,13 @@ class PlainTime {
   }
 
   add(durationArg: any): any {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     const dur = toNapiDuration(durationArg);
     return wrapPlainTime(call(() => this._inner.add(dur)));
   }
 
   subtract(durationArg: any): any {
+    requireBranding(this, NapiPlainTime, 'Temporal.PlainTime');
     const dur = toNapiDuration(durationArg);
     return wrapPlainTime(call(() => this._inner.subtract(dur)));
   }
@@ -331,7 +333,10 @@ class PlainTime {
     delete opts.era;
     delete opts.timeZoneName;
     const dtf = new Intl.DateTimeFormat(locales, opts);
-    return _origFormatGetter!.call(dtf)(d.getTime());
+    if (_origFormatGetter) {
+      return _origFormatGetter.call(dtf)(d.getTime());
+    }
+    return dtf.format(d.getTime());
   }
 
   valueOf() {

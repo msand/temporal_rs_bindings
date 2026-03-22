@@ -108,11 +108,11 @@ impl Instant {
     }
 
     #[napi]
-    pub fn to_string(&self) -> napi::Result<String> {
+    pub fn to_string(&self, options: Option<ToStringRoundingOptions>) -> napi::Result<String> {
         self.inner
             .to_ixdtf_string_with_provider(
                 None,
-                temporal_rs::options::ToStringRoundingOptions::default(),
+                options.unwrap_or_default().into(),
                 provider()?,
             )
             .map_err(to_napi_error)

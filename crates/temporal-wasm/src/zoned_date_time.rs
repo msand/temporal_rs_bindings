@@ -9,7 +9,7 @@ use crate::plain_date_time::PlainDateTime;
 use crate::plain_time::PlainTime;
 use crate::time_zone::TimeZone;
 
-#[wasm_bindgen]
+#[wasm_bindgen(inspectable)]
 pub struct ZonedDateTime {
     pub(crate) inner: temporal_rs::ZonedDateTime,
 }
@@ -29,8 +29,9 @@ impl ZonedDateTime {
         calendar: Option<Calendar>,
     ) -> Result<ZonedDateTime, JsValue> {
         let cal = calendar.map(|c| c.inner).unwrap_or_default();
+        let ns = temporal_common::f64_to_i128(epoch_nanoseconds).map_err(|e| JsValue::from_str(&e))?;
         let inner = temporal_rs::ZonedDateTime::try_new_with_provider(
-            epoch_nanoseconds as i128,
+            ns,
             timezone.inner,
             cal,
             provider()?,
@@ -58,11 +59,9 @@ impl ZonedDateTime {
         calendar: Option<Calendar>,
     ) -> Result<ZonedDateTime, JsValue> {
         let cal = calendar.map(|c| c.inner).unwrap_or_default();
-        if ms.is_nan() || ms.is_infinite() {
-            return Err(JsValue::from_str("RangeError: epochMilliseconds must be finite"));
-        }
+        let ms_i64 = temporal_common::f64_to_i64(ms).map_err(|e| JsValue::from_str(&e))?;
         let instant =
-            temporal_rs::Instant::from_epoch_milliseconds(ms as i64).map_err(to_js_error)?;
+            temporal_rs::Instant::from_epoch_milliseconds(ms_i64).map_err(to_js_error)?;
         let inner = temporal_rs::ZonedDateTime::try_new_from_instant_with_provider(
             instant,
             timezone.inner,
@@ -364,9 +363,16 @@ impl ZonedDateTime {
     }
 
     #[wasm_bindgen(js_name = "toString")]
-    pub fn to_string(&self) -> Result<String, JsValue> {
+    pub fn to_string(&self, options: JsValue) -> Result<String, JsValue> {
+        let opts = deserialize_to_string_rounding_options(options)?;
         self.inner
-            .to_string_with_provider(provider()?)
+            .to_ixdtf_string_with_provider(
+                temporal_rs::options::DisplayOffset::Auto,
+                temporal_rs::options::DisplayTimeZone::Auto,
+                temporal_rs::options::DisplayCalendar::Auto,
+                opts,
+                provider()?,
+            )
             .map_err(to_js_error)
     }
 

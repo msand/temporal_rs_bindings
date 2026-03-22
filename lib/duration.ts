@@ -25,29 +25,51 @@ import { toNapiDuration, extractRelativeTo, _parseDurationForInstant } from './c
 //  Duration
 // ═══════════════════════════════════════════════════════════════
 
+const DURATION_FIELDS_CHECK = [
+  'years',
+  'months',
+  'weeks',
+  'days',
+  'hours',
+  'minutes',
+  'seconds',
+  'milliseconds',
+  'microseconds',
+  'nanoseconds',
+];
+
 class Duration {
   _inner!: NapiDurationT;
-  constructor(arg?: any) {
-    if (arg instanceof NapiDuration) {
-      this._inner = arg;
-    } else if (arg !== undefined && typeof arg === 'object' && arg !== null && arg instanceof Duration) {
-      this._inner = arg._inner;
-    } else if (arg === undefined || arg === null) {
+  constructor(
+    years?: any,
+    months?: any,
+    weeks?: any,
+    days?: any,
+    hours?: any,
+    minutes?: any,
+    seconds?: any,
+    milliseconds?: any,
+    microseconds?: any,
+    nanoseconds?: any,
+  ) {
+    if (years instanceof NapiDuration) {
+      this._inner = years;
+    } else if (years !== undefined && typeof years === 'object' && years !== null && years instanceof Duration) {
+      this._inner = years._inner;
+    } else if (years === undefined || (years === null && months === undefined)) {
       this._inner = call(() => new NapiDuration());
     } else {
       // Constructor signature: new Duration(years, months, weeks, days, hours, minutes, seconds, ms, us, ns)
-      // eslint-disable-next-line prefer-rest-params
-      const args = Array.from(arguments);
-      const y = toIntegerIfIntegral(args[0]);
-      const mo = toIntegerIfIntegral(args[1]);
-      const w = toIntegerIfIntegral(args[2]);
-      const d = toIntegerIfIntegral(args[3]);
-      const h = toIntegerIfIntegral(args[4]);
-      const min = toIntegerIfIntegral(args[5]);
-      const s = toIntegerIfIntegral(args[6]);
-      const ms = toIntegerIfIntegral(args[7]);
-      const us = toIntegerIfIntegral(args[8]);
-      const ns = toIntegerIfIntegral(args[9]);
+      const y = toIntegerIfIntegral(years);
+      const mo = toIntegerIfIntegral(months);
+      const w = toIntegerIfIntegral(weeks);
+      const d = toIntegerIfIntegral(days);
+      const h = toIntegerIfIntegral(hours);
+      const min = toIntegerIfIntegral(minutes);
+      const s = toIntegerIfIntegral(seconds);
+      const ms = toIntegerIfIntegral(milliseconds);
+      const us = toIntegerIfIntegral(microseconds);
+      const ns = toIntegerIfIntegral(nanoseconds);
       // Per spec: duration field values must be within safe integer range
       for (const v of [y, mo, w, d, h, min, s, ms, us, ns]) {
         if (v !== undefined && (v > Number.MAX_SAFE_INTEGER || v < -Number.MAX_SAFE_INTEGER)) {
@@ -134,11 +156,13 @@ class Duration {
   }
 
   add(other: any, _options?: any): Duration {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     const dur = toNapiDuration(other);
     return wrapDuration(call(() => this._inner.add(dur)));
   }
 
   subtract(other: any, _options?: any): Duration {
+    requireBranding(this, NapiDuration, 'Temporal.Duration');
     const dur = toNapiDuration(other);
     return wrapDuration(call(() => this._inner.subtract(dur)));
   }
@@ -416,18 +440,6 @@ class Duration {
     }
 
     // Per spec: if the rounded duration has any field exceeding MAX_SAFE_INTEGER, throw RangeError
-    const DURATION_FIELDS_CHECK = [
-      'years',
-      'months',
-      'weeks',
-      'days',
-      'hours',
-      'minutes',
-      'seconds',
-      'milliseconds',
-      'microseconds',
-      'nanoseconds',
-    ];
     for (const field of DURATION_FIELDS_CHECK) {
       const v = (dur as any)[field];
       if (v > Number.MAX_SAFE_INTEGER || v < -Number.MAX_SAFE_INTEGER) {

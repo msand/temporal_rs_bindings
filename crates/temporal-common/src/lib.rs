@@ -9,31 +9,34 @@ use timezone_provider::zoneinfo64::ZoneInfo64TzdbProvider;
 /// `timezone_provider` dependency for type signatures.
 pub type TzProvider = ZoneInfo64TzdbProvider<'static>;
 
-/// Convert an f64 (JS Number) to i64, matching the spec's ToIntegerIfIntegral.
-/// The value must be finite, integral, and within the representable i64 range.
+/// Convert an f64 (JS Number) to i64, rejecting NaN, Infinity, and fractional values.
+/// Uses the correct i64 boundary: the largest f64 that is < i64::MAX when truncated.
 pub fn f64_to_i64(v: f64) -> Result<i64, String> {
     if v.is_nan() || v.is_infinite() {
         return Err("RangeError: Duration field must be finite".into());
     }
     if v.fract() != 0.0 {
-        return Err("RangeError: Duration field must be an integer".into());
+        return Err("RangeError: Duration field value must be an integer".into());
     }
-    if v > (i64::MAX as f64) || v < (i64::MIN as f64) {
+    // i64::MAX as f64 rounds up to 2^63, which overflows i64.
+    // Use strict less-than to avoid the boundary value that saturates.
+    if v >= (i64::MAX as f64) || v < (i64::MIN as f64) {
         return Err("RangeError: Duration field value is out of range".into());
     }
     Ok(v as i64)
 }
 
-/// Convert an f64 (JS Number) to i128 for microseconds/nanoseconds.
-/// These fields can hold values larger than i64 range but must still
-/// be representable as f64 integers (within ±2^53).
+/// Convert an f64 (JS Number) to i128 for nanosecond-precision values.
+/// Rejects NaN, Infinity, and fractional values.
 pub fn f64_to_i128(v: f64) -> Result<i128, String> {
     if v.is_nan() || v.is_infinite() {
         return Err("RangeError: Duration field must be finite".into());
     }
     if v.fract() != 0.0 {
-        return Err("RangeError: Duration field must be an integer".into());
+        return Err("RangeError: Duration field value must be an integer".into());
     }
+    // f64 can only represent integers exactly up to 2^53, but the i128
+    // cast itself is safe for any finite f64 value.
     Ok(v as i128)
 }
 

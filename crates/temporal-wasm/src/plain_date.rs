@@ -4,7 +4,7 @@ use crate::calendar::Calendar;
 use crate::duration::Duration;
 use crate::options::*;
 
-#[wasm_bindgen]
+#[wasm_bindgen(inspectable)]
 pub struct PlainDate {
     pub(crate) inner: temporal_rs::PlainDate,
 }

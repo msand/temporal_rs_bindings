@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::options::to_js_error;
 
-#[wasm_bindgen]
+#[wasm_bindgen(inspectable)]
 pub struct TimeZone {
     pub(crate) inner: temporal_rs::TimeZone,
 }

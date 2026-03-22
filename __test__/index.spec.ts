@@ -16,9 +16,7 @@ import {
   nowPlainTimeIso,
   nowPlainDateTimeIso,
   nowZonedDateTimeIso,
-  Overflow,
   Unit,
-  DisplayCalendar,
   RoundingMode,
 } from '../index.js';
 
@@ -70,7 +68,7 @@ describe('TimeZone', () => {
   });
 
   it('throws on invalid identifier', () => {
-    expect(() => new TimeZone('Invalid/Zone')).toThrow();
+    expect(() => new TimeZone('Invalid/Zone')).toThrow(Error);
   });
 });
 
@@ -228,7 +226,9 @@ describe('PlainDate', () => {
 
   it('valueOf throws', () => {
     const d = new PlainDate(2024, 1, 1);
-    expect(() => d.valueOf()).toThrow();
+    expect(() => {
+      d.valueOf();
+    }).toThrow(Error);
   });
 
   it('constrains invalid dates by default', () => {
@@ -448,7 +448,6 @@ describe('ZonedDateTime', () => {
   });
 
   it('adds duration across DST', () => {
-    const tz = new TimeZone('America/New_York');
     // March 10, 2024 is DST spring-forward in Eastern
     const zdt = ZonedDateTime.from('2024-03-09T12:00:00-05:00[America/New_York]');
     const dur = new Duration(0, 0, 0, 1); // +1 day
@@ -585,7 +584,7 @@ describe('Now', () => {
 
   it('returns current plain date', () => {
     const d = nowPlainDateIso();
-    expect(d.year).toBeGreaterThanOrEqual(2024);
+    expect(d.year).toBeGreaterThanOrEqual(new Date().getFullYear() - 1);
   });
 
   it('returns current plain time', () => {
@@ -596,18 +595,18 @@ describe('Now', () => {
 
   it('returns current plain date time', () => {
     const dt = nowPlainDateTimeIso();
-    expect(dt.year).toBeGreaterThanOrEqual(2024);
+    expect(dt.year).toBeGreaterThanOrEqual(new Date().getFullYear() - 1);
   });
 
   it('returns current zoned date time', () => {
     const zdt = nowZonedDateTimeIso();
-    expect(zdt.year).toBeGreaterThanOrEqual(2024);
+    expect(zdt.year).toBeGreaterThanOrEqual(new Date().getFullYear() - 1);
     expect(zdt.timeZone.id).toBeTruthy();
   });
 
   it('accepts timezone parameter', () => {
     const utc = TimeZone.utc();
     const d = nowPlainDateIso(utc);
-    expect(d.year).toBeGreaterThanOrEqual(2024);
+    expect(d.year).toBeGreaterThanOrEqual(new Date().getFullYear() - 1);
   });
 });

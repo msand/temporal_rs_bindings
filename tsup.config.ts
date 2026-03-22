@@ -10,8 +10,7 @@ export default defineConfig({
   sourcemap: true,
   minify: true,
   // Don't bundle dependencies - keep the require('../index.js') external
-  noExternal: [],
-  external: ['node:module', 'node:child_process', 'node:url'],
+  external: ['node:module', 'node:child_process', 'node:url', '../index.js', /\.node$/],
   // tsup shims import.meta.url for CJS automatically
   shims: true,
   // Keep original class/function names (esbuild --keep-names)

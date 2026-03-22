@@ -43,6 +43,27 @@ import {
 
 import type { PlainDate } from './plaindate';
 
+/** Estimate the ISO year from a calendar year for range checking. */
+function _estimateIsoYear(calYear: number, calId: string): number {
+  if (calId === 'buddhist') return calYear - 543;
+  if (calId === 'roc') return calYear + 1911;
+  if (calId === 'coptic') return calYear + 284;
+  if (calId === 'ethioaa') return calYear - 5492;
+  if (calId === 'ethiopic' || calId === 'ethiopian') return calYear + 8;
+  if (calId === 'indian') return calYear + 78;
+  if (calId === 'persian') return calYear + 621;
+  if (calId === 'hebrew') return calYear - 3760;
+  if (
+    calId === 'islamic-civil' ||
+    calId === 'islamic-tbla' ||
+    calId === 'islamic-umalqura' ||
+    calId === 'islamic-rgsa'
+  ) {
+    return Math.round(622 + (calYear * 354) / 365);
+  }
+  return calYear;
+}
+
 class PlainMonthDay {
   _inner!: NapiPlainMonthDayT;
   _calId?: string;
@@ -244,23 +265,7 @@ class PlainMonthDay {
       // range, throw RangeError immediately (don't try to find a reference year)
       if (refCalYear !== undefined) {
         // Estimate the ISO year using known calendar offsets
-        let estimatedIsoYear = refCalYear;
-        if (mdFromCalId === 'buddhist') estimatedIsoYear = refCalYear - 543;
-        else if (mdFromCalId === 'roc') estimatedIsoYear = refCalYear + 1911;
-        else if (mdFromCalId === 'coptic') estimatedIsoYear = refCalYear + 284;
-        else if (mdFromCalId === 'ethioaa') estimatedIsoYear = refCalYear - 5492;
-        else if (mdFromCalId === 'ethiopic' || mdFromCalId === 'ethiopian') estimatedIsoYear = refCalYear + 8;
-        else if (mdFromCalId === 'indian') estimatedIsoYear = refCalYear + 78;
-        else if (mdFromCalId === 'persian') estimatedIsoYear = refCalYear + 621;
-        else if (mdFromCalId === 'hebrew') estimatedIsoYear = refCalYear - 3760;
-        else if (
-          mdFromCalId === 'islamic-civil' ||
-          mdFromCalId === 'islamic-tbla' ||
-          mdFromCalId === 'islamic-umalqura' ||
-          mdFromCalId === 'islamic-rgsa'
-        ) {
-          estimatedIsoYear = Math.round(622 + (refCalYear * 354) / 365);
-        }
+        const estimatedIsoYear = _estimateIsoYear(refCalYear, mdFromCalId);
         // Use a generous margin (±100 years) to avoid false positives for calendars
         // where the offset estimate is approximate
         if (estimatedIsoYear < -272000 || estimatedIsoYear > 276000) {
@@ -272,24 +277,7 @@ class PlainMonthDay {
         const eraFields: any = { era: arg.era, eraYear: toInteger(arg.eraYear) };
         resolveEraYear(eraFields, mdFromCalId);
         if (eraFields.year !== undefined) {
-          let estimatedIsoEra = eraFields.year;
-          if (mdFromCalId === 'buddhist') estimatedIsoEra = (eraFields.year as number) - 543;
-          else if (mdFromCalId === 'roc') estimatedIsoEra = (eraFields.year as number) + 1911;
-          else if (mdFromCalId === 'coptic') estimatedIsoEra = (eraFields.year as number) + 284;
-          else if (mdFromCalId === 'ethioaa') estimatedIsoEra = (eraFields.year as number) - 5492;
-          else if (mdFromCalId === 'ethiopic' || mdFromCalId === 'ethiopian')
-            estimatedIsoEra = (eraFields.year as number) + 8;
-          else if (mdFromCalId === 'indian') estimatedIsoEra = (eraFields.year as number) + 78;
-          else if (mdFromCalId === 'persian') estimatedIsoEra = (eraFields.year as number) + 621;
-          else if (mdFromCalId === 'hebrew') estimatedIsoEra = eraFields.year - 3760;
-          else if (
-            mdFromCalId === 'islamic-civil' ||
-            mdFromCalId === 'islamic-tbla' ||
-            mdFromCalId === 'islamic-umalqura' ||
-            mdFromCalId === 'islamic-rgsa'
-          ) {
-            estimatedIsoEra = Math.round(622 + (eraFields.year * 354) / 365);
-          }
+          const estimatedIsoEra = _estimateIsoYear(eraFields.year, mdFromCalId);
           if (estimatedIsoEra < -272000 || estimatedIsoEra > 276000) {
             throw new RangeError(`eraYear ${arg.eraYear} era ${arg.era} is out of range for ${mdFromCalId} calendar`);
           }
@@ -710,7 +698,10 @@ class PlainMonthDay {
         opts.day = 'numeric';
       }
       const dtf = new Intl.DateTimeFormat(locales, opts);
-      return _origFormatGetter!.call(dtf)(ms);
+      if (_origFormatGetter) {
+        return _origFormatGetter.call(dtf)(ms);
+      }
+      return dtf.format(ms);
     }
     return this.toString();
   }

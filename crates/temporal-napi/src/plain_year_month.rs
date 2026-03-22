@@ -90,7 +90,7 @@ impl PlainYearMonth {
         duration: &Duration,
         overflow: Option<Overflow>,
     ) -> napi::Result<PlainYearMonth> {
-        let ov: temporal_rs::options::Overflow = overflow.unwrap_or(Overflow::Constrain).into();
+        let ov = overflow.map(Into::into).unwrap_or(temporal_rs::options::Overflow::Constrain);
         let inner = self
             .inner
             .add(&duration.inner, ov)
@@ -104,7 +104,7 @@ impl PlainYearMonth {
         duration: &Duration,
         overflow: Option<Overflow>,
     ) -> napi::Result<PlainYearMonth> {
-        let ov: temporal_rs::options::Overflow = overflow.unwrap_or(Overflow::Constrain).into();
+        let ov = overflow.map(Into::into).unwrap_or(temporal_rs::options::Overflow::Constrain);
         let inner = self
             .inner
             .subtract(&duration.inner, ov)
