@@ -404,7 +404,7 @@ export function validateMonthCodeSyntax(monthCode: any): { monthNum: number; isL
   if (typeof monthCode === 'string') {
     str = monthCode;
   } else if (typeof monthCode === 'object' || typeof monthCode === 'function') {
-    const prim = monthCode.toString !== undefined ? monthCode.toString() : String(monthCode);
+    const prim = typeof monthCode.toString === 'function' ? monthCode.toString() : String(monthCode);
     if (typeof prim !== 'string') throw new TypeError('monthCode must be a string');
     str = prim;
   } else {
@@ -414,8 +414,9 @@ export function validateMonthCodeSyntax(monthCode: any): { monthNum: number; isL
   const m = str.match(/^M(\d{2})(L?)$/);
   if (!m) throw new RangeError(`Invalid monthCode: ${str}`);
   const monthNum = parseInt(m[1]!, 10);
+  const isLeap = m[2] === 'L';
   if (monthNum < 1) throw new RangeError(`Invalid monthCode: ${str}`);
-  return { monthNum, isLeap: m[2] === 'L' };
+  return { monthNum, isLeap };
 }
 
 // ─── Helper: extract overflow from options ────────────────────
@@ -752,20 +753,21 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
   const newMs = Math.floor(totalNs / 1000000);
   const newUs = Math.floor((totalNs % 1000000) / 1000);
   const newNs = totalNs % 1000;
-  // Cascade carry through seconds -> minutes -> hours -> days
+  // Per spec: carry rounding overflow up to days, but only into units that are already present.
+  // E.g., PT59.9S rounded to PT60S stays (minutes not present), but PT1M59.9S → PT2M0S.
   let newSec = Math.abs(dur.seconds) + extraSeconds;
   let min = Math.abs(dur.minutes);
   let h = Math.abs(dur.hours);
   let d = Math.abs(dur.days);
-  if (newSec >= 60) {
+  if (newSec >= 60 && (min || h || d)) {
     min += Math.floor(newSec / 60);
     newSec = newSec % 60;
   }
-  if (min >= 60) {
+  if (min >= 60 && (h || d)) {
     h += Math.floor(min / 60);
     min = min % 60;
   }
-  if (h >= 24) {
+  if (h >= 24 && d) {
     d += Math.floor(h / 24);
     h = h % 24;
   }

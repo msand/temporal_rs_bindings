@@ -344,15 +344,15 @@ export function toNapiPlainDate(arg: any): NapiPlainDateT {
     const calId = getCalendarId(_calendar);
     const cal = toNapiCalendar(_calendar);
     const _day = arg.day;
-    const dayVal = toInteger(_day);
+    const dayVal = toIntegerIfIntegral(_day);
     const _month = arg.month;
-    const monthRaw = toInteger(_month);
+    const monthRaw = toIntegerIfIntegral(_month);
     const _monthCode = arg.monthCode;
     const monthCodeStr = _monthCode !== undefined ? toPrimitiveAndRequireString(_monthCode, 'monthCode') : undefined;
     // Per spec: validate monthCode syntax immediately after coercing, before reading subsequent fields
     if (monthCodeStr !== undefined) validateMonthCodeSyntax(monthCodeStr);
     const _year = arg.year;
-    const yearVal = toInteger(_year);
+    const yearVal = toIntegerIfIntegral(_year);
     // Resolve era/eraYear for calendars that support them (don't read for ISO)
     let resolvedYear = yearVal;
     const _calValidEras = VALID_ERAS[calId];
@@ -458,7 +458,7 @@ export function toNapiPlainDateTime(arg: any): NapiPlainDateTimeT {
     const calId = getCalendarId(_calendar);
     const cal = toNapiCalendar(_calendar);
     const _day = arg.day;
-    const day = toInteger(_day);
+    const day = toIntegerIfIntegral(_day);
     const _hour = arg.hour;
     const hour = toIntegerWithTruncation(_hour);
     const _microsecond = arg.microsecond;
@@ -468,7 +468,7 @@ export function toNapiPlainDateTime(arg: any): NapiPlainDateTimeT {
     const _minute = arg.minute;
     const minute = toIntegerWithTruncation(_minute);
     const _month = arg.month;
-    const monthRaw = toInteger(_month);
+    const monthRaw = toIntegerIfIntegral(_month);
     const _monthCode = arg.monthCode;
     const monthCodeStr = _monthCode !== undefined ? toPrimitiveAndRequireString(_monthCode, 'monthCode') : undefined;
     // Per spec: validate monthCode syntax immediately after coercing, before reading subsequent fields
@@ -478,7 +478,7 @@ export function toNapiPlainDateTime(arg: any): NapiPlainDateTimeT {
     const _second = arg.second;
     const second = toIntegerWithTruncation(_second);
     const _year = arg.year;
-    const yearVal = toInteger(_year);
+    const yearVal = toIntegerIfIntegral(_year);
     // Resolve era/eraYear for calendars that support them
     let resolvedYear = yearVal;
     const _calValidErasDT = VALID_ERAS[calId];
@@ -512,12 +512,12 @@ export function toNapiPlainDateTime(arg: any): NapiPlainDateTimeT {
           iso.isoYear,
           iso.isoMonth,
           iso.isoDay,
-          hour,
-          minute,
-          second,
-          millisecond,
-          microsecond,
-          nanosecond,
+          hour ?? 0,
+          minute ?? 0,
+          second ?? 0,
+          millisecond ?? 0,
+          microsecond ?? 0,
+          nanosecond ?? 0,
           cal,
         ),
     );

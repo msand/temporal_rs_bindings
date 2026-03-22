@@ -5,7 +5,7 @@ import {
   type LocalParts,
   type ZdtStringParts,
 } from './binding';
-import { call, computeEpochNanoseconds, isoDateToEpochDays } from './helpers';
+import { call, computeEpochNanoseconds, isoDateToEpochDays, epochDaysToISO } from './helpers';
 
 // Late-bound class reference to break circular dependency
 export const _tzClasses: Record<string, any> = {};
@@ -793,12 +793,22 @@ export function bigintNsToZdtString(epochNs: bigint, tzId: string, calId?: strin
   const parts = getLocalPartsFromEpoch(msNum, tzId);
   const micros = String(Number(subMsNs / 1000n)).padStart(3, '0');
   const nanos = String(Number(subMsNs % 1000n)).padStart(3, '0');
-  const year = parts._fullYear;
-  const month = parts.month;
-  const day = parts.day;
-  const hour = parseInt(parts.hour, 10);
+  let year = parts._fullYear;
+  let month = parts.month;
+  let day = parts.day;
+  let hour = parseInt(parts.hour, 10);
   const minute = parts.minute;
   const second = parts.second;
+  // Normalize hour 24 (some ICU implementations return 24 for midnight)
+  if (hour === 24) {
+    hour = 0;
+    // Roll to next day using epoch arithmetic
+    const nextDayEpoch = isoDateToEpochDays(year, parseInt(month, 10), parseInt(day, 10)) + 1;
+    const nextDay = epochDaysToISO(nextDayEpoch);
+    year = nextDay.year;
+    month = String(nextDay.month).padStart(2, '0');
+    day = String(nextDay.day).padStart(2, '0');
+  }
   const ms = (parts.fractionalSecond || '000').padEnd(3, '0');
   let yearStr;
   if (year < 0 || year >= 10000) {

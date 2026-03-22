@@ -471,9 +471,11 @@ class PlainMonthDay {
           bestIso = { ...fallback, calYear: baseRefYear, dim: dim0, yearMonth: calMonth };
         }
       }
-      return new PlainMonthDay(
+      const md = new PlainMonthDay(
         call(() => new NapiPlainMonthDay(bestIso.isoMonth, bestIso.isoDay, cal, bestIso.isoYear)),
       );
+      md._calId = mdFromCalId;
+      return md;
     }
     throw new TypeError('Invalid argument for PlainMonthDay.from()');
   }

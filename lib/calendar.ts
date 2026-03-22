@@ -492,7 +492,13 @@ export function getCalendarId(calArg: any): string {
     if (VALID_CALENDAR_IDS.has(canonCal)) return canonCal;
     // Extract calendar from annotation in ISO-like strings
     const match = calArg.match(/\[u-ca=([^\]]+)\]/);
-    if (match) return canonicalizeCalendarId(match[1]);
+    if (match) {
+      const extracted = canonicalizeCalendarId(match[1]);
+      if (REJECTED_CALENDAR_IDS.has(extracted)) {
+        throw new RangeError(`${match[1]} is not a valid Temporal calendar identifier`);
+      }
+      return extracted;
+    }
     // If it looks like an ISO string, return iso8601
     if (
       /^\d{4}-\d{2}/.test(calArg) ||
@@ -635,6 +641,10 @@ export function calendarDateToISO(
   ) {
     // Islamic year ~354 days, so: ISO ≈ 622 + calYear * 354/365
     isoYear = Math.round(622 + (targetCalYear * 354) / 365);
+  } else if (calId === 'chinese') {
+    isoYear = targetCalYear - 2637; // Chinese calendar epoch ~2637 BCE
+  } else if (calId === 'dangi') {
+    isoYear = targetCalYear - 2333; // Dangi calendar epoch ~2333 BCE
   }
   try {
     // Step 1: Refine ISO year estimate via mid-year probe
