@@ -106,14 +106,10 @@ function _temporalToISOFields(temporalObj: any): ISOFields | undefined {
         minute: parseInt(m[5]!, 10),
         second: parseInt(m[6]!, 10),
       };
-    return {
-      year: inner.year,
-      month: inner.month,
-      day: inner.day,
-      hour: inner.hour as any,
-      minute: inner.minute as any,
-      second: inner.second as any,
-    };
+    // Fallback should not be reached for well-formed Temporal objects,
+    // but if it is, inner.year/month/day are calendar values, not ISO values.
+    // Return undefined to signal that ISO extraction failed.
+    return undefined;
   }
   if (inner instanceof NapiPlainDate) {
     const str = inner.toString();
@@ -127,7 +123,7 @@ function _temporalToISOFields(temporalObj: any): ISOFields | undefined {
         minute: 0,
         second: 0,
       };
-    return { year: inner.year, month: inner.month, day: inner.day, hour: 12, minute: 0, second: 0 };
+    return undefined;
   }
   if (inner instanceof NapiPlainYearMonth) {
     const str = inner.toString();

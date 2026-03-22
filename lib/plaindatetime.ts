@@ -665,7 +665,11 @@ class PlainDateTime {
         : call(() => new NapiPlainDate(otherInner.year, otherInner.month, otherInner.day, otherInner.calendar));
       const dateDiff = calendarDateDifference(startDate, endDate, lu, calId);
       if (dateDiff) {
-        // Get time difference from NAPI for the remaining time component
+        // Get time difference from NAPI for the remaining time component.
+        // NOTE: If calendarDateDifference computes different days than NAPI,
+        // the time components from NAPI may be slightly inconsistent. This is
+        // acceptable because it only affects non-ISO calendars where NAPI's
+        // date arithmetic is known to be incorrect.
         const napiDur = call(() => this._inner.until(otherInner, settings));
         // Use the calendar-correct date components but preserve time components from NAPI
         return wrapDuration(

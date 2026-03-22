@@ -1037,18 +1037,16 @@ class ZonedDateTime {
     } else if (_month !== undefined) {
       merged.month = monthRaw;
     } else if (_monthCode !== undefined) {
-      try {
-        merged.month = monthCodeToMonth(monthCodeStr, calId, merged.year);
-      } catch {
-        const mcMatch = typeof monthCodeStr === 'string' ? monthCodeStr.match(/^M(\d{2})(L?)$/) : null;
-        if (mcMatch) {
-          const num = parseInt(mcMatch[1]!, 10);
-          merged.month = mcMatch[2] === 'L' ? num + 1 : num;
-        } else {
-          merged.month = 1;
-        }
+      // Defer monthCodeToMonth until after options are read (spec requires options to be observed first)
+      _pendingMonthCodeValidation = { monthCode: monthCodeStr, calId, year: merged.year, needsMonth: true };
+      // Tentatively extract month from monthCode syntax for early range checks
+      const mcMatch = typeof monthCodeStr === 'string' ? monthCodeStr.match(/^M(\d{2})(L?)$/) : null;
+      if (mcMatch) {
+        const num = parseInt(mcMatch[1]!, 10);
+        merged.month = mcMatch[2] === 'L' ? num + 1 : num;
+      } else {
+        merged.month = 1; // Will be validated later
       }
-      _pendingMonthCodeValidation = { monthCode: monthCodeStr, calId, year: merged.year };
     } else {
       merged.month = monthCodeToMonth(this.monthCode, calId, merged.year);
     }
@@ -1080,9 +1078,16 @@ class ZonedDateTime {
     if (_withOverflowRaw !== undefined) {
       overflow = mapOverflow(toStringOption(_withOverflowRaw));
     }
-    // Deferred calendar-specific monthCode validation
+    // Deferred calendar-specific monthCode validation (after options are read per spec)
     if (_pendingMonthCodeValidation) {
-      if (_pendingMonthCodeValidation.month !== undefined) {
+      if (_pendingMonthCodeValidation.needsMonth) {
+        // Resolve month from monthCode now that options have been read
+        merged.month = monthCodeToMonth(
+          _pendingMonthCodeValidation.monthCode,
+          _pendingMonthCodeValidation.calId,
+          _pendingMonthCodeValidation.year,
+        );
+      } else if (_pendingMonthCodeValidation.month !== undefined) {
         const fromCode = monthCodeToMonth(_pendingMonthCodeValidation.monthCode, calId, merged.year);
         if (_trunc(_pendingMonthCodeValidation.month) !== fromCode) {
           throw new RangeError(
@@ -1106,8 +1111,10 @@ class ZonedDateTime {
         `monthCode ${effectiveMonthCodeZDT} is not valid for year ${merged.year} in ${calId} calendar`,
       );
     }
+    // Recompute tm after deferred validation may have updated merged.month
+    const resolvedTm = _trunc(merged.month);
     if (!ISO_MONTH_ALIGNED_CALENDARS.has(calId) || calId === 'japanese') {
-      const dim = calendarDaysInMonth(merged.year, tm, calId);
+      const dim = calendarDaysInMonth(merged.year, resolvedTm, calId);
       if (dim !== undefined) {
         if (overflow === 'Reject' && td > dim) {
           throw new RangeError(

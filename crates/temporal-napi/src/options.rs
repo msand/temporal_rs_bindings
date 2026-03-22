@@ -176,7 +176,12 @@ impl From<ToStringRoundingOptions> for temporal_rs::options::ToStringRoundingOpt
         let precision = if value.is_minute.unwrap_or(false) {
             temporal_rs::parsers::Precision::Minute
         } else if let Some(digit) = value.precision {
-            temporal_rs::parsers::Precision::Digit(digit)
+            if digit > 9 {
+                // Clamp to valid range - JS layer should already validate
+                temporal_rs::parsers::Precision::Digit(9)
+            } else {
+                temporal_rs::parsers::Precision::Digit(digit)
+            }
         } else {
             temporal_rs::parsers::Precision::Auto
         };

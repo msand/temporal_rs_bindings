@@ -511,7 +511,7 @@ export function getCalendarId(calArg: any): string {
     // Check if it looks like a time string (e.g. "15:23", "152330", "T15:23:30", "15")
     const timeStr = calArg.startsWith('T') || calArg.startsWith('t') ? calArg.substring(1) : calArg;
     if (
-      /^\d{2}(:\d{2}(:\d{2})?)?/.test(timeStr) ||
+      /^\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(timeStr) ||
       /^\d{6}/.test(timeStr) ||
       /^\d{4}$/.test(timeStr) ||
       /^\d{2}$/.test(timeStr)
@@ -524,6 +524,10 @@ export function getCalendarId(calArg: any): string {
     }
     // Reject calendar IDs that are only valid for Intl.DateTimeFormat, not Temporal
     if (REJECTED_CALENDAR_IDS.has(canonCal)) {
+      throw new RangeError(`${calArg} is not a valid Temporal calendar identifier`);
+    }
+    // Reject unknown calendar IDs not in the supported set
+    if (!VALID_CALENDAR_IDS.has(canonCal)) {
       throw new RangeError(`${calArg} is not a valid Temporal calendar identifier`);
     }
     return canonCal;

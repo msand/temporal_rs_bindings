@@ -250,7 +250,7 @@ class PlainTime {
       // Constrain: clamp all time fields to valid ranges
       h = Math.max(0, Math.min(h, 23));
       mi = Math.max(0, Math.min(mi, 59));
-      s = Math.max(0, Math.min(s === 60 ? 59 : s, 59));
+      s = Math.max(0, Math.min(s, 59));
       ms = Math.max(0, Math.min(ms, 999));
       us = Math.max(0, Math.min(us, 999));
       ns = Math.max(0, Math.min(ns, 999));

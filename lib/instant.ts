@@ -4,6 +4,12 @@ import {
   _wrapperSet,
   _isTemporalInstant,
   _isTemporalZonedDateTime,
+  _isTemporalPlainDate,
+  _isTemporalPlainTime,
+  _isTemporalPlainDateTime,
+  _isTemporalPlainYearMonth,
+  _isTemporalPlainMonthDay,
+  _isTemporalDuration,
   bigintNsToISOString,
   computeEpochNanoseconds,
   requireBranding,
@@ -93,6 +99,17 @@ class Instant {
     // Per spec: ZonedDateTime is accepted (extract instant)
     if (_isTemporalZonedDateTime(arg) || (arg && arg._inner instanceof NapiZonedDateTime)) {
       return new Instant(arg._inner.toInstant());
+    }
+    // Per spec: reject Temporal types that don't carry an instant
+    if (
+      _isTemporalPlainDate(arg) ||
+      _isTemporalPlainTime(arg) ||
+      _isTemporalPlainDateTime(arg) ||
+      _isTemporalPlainYearMonth(arg) ||
+      _isTemporalPlainMonthDay(arg) ||
+      _isTemporalDuration(arg)
+    ) {
+      throw new TypeError('Cannot convert a non-instant Temporal type to Instant');
     }
     // Per spec: other objects/functions - call toString() and try to parse
     if (arg !== null && arg !== undefined && (typeof arg === 'object' || typeof arg === 'function')) {

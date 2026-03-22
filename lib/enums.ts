@@ -80,7 +80,7 @@ export function mapUnit(val: any): any {
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   const str = String(val);
   const mapped = UNIT_MAP[str];
-  if (!mapped) throw new RangeError(`Invalid unit: ${val}`);
+  if (!mapped) throw new RangeError(`Invalid unit: ${str}`);
   return mapped;
 }
 
@@ -89,7 +89,7 @@ export function mapRoundingMode(val: any): any {
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   const str = String(val);
   const mapped = ROUNDING_MODE_MAP[str];
-  if (!mapped) throw new RangeError(`Invalid rounding mode: ${val}`);
+  if (!mapped) throw new RangeError(`Invalid rounding mode: ${str}`);
   return mapped;
 }
 
@@ -98,7 +98,7 @@ export function mapOverflow(val: any): any {
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   const str = String(val);
   const mapped = OVERFLOW_MAP[str];
-  if (!mapped) throw new RangeError(`Invalid overflow: ${val}`);
+  if (!mapped) throw new RangeError(`Invalid overflow: ${str}`);
   return mapped;
 }
 
@@ -107,6 +107,6 @@ export function mapDisplayCalendar(val: any): any {
   if (typeof val === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   const str = String(val);
   const mapped = DISPLAY_CALENDAR_MAP[str];
-  if (!mapped) throw new RangeError(`Invalid calendarName option: ${val}`);
+  if (!mapped) throw new RangeError(`Invalid calendarName option: ${str}`);
   return mapped;
 }

@@ -109,7 +109,7 @@ export function toNapiCalendar(cal: any): NapiCalendar {
     }
     // Check if it looks like a time string (e.g. "15:23", "152330", "T15:23:30")
     const timeStr = cal.startsWith('T') || cal.startsWith('t') ? cal.substring(1) : cal;
-    if (/^\d{2}(:\d{2}(:\d{2})?)?/.test(timeStr) || /^\d{6}/.test(timeStr) || /^\d{4}$/.test(timeStr)) {
+    if (/^\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?$/.test(timeStr) || /^\d{6}/.test(timeStr) || /^\d{4}$/.test(timeStr)) {
       return call(() => new NapiCalendar('iso8601'));
     }
     return call(() => new NapiCalendar(cal));
@@ -131,9 +131,8 @@ export function toNapiCalendar(cal: any): NapiCalendar {
     if (cal._inner instanceof NapiDuration) {
       throw new TypeError('Duration is not a valid calendar');
     }
-    if (cal.id !== undefined) return call(() => new NapiCalendar(String(cal.id)));
-    if (cal.calendarId !== undefined) return call(() => new NapiCalendar(String(cal.calendarId)));
-    if (cal.calendar !== undefined) return toNapiCalendar(cal.calendar);
+    // Per spec: plain objects without Temporal inner should throw TypeError
+    throw new TypeError('Invalid calendar');
   }
   throw new TypeError('Invalid calendar');
 }
@@ -158,8 +157,8 @@ export function toNapiTimeZone(tz: any): NapiTimeZone {
     // Temporal.ZonedDateTime can be used as a timeZone (extract its timeZone)
     return tz._inner.timeZone;
   }
-  if (typeof tz === 'object' && tz.id) return call(() => new NapiTimeZone(String(tz.id)));
-  if (typeof tz === 'object' && tz.timeZone !== undefined) return toNapiTimeZone(tz.timeZone);
+  // Per spec: plain objects without Temporal inner should throw TypeError
+  throw new TypeError('Invalid time zone');
   throw new TypeError('Invalid time zone');
 }
 
@@ -678,16 +677,24 @@ export function toNapiZonedDateTime(arg: any): NapiZonedDateTimeT {
       const pdIso = _extractISOFromNapiDT(pd);
       isoDay = pdIso.day;
       isoMonth = pdIso.month;
-    } catch {
-      // Try max valid day
+    } catch (outerErr: any) {
+      // Only fall back for day-out-of-range errors; rethrow others
+      const msg = outerErr && outerErr.message ? outerErr.message : '';
+      if (!msg.includes('day') && !msg.includes('Day') && !msg.includes('range') && !msg.includes('Range')) {
+        throw outerErr;
+      }
+      // Try to find the max valid day
+      let found = false;
       for (let d = 28; d <= 31; d++) {
         try {
           call(() => new NapiPlainDate(year, isoMonth, d, cal));
           isoDay = d;
+          found = true;
         } catch {
           break;
         }
       }
+      if (!found) throw outerErr;
     }
     let str = `${padYear(year)}-${pad2(isoMonth)}-${pad2(isoDay)}T${pad2(hour)}:${pad2(minute)}:${pad2(second)}`;
     if ((millisecondVal ?? 0) || (microsecondVal ?? 0) || (nanosecondVal ?? 0)) {
@@ -905,37 +912,37 @@ export function extractRelativeTo(rt: any): {
     const _calId = getCalendarId(_calendar);
     const _calSupportsEras = VALID_ERAS[_calId] && VALID_ERAS[_calId].size > 0;
     const _day = rt.day;
-    const _dayVal = _day !== undefined ? toInteger(_day) : undefined;
+    const _dayVal = _day !== undefined ? toIntegerIfIntegral(_day) : undefined;
     if (_dayVal !== undefined) rejectInfinity(_dayVal, 'day');
     // Per spec: read era/eraYear in alphabetical order (between day and hour), only for calendars with eras
     let _era, _eraYearVal;
     if (_calSupportsEras) {
       _era = rt.era;
       const _eraYear = rt.eraYear;
-      _eraYearVal = _eraYear !== undefined ? toInteger(_eraYear) : undefined;
+      _eraYearVal = _eraYear !== undefined ? toIntegerIfIntegral(_eraYear) : undefined;
       if (_eraYearVal !== undefined) rejectInfinity(_eraYearVal, 'eraYear');
     }
     const _hour = rt.hour;
-    const _hourVal = _hour !== undefined ? toInteger(_hour) : undefined;
+    const _hourVal = _hour !== undefined ? toIntegerIfIntegral(_hour) : undefined;
     if (_hourVal !== undefined) rejectInfinity(_hourVal, 'hour');
     const _microsecond = rt.microsecond;
-    const _microsecondVal = _microsecond !== undefined ? toInteger(_microsecond) : undefined;
+    const _microsecondVal = _microsecond !== undefined ? toIntegerIfIntegral(_microsecond) : undefined;
     if (_microsecondVal !== undefined) rejectInfinity(_microsecondVal, 'microsecond');
     const _millisecond = rt.millisecond;
-    const _millisecondVal = _millisecond !== undefined ? toInteger(_millisecond) : undefined;
+    const _millisecondVal = _millisecond !== undefined ? toIntegerIfIntegral(_millisecond) : undefined;
     if (_millisecondVal !== undefined) rejectInfinity(_millisecondVal, 'millisecond');
     const _minute = rt.minute;
-    const _minuteVal = _minute !== undefined ? toInteger(_minute) : undefined;
+    const _minuteVal = _minute !== undefined ? toIntegerIfIntegral(_minute) : undefined;
     if (_minuteVal !== undefined) rejectInfinity(_minuteVal, 'minute');
     const _month = rt.month;
-    const _monthVal = _month !== undefined ? toInteger(_month) : undefined;
+    const _monthVal = _month !== undefined ? toIntegerIfIntegral(_month) : undefined;
     if (_monthVal !== undefined) rejectInfinity(_monthVal, 'month');
     const _monthCode = rt.monthCode;
     const _monthCodeStr = _monthCode !== undefined ? toPrimitiveAndRequireString(_monthCode, 'monthCode') : undefined;
     // Per spec: validate monthCode syntax immediately after coercing
     if (_monthCodeStr !== undefined) validateMonthCodeSyntax(_monthCodeStr);
     const _nanosecond = rt.nanosecond;
-    const _nanosecondVal = _nanosecond !== undefined ? toInteger(_nanosecond) : undefined;
+    const _nanosecondVal = _nanosecond !== undefined ? toIntegerIfIntegral(_nanosecond) : undefined;
     if (_nanosecondVal !== undefined) rejectInfinity(_nanosecondVal, 'nanosecond');
     const _offset = rt.offset;
     // Per spec: coerce offset with ToPrimitiveAndRequireString
@@ -944,11 +951,11 @@ export function extractRelativeTo(rt: any): {
       _offsetStr = toPrimitiveAndRequireString(_offset, 'offset');
     }
     const _second = rt.second;
-    const _secondVal = _second !== undefined ? toInteger(_second) : undefined;
+    const _secondVal = _second !== undefined ? toIntegerIfIntegral(_second) : undefined;
     if (_secondVal !== undefined) rejectInfinity(_secondVal, 'second');
     const _timeZone = rt.timeZone;
     const _year = rt.year;
-    const _yearVal = _year !== undefined ? toInteger(_year) : undefined;
+    const _yearVal = _year !== undefined ? toIntegerIfIntegral(_year) : undefined;
     if (_yearVal !== undefined) rejectInfinity(_yearVal, 'year');
 
     if (_timeZone !== undefined) {

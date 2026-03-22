@@ -366,8 +366,12 @@ export function parseOffsetStringToNs(str: string): any {
 // Normalize a fixed-offset timezone ID to colon-separated form for parsing
 function _normalizeOffsetTz(tzId: string): string {
   if (tzId.includes(':')) return tzId;
-  // +HH -> +HH:00, +HHMM -> +HH:MM
-  return tzId.substring(0, 3) + ':' + (tzId.substring(3) || '00');
+  const sign = tzId.substring(0, 1);
+  const rest = tzId.substring(1);
+  if (rest.length <= 2) return sign + rest + ':00';
+  if (rest.length <= 4) return sign + rest.substring(0, 2) + ':' + rest.substring(2);
+  // +HHMMSS or +HHMMSS.fffffffff
+  return sign + rest.substring(0, 2) + ':' + rest.substring(2, 4) + ':' + rest.substring(4);
 }
 
 // Parse a fixed-offset timezone ID (e.g. "+05:30", "+05:30:00") to milliseconds
@@ -397,25 +401,13 @@ export function _getOffsetNsAtEpoch(epochMs: number, tzId: string): bigint {
 // Validate monthCode syntax only (not calendar-specific validity)
 // Checks that the format is M01-M99 or M01L-M99L (L suffix for leap months)
 // Returns the parsed month number and isLeap flag for callers that need them.
-export function validateMonthCodeSyntax(monthCode: any): { monthNum: number; isLeap: boolean } {
-  if (typeof monthCode === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
-  if (typeof monthCode === 'bigint') throw new TypeError('Cannot convert a BigInt value to a string');
-  let str;
-  if (typeof monthCode === 'string') {
-    str = monthCode;
-  } else if (typeof monthCode === 'object' || typeof monthCode === 'function') {
-    const prim = typeof monthCode.toString === 'function' ? monthCode.toString() : String(monthCode);
-    if (typeof prim !== 'string') throw new TypeError('monthCode must be a string');
-    str = prim;
-  } else {
-    throw new TypeError('monthCode must be a string');
-  }
-  if (!str) throw new RangeError('Invalid monthCode: empty string');
-  const m = str.match(/^M(\d{2})(L?)$/);
-  if (!m) throw new RangeError(`Invalid monthCode: ${str}`);
+export function validateMonthCodeSyntax(monthCode: string): { monthNum: number; isLeap: boolean } {
+  if (!monthCode) throw new RangeError('Invalid monthCode: empty string');
+  const m = monthCode.match(/^M(\d{2})(L?)$/);
+  if (!m) throw new RangeError(`Invalid monthCode: ${monthCode}`);
   const monthNum = parseInt(m[1]!, 10);
   const isLeap = m[2] === 'L';
-  if (monthNum < 1) throw new RangeError(`Invalid monthCode: ${str}`);
+  if (monthNum < 1) throw new RangeError(`Invalid monthCode: ${monthCode}`);
   return { monthNum, isLeap };
 }
 
@@ -439,22 +431,7 @@ export function rejectInfinity(value: any, name: string): void {
 export function rejectISODateRange(year: number, month: number, day: number): void {
   if (month < 1 || month > 12) throw new RangeError(`Invalid month: ${month}`);
   if (day < 1) throw new RangeError(`Invalid day: ${day}`);
-  // Days in each month for ISO calendar
-  const daysInMonth = [
-    31,
-    year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28,
-    31,
-    30,
-    31,
-    30,
-    31,
-    31,
-    30,
-    31,
-    30,
-    31,
-  ];
-  const maxDay = daysInMonth[month - 1] ?? 31;
+  const maxDay = _isoDaysInMonth(year, month);
   if (day > maxDay) throw new RangeError(`Invalid day ${day} for month ${month}`);
 }
 
@@ -658,8 +635,8 @@ export function formatDurationString(dur: any, precision: any): string {
   if (weeks) datePart += `${weeks}W`;
   if (days) datePart += `${days}D`;
 
-  // Build the seconds + fractional part
-  const totalNs = milliseconds * 1000000 + microseconds * 1000 + nanoseconds;
+  // Build the seconds + fractional part (use BigInt to avoid precision loss for large values)
+  const totalNs = Number(BigInt(milliseconds) * 1000000n + BigInt(microseconds) * 1000n + BigInt(nanoseconds));
   const hasFrac = totalNs > 0;
 
   // Determine if we need to show seconds
@@ -705,7 +682,7 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
   const ms = Math.abs(dur.milliseconds);
   const us = Math.abs(dur.microseconds);
   const ns = Math.abs(dur.nanoseconds);
-  let totalNs = ms * 1000000 + us * 1000 + ns;
+  let totalNs = Number(BigInt(ms) * 1000000n + BigInt(us) * 1000n + BigInt(ns));
   const sign = dur.sign;
 
   // Compute the rounding increment in nanoseconds
@@ -807,26 +784,29 @@ export function roundDurationSubSeconds(dur: any, precision: number, roundingMod
 // ─── Helper: BigInt epoch nanoseconds to ISO 8601 UTC string ──
 
 export function bigintNsToISOString(epochNs: bigint): string {
-  const NS_PER_MS = 1000000n;
-  // Floor division towards -Infinity
-  let epochMs = epochNs / NS_PER_MS;
-  let subMsNs = epochNs % NS_PER_MS;
-  if (subMsNs < 0n) {
-    subMsNs += NS_PER_MS;
-    epochMs -= 1n;
+  const NS_PER_SEC = 1000000000n;
+  // Floor division towards -Infinity for seconds
+  let epochSec = epochNs / NS_PER_SEC;
+  let subSecNs = epochNs % NS_PER_SEC;
+  if (subSecNs < 0n) {
+    subSecNs += NS_PER_SEC;
+    epochSec -= 1n;
   }
-  const d = new Date(Number(epochMs));
-  const micros = Number(subMsNs / 1000n);
-  const nanos = Number(subMsNs % 1000n);
-  const year = d.getUTCFullYear();
-  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  const hour = String(d.getUTCHours()).padStart(2, '0');
-  const minute = String(d.getUTCMinutes()).padStart(2, '0');
-  const second = String(d.getUTCSeconds()).padStart(2, '0');
-  const milli = String(d.getUTCMilliseconds()).padStart(3, '0');
-  const micro = String(micros).padStart(3, '0');
-  const nano = String(nanos).padStart(3, '0');
+  // Convert epoch seconds to days + time-of-day
+  const SEC_PER_DAY = 86400n;
+  let epochDays = epochSec / SEC_PER_DAY;
+  let daySeconds = epochSec % SEC_PER_DAY;
+  if (daySeconds < 0n) {
+    daySeconds += SEC_PER_DAY;
+    epochDays -= 1n;
+  }
+  const secNum = Number(daySeconds);
+  const hour = Math.floor(secNum / 3600);
+  const minute = Math.floor((secNum % 3600) / 60);
+  const second = secNum % 60;
+  // Use pure-arithmetic algorithm for date (handles extreme years)
+  const iso = epochDaysToISO(Number(epochDays));
+  const year = iso.year;
   let yearStr;
   if (year < 0 || year >= 10000) {
     const s = String(Math.abs(year)).padStart(6, '0');
@@ -834,10 +814,27 @@ export function bigintNsToISOString(epochNs: bigint): string {
   } else {
     yearStr = String(year).padStart(4, '0');
   }
+  const milli = String(Number(subSecNs / 1000000n)).padStart(3, '0');
+  const micro = String(Number((subSecNs / 1000n) % 1000n)).padStart(3, '0');
+  const nano = String(Number(subSecNs % 1000n)).padStart(3, '0');
   let frac = milli + micro + nano;
   frac = frac.replace(/0+$/, '');
   const fracPart = frac ? '.' + frac : '';
-  return yearStr + '-' + month + '-' + day + 'T' + hour + ':' + minute + ':' + second + fracPart + 'Z';
+  return (
+    yearStr +
+    '-' +
+    String(iso.month).padStart(2, '0') +
+    '-' +
+    String(iso.day).padStart(2, '0') +
+    'T' +
+    String(hour).padStart(2, '0') +
+    ':' +
+    String(minute).padStart(2, '0') +
+    ':' +
+    String(second).padStart(2, '0') +
+    fracPart +
+    'Z'
+  );
 }
 
 // ─── Helper: compute epoch nanoseconds BigInt from NAPI inner ──

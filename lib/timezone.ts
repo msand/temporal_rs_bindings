@@ -161,7 +161,17 @@ export function getLocalPartsFromEpoch(epochMs: number, tzId: string): LocalPart
   }
   // Convert era-based year to astronomical year
   const eraYear = parseInt(parts.year, 10);
-  if (parts['era'] && (parts['era'] === 'BC' || parts['era'] === 'B')) {
+  const era = parts['era'];
+  if (
+    era &&
+    (era === 'BC' ||
+      era === 'B' ||
+      era === 'v. Chr.' ||
+      era === 'av. J.-C.' ||
+      era === 'a.C.' ||
+      era.toLowerCase() === 'bce' ||
+      era.toLowerCase() === 'bc')
+  ) {
     // BC year: 1 BC = year 0, 2 BC = year -1, etc.
     parts._fullYear = -(eraYear - 1);
   } else {
@@ -232,8 +242,8 @@ export function _resolveLocalToEpochMs(
   if (local1 === localAsUtcMs) candidates.push({ epochMs: candidate1, offset: offset1 });
   if (local2 === localAsUtcMs && candidate2 !== candidate1) candidates.push({ epochMs: candidate2, offset: offset2 });
 
-  // Also check with offsets +-1h to handle DST overlaps
-  for (const delta of [-3600000, 3600000]) {
+  // Also check with various offsets to handle DST overlaps (including non-standard transitions)
+  for (const delta of [-7200000, -3600000, -1800000, 1800000, 3600000, 7200000]) {
     const probeEpoch = candidate1 + delta;
     const probeOffset = _getOffsetMs(probeEpoch, tzId);
     const probeLocal = probeEpoch + probeOffset;

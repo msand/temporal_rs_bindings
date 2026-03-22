@@ -167,15 +167,27 @@ class Duration {
     return wrapDuration(this._inner.abs());
   }
 
-  add(other: any, _options?: any): Duration {
+  add(other: any, options?: any): Duration {
     requireBranding(this, NapiDuration, 'Temporal.Duration');
     const dur = toNapiDuration(other);
+    if (options !== undefined) {
+      validateOptions(options);
+      // Per spec: read relativeTo to trigger observable property accesses
+      const _rtRaw = options.relativeTo;
+      extractRelativeTo(_rtRaw);
+    }
     return wrapDuration(call(() => this._inner.add(dur)));
   }
 
-  subtract(other: any, _options?: any): Duration {
+  subtract(other: any, options?: any): Duration {
     requireBranding(this, NapiDuration, 'Temporal.Duration');
     const dur = toNapiDuration(other);
+    if (options !== undefined) {
+      validateOptions(options);
+      // Per spec: read relativeTo to trigger observable property accesses
+      const _rtRaw = options.relativeTo;
+      extractRelativeTo(_rtRaw);
+    }
     return wrapDuration(call(() => this._inner.subtract(dur)));
   }
 

@@ -126,6 +126,7 @@ temporal_common::impl_temporal_enum_from!(DisplayTimeZone => temporal_rs::option
 // ==== Option Structs (serde-deserializable for JsValue) ====
 
 #[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct DifferenceSettings {
     pub largest_unit: Option<Unit>,
     pub smallest_unit: Option<Unit>,
@@ -160,6 +161,7 @@ pub(crate) fn deserialize_difference_settings(
 }
 
 #[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RoundingOptions {
     pub largest_unit: Option<Unit>,
     pub smallest_unit: Option<Unit>,
@@ -194,6 +196,7 @@ pub(crate) fn deserialize_rounding_options(
 }
 
 #[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct ToStringRoundingOptions {
     pub precision: Option<u8>,
     pub is_minute: Option<bool>,
@@ -206,7 +209,12 @@ impl From<ToStringRoundingOptions> for temporal_rs::options::ToStringRoundingOpt
         let precision = if value.is_minute.unwrap_or(false) {
             temporal_rs::parsers::Precision::Minute
         } else if let Some(digit) = value.precision {
-            temporal_rs::parsers::Precision::Digit(digit)
+            if digit > 9 {
+                // Clamp to valid range - JS layer should already validate
+                temporal_rs::parsers::Precision::Digit(9)
+            } else {
+                temporal_rs::parsers::Precision::Digit(digit)
+            }
         } else {
             temporal_rs::parsers::Precision::Auto
         };
@@ -231,6 +239,7 @@ pub(crate) fn deserialize_to_string_rounding_options(
 }
 
 #[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct ZonedToStringOptions {
     pub precision: Option<u8>,
     pub is_minute: Option<bool>,

@@ -645,12 +645,16 @@ class PlainDate {
         opts.month = 'numeric';
         opts.day = 'numeric';
       }
-      // Remove time-related options since this is date-only
-      delete opts.hour;
-      delete opts.minute;
-      delete opts.second;
-      delete opts.fractionalSecondDigits;
-      delete opts.dayPeriod;
+      // Per spec: time-related options conflict with PlainDate
+      if (
+        opts.hour !== undefined ||
+        opts.minute !== undefined ||
+        opts.second !== undefined ||
+        opts.fractionalSecondDigits !== undefined ||
+        opts.dayPeriod !== undefined
+      ) {
+        throw new TypeError('Time-related options are not allowed for PlainDate.toLocaleString()');
+      }
       const dtf = new Intl.DateTimeFormat(locales, opts);
       if (_origFormatGetter) {
         return _origFormatGetter.call(dtf)(d.getTime());
