@@ -77,6 +77,10 @@ macro_rules! impl_temporal_enum_from {
 ///
 /// This avoids creating a new provider on every timezone operation.
 /// The provider is initialised once on first call and reused thereafter.
+///
+/// NOTE: The provider uses compiled-in timezone data (zoneinfo64). Initialization
+/// should never fail in practice. If it does fail (returns None), the failure is
+/// permanent for the process lifetime because OnceLock only runs the initializer once.
 pub fn cached_provider() -> Option<&'static ZoneInfo64TzdbProvider<'static>> {
     use std::sync::OnceLock;
     static PROVIDER: OnceLock<Option<ZoneInfo64TzdbProvider<'static>>> = OnceLock::new();

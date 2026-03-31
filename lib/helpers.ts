@@ -91,6 +91,8 @@ export function _isTemporalPlainMonthDay(arg: any): arg is { _inner: NapiPlainMo
 }
 
 // ─── Helper: round a value to a given increment with rounding mode ──
+// NOTE: This function is only used for calendar-unit rounding where values are small integers.
+// Do NOT use for nanosecond-precision values (which can exceed Number.MAX_SAFE_INTEGER).
 
 export function _roundToIncrement(value: number, increment: number, mode: string): number {
   if (increment === 0) throw new RangeError('roundingIncrement must not be zero');

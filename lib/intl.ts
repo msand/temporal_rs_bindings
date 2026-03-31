@@ -533,6 +533,7 @@ function _getTemporalDtf(dtf: Intl.DateTimeFormat, temporalObj: any): Intl.DateT
 
 // Helper: format a Temporal object as string, handling extreme dates.
 function _formatTemporalAsString(dtf: Intl.DateTimeFormat, temporalObj: any): string | undefined {
+  if (!_origFormatGetterLocal) return undefined;
   const utcDtf = _getTemporalDtf(dtf, temporalObj);
   const isoFields = _temporalToISOFields(temporalObj);
   // Check if this is an extreme date outside Date range
@@ -542,13 +543,14 @@ function _formatTemporalAsString(dtf: Intl.DateTimeFormat, temporalObj: any): st
   const ms = _temporalToEpochMsLocal(temporalObj);
   if (ms === undefined) return undefined;
   if (utcDtf !== dtf) {
-    return _origFormatGetterLocal!.call(utcDtf)(ms);
+    return _origFormatGetterLocal.call(utcDtf)(ms);
   }
-  return _origFormatGetterLocal!.call(dtf)(ms);
+  return _origFormatGetterLocal.call(dtf)(ms);
 }
 
 // Helper: formatToParts for a Temporal object, handling extreme dates
 function _formatTemporalToParts(dtf: Intl.DateTimeFormat, temporalObj: any): any[] | undefined {
+  if (!_origFormatGetterLocal) return undefined;
   const utcDtf = _getTemporalDtf(dtf, temporalObj);
   const isoFields = _temporalToISOFields(temporalObj);
   if (isoFields && _isExtremeYear(isoFields.year)) {

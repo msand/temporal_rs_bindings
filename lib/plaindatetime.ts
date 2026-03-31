@@ -796,6 +796,10 @@ class PlainDateTime {
       tz.id,
       disambiguationStr,
     );
+    // Sub-millisecond components (microsecond, nanosecond) are preserved across
+    // disambiguation because DST transitions occur at second boundaries at minimum.
+    // The resolved epochMs already reflects the disambiguated wall-clock time at
+    // millisecond precision; we just add back the sub-ms remainder.
     const epochNs = BigInt(resolved.epochMs) * 1000000n + BigInt(inner.microsecond) * 1000n + BigInt(inner.nanosecond);
     const zdtStr = bigintNsToZdtString(epochNs, tz.id, this.calendarId);
     return wrapZonedDateTime(

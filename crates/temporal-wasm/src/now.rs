@@ -40,6 +40,10 @@ impl HostTimeZone for BrowserHostSystem {
     ) -> temporal_rs::TemporalResult<temporal_rs::TimeZone> {
         // Fall back to UTC in WASM environments where system timezone detection
         // is not reliably available.
+        // TODO: Use `Intl.DateTimeFormat().resolvedOptions().timeZone` via wasm-bindgen
+        // JS interop to detect the browser's actual IANA timezone instead of always
+        // returning UTC. This would require adding a wasm-bindgen extern block to call
+        // into JS and parse the result into a temporal_rs::TimeZone.
         Ok(temporal_rs::TimeZone::from(temporal_rs::UtcOffset::default()))
     }
 }

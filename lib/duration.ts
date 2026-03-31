@@ -170,25 +170,31 @@ class Duration {
   add(other: any, options?: any): Duration {
     requireBranding(this, NapiDuration, 'Temporal.Duration');
     const dur = toNapiDuration(other);
+    let relativeToDate = null;
+    let relativeToZdt = null;
     if (options !== undefined) {
       validateOptions(options);
-      // Per spec: read relativeTo to trigger observable property accesses
       const _rtRaw = options.relativeTo;
-      extractRelativeTo(_rtRaw);
+      const rt = extractRelativeTo(_rtRaw);
+      relativeToDate = rt.relativeToDate;
+      relativeToZdt = rt.relativeToZdt;
     }
-    return wrapDuration(call(() => this._inner.add(dur)));
+    return wrapDuration(call(() => this._inner.add(dur, relativeToDate, relativeToZdt)));
   }
 
   subtract(other: any, options?: any): Duration {
     requireBranding(this, NapiDuration, 'Temporal.Duration');
     const dur = toNapiDuration(other);
+    let relativeToDate = null;
+    let relativeToZdt = null;
     if (options !== undefined) {
       validateOptions(options);
-      // Per spec: read relativeTo to trigger observable property accesses
       const _rtRaw = options.relativeTo;
-      extractRelativeTo(_rtRaw);
+      const rt = extractRelativeTo(_rtRaw);
+      relativeToDate = rt.relativeToDate;
+      relativeToZdt = rt.relativeToZdt;
     }
-    return wrapDuration(call(() => this._inner.subtract(dur)));
+    return wrapDuration(call(() => this._inner.subtract(dur, relativeToDate, relativeToZdt)));
   }
 
   with(temporalDurationLike: any): Duration {

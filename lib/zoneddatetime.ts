@@ -181,8 +181,8 @@ class ZonedDateTime {
           if (!(midErr instanceof RangeError)) throw midErr;
           // Last resort: for extreme epoch values where the local wall-clock time
           // exceeds representable range, try to construct at the boundary.
-          // NOTE: This may produce a ZDT whose local time differs from the
-          // requested epoch, but is the best approximation possible.
+          // NOTE: The _epochNs field (set below) preserves the original epoch,
+          // ensuring epochNanoseconds returns the correct value.
           try {
             const isFixedOffset = FIXED_OFFSET_TZ_RE.test(tzId);
             if (isFixedOffset) {
@@ -273,7 +273,7 @@ class ZonedDateTime {
           calAnnotationCount++;
           if (isCritical) hasCriticalCal = true;
         } else if (content.includes('=')) {
-          // Per spec: annotation keys must be lowercase (a-z, 0-9, hyphen only)
+          // Per spec: annotation keys must be lowercase
           const keyMatch = content.match(/^([^=]+)=/);
           if (keyMatch) {
             const key = keyMatch[1];
@@ -578,7 +578,7 @@ class ZonedDateTime {
         if (month > maxMonth) throw new RangeError('month out of range');
         if (day > 31) throw new RangeError('day out of range');
         // For non-ISO calendars, also check calendar-specific daysInMonth
-        if (calId !== 'iso8601' && calId !== 'gregory') {
+        if (calId !== 'iso8601') {
           const dim = calendarDaysInMonth(year, _trunc(month), calId);
           if (dim !== undefined && _trunc(day) > dim) {
             throw new RangeError(`day ${day} out of range for month ${month} in ${calId} calendar (max ${dim} days)`);
@@ -950,17 +950,7 @@ class ZonedDateTime {
     const _offset = fields.offset;
     let offsetStr;
     if (_offset !== undefined) {
-      // Per spec: ToPrimitiveAndRequireString - only string and object/function are accepted
-      if (typeof _offset === 'symbol') throw new TypeError('Cannot convert a Symbol value to a string');
-      if (typeof _offset === 'bigint') throw new TypeError('Cannot convert a BigInt value to a string');
-      if (_offset === null) throw new TypeError('offset must be a string');
-      if (typeof _offset === 'string') {
-        offsetStr = _offset;
-      } else if (typeof _offset === 'object' || typeof _offset === 'function') {
-        offsetStr = String(_offset);
-      } else {
-        throw new TypeError(`offset must be a string, got ${typeof _offset}`);
-      }
+      offsetStr = toPrimitiveAndRequireString(_offset, 'offset');
     } else {
       offsetStr = this.offset;
     }

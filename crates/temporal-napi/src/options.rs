@@ -177,7 +177,7 @@ impl From<ToStringRoundingOptions> for temporal_rs::options::ToStringRoundingOpt
             temporal_rs::parsers::Precision::Minute
         } else if let Some(digit) = value.precision {
             if digit > 9 {
-                // Clamp to valid range - JS layer should already validate
+                // From impl cannot fail; clamp to max. JS layer validates beforehand.
                 temporal_rs::parsers::Precision::Digit(9)
             } else {
                 temporal_rs::parsers::Precision::Digit(digit)

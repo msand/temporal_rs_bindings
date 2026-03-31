@@ -1,7 +1,7 @@
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['lib/temporal.d.ts'] },
+  { ignores: ['lib/temporal.d.ts', 'lib/temporal.d.mts'] },
   // Conformance layer — strict with any-related exemptions (wraps untyped NAPI)
   {
     files: ['lib/**/*.ts'],

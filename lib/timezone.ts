@@ -172,8 +172,8 @@ export function getLocalPartsFromEpoch(epochMs: number, tzId: string): LocalPart
     era === 'AD' ||
     era === 'A' ||
     era === 'Anno Domini' ||
-    era.toLowerCase() === 'ce' ||
-    era.toLowerCase() === 'ad';
+    (typeof era === 'string' && era.toLowerCase() === 'ce') ||
+    (typeof era === 'string' && era.toLowerCase() === 'ad');
   if (era && !isAD) {
     // BC year: 1 BC = year 0, 2 BC = year -1, etc.
     parts._fullYear = -(eraYear - 1);
@@ -266,27 +266,16 @@ export function _resolveLocalToEpochMs(
       throw new RangeError('Invalid local time (falls in DST gap); use disambiguation option');
     }
     // For gap: find the transition boundary.
-    // Per spec:
-    //   "earlier" = clamp to pre-transition wall-clock (latest instant BEFORE gap)
-    //   "compatible"/"later" = clamp to post-transition wall-clock (earliest instant AFTER gap)
+    // Per spec (GetPossibleInstantsFor + DisambiguatePossibleInstants):
+    //   "earlier" = the earlier (smaller) UTC epoch nanosecond
+    //   "later"/"compatible" = the later (larger) UTC epoch nanosecond
     //
-    // For a spring-forward gap (e.g., America/New_York EST->EDT):
-    //   beforeOffset = offset 1 day before gap = EST = -18000000ms (-05:00)
-    //   afterOffset  = offset 1 day after gap  = EDT = -14400000ms (-04:00)
-    //
-    // epochMs = localAsUtcMs - offset, so:
-    //   Using beforeOffset (-18000000): larger epoch (later in UTC) = pre-transition instant
-    //   Using afterOffset  (-14400000): smaller epoch (earlier in UTC) = post-transition instant
-    //
-    // "earlier" wants the SMALLER epoch (post-transition offset → afterOffset)
-    // "later"/"compatible" wants the LARGER epoch (pre-transition offset → beforeOffset)
+    // We probe the offsets before and after the gap to get two candidate epochs.
+    // Then pick the smaller or larger depending on disambiguation mode.
 
-    const beforeOffset = _getOffsetMs(localAsUtcMs - estOffset - 86400000, tzId); // 1 day before
-    const afterOffset = _getOffsetMs(localAsUtcMs - estOffset + 86400000, tzId); // 1 day after
+    const beforeOffset = _getOffsetMs(localAsUtcMs - estOffset - 86400000, tzId);
+    const afterOffset = _getOffsetMs(localAsUtcMs - estOffset + 86400000, tzId);
 
-    // "earlier" uses afterOffset (gives smaller epoch = earlier UTC instant)
-    // "later"/"compatible" uses beforeOffset (gives larger epoch = later UTC instant)
-    // Determine which is which: the offset that produces the smaller epoch is the "earlier" one
     const epochWithBefore = localAsUtcMs - beforeOffset;
     const epochWithAfter = localAsUtcMs - afterOffset;
 

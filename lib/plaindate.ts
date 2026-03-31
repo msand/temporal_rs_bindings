@@ -183,6 +183,8 @@ class PlainDate {
       let constrainedMonth = _trunc(month);
       let constrainedDay = _trunc(day);
       if (overflow !== 'Reject') {
+        // Gregory and ISO share identical month/day structure and year numbering,
+        // so _isoDaysInMonth works correctly for both.
         if (calId === 'iso8601' || calId === 'gregory') {
           constrainedMonth = Math.max(1, Math.min(constrainedMonth, 12));
           const maxDay = _isoDaysInMonth(year, constrainedMonth);

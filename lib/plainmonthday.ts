@@ -108,7 +108,10 @@ class PlainMonthDay {
         validateOptions(options);
         extractOverflow(options);
       }
-      return new PlainMonthDay(inner);
+      const r = new PlainMonthDay(inner);
+      const calMatch = arg.match(/\[u-ca=([^\]]+)\]/);
+      if (calMatch) r._calId = canonicalizeCalendarId(calMatch[1]);
+      return r;
     }
     validateOptions(options);
     if (_isTemporalPlainMonthDay(arg)) {
