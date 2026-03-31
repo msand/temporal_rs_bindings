@@ -19,6 +19,22 @@
 - Removed unused imports across class files
 - Pinned `temporal_rs` git dependency to exact commit rev
 
+## [0.1.7] - 2026-03-31
+
+### Fixed
+- **Duration.add/subtract now supports relativeTo** — implemented full TC39 AddDurations (7.5.27) in NAPI with PlainDate and ZonedDateTime relativeTo paths, fixing calendar-unit duration arithmetic (+27 test262 tests, 6660/6662 passing)
+- ZonedDateTime.from reject mode now validates gregory calendar day-of-month (was silently skipping)
+- ZonedDateTime.with() offset coercion replaced hand-rolled logic with `toPrimitiveAndRequireString` for consistency with `from()`
+- PlainMonthDay.from string path now preserves `[u-ca=...]` calendar annotation in `_calId`
+- Intl.DateTimeFormat formatting null-safety guards for `_origFormatGetterLocal`
+- timezone.ts type narrowing for era field (`toLowerCase` on potentially non-string type)
+- DST gap disambiguation comments clarified (logic was already correct)
+
+### Changed
+- `./native` package.json export now includes `"import"` condition for ESM bundler compatibility
+- ESLint ignores now include `lib/temporal.d.mts` (tsup build output)
+- Rust doc comments improved for `cached_provider()` OnceLock semantics and precision clamping
+
 ## [0.1.6] - 2026-03-21
 
 ### Fixed
