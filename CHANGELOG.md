@@ -19,6 +19,12 @@
 - Removed unused imports across class files
 - Pinned `temporal_rs` git dependency to exact commit rev
 
+## [0.1.8] - 2026-04-01
+
+### Fixed
+- **TypeScript types** — replaced unusable `Record<string, any>` types for `Temporal` and `Now` with hand-crafted type definitions aligned with TypeScript's `esnext.temporal.d.ts`, providing full autocomplete and type safety for all classes, methods, and options interfaces
+- Disabled tsup auto-generated `.d.ts` (now hand-crafted and version-controlled)
+
 ## [0.1.7] - 2026-03-31
 
 ### Fixed
