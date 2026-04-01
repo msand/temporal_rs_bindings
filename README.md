@@ -290,10 +290,10 @@ The 2 remaining failures are caused by inconsistencies between Node.js's ICU4C a
 
 This package wraps [temporal_rs](https://github.com/boa-dev/temporal) (the Rust implementation used by Boa, Kiesel, and V8) via two binding layers:
 
-- **NAPI-RS** for native Node.js addons with auto-generated TypeScript definitions
+- **NAPI-RS** for native Node.js addons with hand-crafted TypeScript definitions (aligned with `esnext.temporal.d.ts`)
 - **wasm-bindgen** for browser-compatible WASM builds
 
-A modular TypeScript spec conformance layer (`lib/`) bridges the gap between the NAPI binding surface and the TC39 Temporal specification. It is compiled via [tsup](https://tsup.egoist.dev/) to both ESM (`.mjs`) and CJS (`.js`) with type declarations, providing:
+A modular TypeScript spec conformance layer (`lib/`) bridges the gap between the NAPI binding surface and the TC39 Temporal specification. It is compiled via [tsup](https://tsup.egoist.dev/) to both ESM (`.mjs`) and CJS (`.js`) with sourcemaps; hand-crafted type declarations (`.d.ts`, `.d.mts`) aligned with TypeScript's `esnext.temporal.d.ts` provide full type coverage. The conformance layer provides:
 
 - `Temporal` namespace with all types and `Temporal.Now`
 - Property bag arguments for `from()`, `with()`, `add()`, `subtract()`

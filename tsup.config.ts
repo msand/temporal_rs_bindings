@@ -4,7 +4,7 @@ export default defineConfig({
   entry: ['lib/temporal.ts'],
   format: ['esm', 'cjs'],
   outDir: 'lib',
-  dts: true,
+  dts: false,
   clean: false,
   splitting: false,
   sourcemap: true,

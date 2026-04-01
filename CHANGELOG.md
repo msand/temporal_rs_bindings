@@ -32,7 +32,7 @@
 
 ### Changed
 - `./native` package.json export now includes `"import"` condition for ESM bundler compatibility
-- ESLint ignores now include `lib/temporal.d.mts` (tsup build output)
+- ESLint ignores now include `lib/temporal.d.mts` (type declaration file)
 - Rust doc comments improved for `cached_provider()` OnceLock semantics and precision clamping
 
 ## [0.1.6] - 2026-03-21
