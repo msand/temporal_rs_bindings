@@ -19,6 +19,11 @@
 - Removed unused imports across class files
 - Pinned `temporal_rs` git dependency to exact commit rev
 
+## [0.1.9] - 2026-04-01
+
+### Fixed
+- Formatting fix for hand-crafted type declarations (prettier)
+
 ## [0.1.8] - 2026-04-01
 
 ### Fixed

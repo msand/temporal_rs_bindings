@@ -554,7 +554,7 @@ dependencies = [
 
 [[package]]
 name = "temporal-common"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "temporal_rs",
  "timezone_provider",
@@ -562,7 +562,7 @@ dependencies = [
 
 [[package]]
 name = "temporal-napi"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "napi",
  "napi-build",
@@ -573,7 +573,7 @@ dependencies = [
 
 [[package]]
 name = "temporal-wasm"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "js-sys",
  "serde",

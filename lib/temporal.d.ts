@@ -17,7 +17,7 @@ export type TimeZoneLike = ZonedDateTime | string;
 export type ZonedDateTimeLike = ZonedDateTime | ZonedDateTimeLikeObject | string;
 
 export type PartialTemporalLike<T extends object> = {
-  [P in Exclude<keyof T, "calendar" | "timeZone">]?: T[P] | undefined;
+  [P in Exclude<keyof T, 'calendar' | 'timeZone'>]?: T[P] | undefined;
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -58,7 +58,7 @@ export interface TimeLikeObject {
   nanosecond?: number | undefined;
 }
 
-export interface YearMonthLikeObject extends Omit<DateLikeObject, "day"> {}
+export interface YearMonthLikeObject extends Omit<DateLikeObject, 'day'> {}
 
 export interface ZonedDateTimeLikeObject extends DateTimeLikeObject {
   timeZone: TimeZoneLike;
@@ -69,21 +69,21 @@ export interface ZonedDateTimeLikeObject extends DateTimeLikeObject {
 //  Unit types
 // ═══════════════════════════════════════════════════════════════
 
-export type DateUnit = "year" | "month" | "week" | "day";
-export type TimeUnit = "hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond";
+export type DateUnit = 'year' | 'month' | 'week' | 'day';
+export type TimeUnit = 'hour' | 'minute' | 'second' | 'millisecond' | 'microsecond' | 'nanosecond';
 export type PluralizeUnit<T extends DateUnit | TimeUnit> =
   | T
   | {
-      year: "years";
-      month: "months";
-      week: "weeks";
-      day: "days";
-      hour: "hours";
-      minute: "minutes";
-      second: "seconds";
-      millisecond: "milliseconds";
-      microsecond: "microseconds";
-      nanosecond: "nanoseconds";
+      year: 'years';
+      month: 'months';
+      week: 'weeks';
+      day: 'days';
+      hour: 'hours';
+      minute: 'minutes';
+      second: 'seconds';
+      millisecond: 'milliseconds';
+      microsecond: 'microseconds';
+      nanosecond: 'nanoseconds';
     }[T];
 
 // ═══════════════════════════════════════════════════════════════
@@ -91,43 +91,46 @@ export type PluralizeUnit<T extends DateUnit | TimeUnit> =
 // ═══════════════════════════════════════════════════════════════
 
 export interface DisambiguationOptions {
-  disambiguation?: "compatible" | "earlier" | "later" | "reject" | undefined;
+  disambiguation?: 'compatible' | 'earlier' | 'later' | 'reject' | undefined;
 }
 
 export interface OverflowOptions {
-  overflow?: "constrain" | "reject" | undefined;
+  overflow?: 'constrain' | 'reject' | undefined;
 }
 
 export interface TransitionOptions {
-  direction: "next" | "previous";
+  direction: 'next' | 'previous';
 }
 
 export interface RoundingOptions<Units extends DateUnit | TimeUnit> {
   smallestUnit?: PluralizeUnit<Units> | undefined;
   roundingIncrement?: number | undefined;
   roundingMode?:
-    | "ceil"
-    | "floor"
-    | "expand"
-    | "trunc"
-    | "halfCeil"
-    | "halfFloor"
-    | "halfExpand"
-    | "halfTrunc"
-    | "halfEven"
+    | 'ceil'
+    | 'floor'
+    | 'expand'
+    | 'trunc'
+    | 'halfCeil'
+    | 'halfFloor'
+    | 'halfExpand'
+    | 'halfTrunc'
+    | 'halfEven'
     | undefined;
 }
 
 export interface RoundingOptionsWithLargestUnit<Units extends DateUnit | TimeUnit> extends RoundingOptions<Units> {
-  largestUnit?: "auto" | PluralizeUnit<Units> | undefined;
+  largestUnit?: 'auto' | PluralizeUnit<Units> | undefined;
 }
 
-export interface ToStringRoundingOptions<Units extends DateUnit | TimeUnit>
-  extends Pick<RoundingOptions<Units>, "smallestUnit" | "roundingMode"> {}
+export interface ToStringRoundingOptions<Units extends DateUnit | TimeUnit> extends Pick<
+  RoundingOptions<Units>,
+  'smallestUnit' | 'roundingMode'
+> {}
 
-export interface ToStringRoundingOptionsWithFractionalSeconds<Units extends DateUnit | TimeUnit>
-  extends ToStringRoundingOptions<Units> {
-  fractionalSecondDigits?: "auto" | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | undefined;
+export interface ToStringRoundingOptionsWithFractionalSeconds<
+  Units extends DateUnit | TimeUnit,
+> extends ToStringRoundingOptions<Units> {
+  fractionalSecondDigits?: 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | undefined;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -135,7 +138,7 @@ export interface ToStringRoundingOptionsWithFractionalSeconds<Units extends Date
 // ═══════════════════════════════════════════════════════════════
 
 export interface PlainDateToStringOptions {
-  calendarName?: "auto" | "always" | "never" | "critical" | undefined;
+  calendarName?: 'auto' | 'always' | 'never' | 'critical' | undefined;
 }
 
 export interface PlainDateToZonedDateTimeOptions {
@@ -176,7 +179,7 @@ export interface PlainDate {
   toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
   toJSON(): string;
   valueOf(): never;
-  readonly [Symbol.toStringTag]: "Temporal.PlainDate";
+  readonly [Symbol.toStringTag]: 'Temporal.PlainDate';
 }
 
 export interface PlainDateConstructor {
@@ -191,8 +194,9 @@ export declare const PlainDate: PlainDateConstructor;
 //  PlainTime
 // ═══════════════════════════════════════════════════════════════
 
-export interface PlainTimeToStringOptions
-  extends ToStringRoundingOptionsWithFractionalSeconds<Exclude<TimeUnit, "hour">> {}
+export interface PlainTimeToStringOptions extends ToStringRoundingOptionsWithFractionalSeconds<
+  Exclude<TimeUnit, 'hour'>
+> {}
 
 export interface PlainTime {
   readonly hour: number;
@@ -213,7 +217,7 @@ export interface PlainTime {
   toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
   toJSON(): string;
   valueOf(): never;
-  readonly [Symbol.toStringTag]: "Temporal.PlainTime";
+  readonly [Symbol.toStringTag]: 'Temporal.PlainTime';
 }
 
 export interface PlainTimeConstructor {
@@ -267,8 +271,8 @@ export interface PlainDateTime {
   subtract(duration: DurationLike, options?: OverflowOptions): PlainDateTime;
   until(other: PlainDateTimeLike, options?: RoundingOptionsWithLargestUnit<DateUnit | TimeUnit>): Duration;
   since(other: PlainDateTimeLike, options?: RoundingOptionsWithLargestUnit<DateUnit | TimeUnit>): Duration;
-  round(roundTo: PluralizeUnit<"day" | TimeUnit>): PlainDateTime;
-  round(roundTo: RoundingOptions<"day" | TimeUnit>): PlainDateTime;
+  round(roundTo: PluralizeUnit<'day' | TimeUnit>): PlainDateTime;
+  round(roundTo: RoundingOptions<'day' | TimeUnit>): PlainDateTime;
   equals(other: PlainDateTimeLike): boolean;
   toString(options?: PlainDateTimeToStringOptions): string;
   toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
@@ -277,7 +281,7 @@ export interface PlainDateTime {
   toZonedDateTime(timeZone: TimeZoneLike, options?: DisambiguationOptions): ZonedDateTime;
   toPlainDate(): PlainDate;
   toPlainTime(): PlainTime;
-  readonly [Symbol.toStringTag]: "Temporal.PlainDateTime";
+  readonly [Symbol.toStringTag]: 'Temporal.PlainDateTime';
 }
 
 export interface PlainDateTimeConstructor {
@@ -304,12 +308,12 @@ export declare const PlainDateTime: PlainDateTimeConstructor;
 // ═══════════════════════════════════════════════════════════════
 
 export interface ZonedDateTimeToStringOptions extends PlainDateTimeToStringOptions {
-  offset?: "auto" | "never" | undefined;
-  timeZoneName?: "auto" | "never" | "critical" | undefined;
+  offset?: 'auto' | 'never' | undefined;
+  timeZoneName?: 'auto' | 'never' | 'critical' | undefined;
 }
 
 export interface ZonedDateTimeFromOptions extends OverflowOptions, DisambiguationOptions {
-  offset?: "use" | "ignore" | "prefer" | "reject" | undefined;
+  offset?: 'use' | 'ignore' | 'prefer' | 'reject' | undefined;
 }
 
 export interface ZonedDateTime {
@@ -352,21 +356,21 @@ export interface ZonedDateTime {
   subtract(duration: DurationLike, options?: OverflowOptions): ZonedDateTime;
   until(other: ZonedDateTimeLike, options?: RoundingOptionsWithLargestUnit<DateUnit | TimeUnit>): Duration;
   since(other: ZonedDateTimeLike, options?: RoundingOptionsWithLargestUnit<DateUnit | TimeUnit>): Duration;
-  round(roundTo: PluralizeUnit<"day" | TimeUnit>): ZonedDateTime;
-  round(roundTo: RoundingOptions<"day" | TimeUnit>): ZonedDateTime;
+  round(roundTo: PluralizeUnit<'day' | TimeUnit>): ZonedDateTime;
+  round(roundTo: RoundingOptions<'day' | TimeUnit>): ZonedDateTime;
   equals(other: ZonedDateTimeLike): boolean;
   toString(options?: ZonedDateTimeToStringOptions): string;
   toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
   toJSON(): string;
   valueOf(): never;
   startOfDay(): ZonedDateTime;
-  getTimeZoneTransition(direction: "next" | "previous"): ZonedDateTime | null;
+  getTimeZoneTransition(direction: 'next' | 'previous'): ZonedDateTime | null;
   getTimeZoneTransition(direction: TransitionOptions): ZonedDateTime | null;
   toInstant(): Instant;
   toPlainDate(): PlainDate;
   toPlainTime(): PlainTime;
   toPlainDateTime(): PlainDateTime;
-  readonly [Symbol.toStringTag]: "Temporal.ZonedDateTime";
+  readonly [Symbol.toStringTag]: 'Temporal.ZonedDateTime';
 }
 
 export interface ZonedDateTimeConstructor {
@@ -385,10 +389,12 @@ export interface DurationRelativeToOptions {
   relativeTo?: ZonedDateTimeLike | PlainDateLike | undefined;
 }
 
-export interface DurationRoundingOptions extends DurationRelativeToOptions, RoundingOptionsWithLargestUnit<DateUnit | TimeUnit> {}
+export interface DurationRoundingOptions
+  extends DurationRelativeToOptions, RoundingOptionsWithLargestUnit<DateUnit | TimeUnit> {}
 
-export interface DurationToStringOptions
-  extends ToStringRoundingOptionsWithFractionalSeconds<Exclude<TimeUnit, "hour" | "minute">> {}
+export interface DurationToStringOptions extends ToStringRoundingOptionsWithFractionalSeconds<
+  Exclude<TimeUnit, 'hour' | 'minute'>
+> {}
 
 export interface DurationTotalOptions extends DurationRelativeToOptions {
   unit: PluralizeUnit<DateUnit | TimeUnit>;
@@ -412,15 +418,15 @@ export interface Duration {
   abs(): Duration;
   add(other: DurationLike): Duration;
   subtract(other: DurationLike): Duration;
-  round(roundTo: PluralizeUnit<"day" | TimeUnit>): Duration;
+  round(roundTo: PluralizeUnit<'day' | TimeUnit>): Duration;
   round(roundTo: DurationRoundingOptions): Duration;
-  total(totalOf: PluralizeUnit<"day" | TimeUnit>): number;
+  total(totalOf: PluralizeUnit<'day' | TimeUnit>): number;
   total(totalOf: DurationTotalOptions): number;
   toString(options?: DurationToStringOptions): string;
   toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
   toJSON(): string;
   valueOf(): never;
-  readonly [Symbol.toStringTag]: "Temporal.Duration";
+  readonly [Symbol.toStringTag]: 'Temporal.Duration';
 }
 
 export interface DurationConstructor {
@@ -465,7 +471,7 @@ export interface Instant {
   toJSON(): string;
   valueOf(): never;
   toZonedDateTimeISO(timeZone: TimeZoneLike): ZonedDateTime;
-  readonly [Symbol.toStringTag]: "Temporal.Instant";
+  readonly [Symbol.toStringTag]: 'Temporal.Instant';
 }
 
 export interface InstantConstructor {
@@ -500,15 +506,15 @@ export interface PlainYearMonth {
   with(yearMonthLike: PartialTemporalLike<YearMonthLikeObject>, options?: OverflowOptions): PlainYearMonth;
   add(duration: DurationLike, options?: OverflowOptions): PlainYearMonth;
   subtract(duration: DurationLike, options?: OverflowOptions): PlainYearMonth;
-  until(other: PlainYearMonthLike, options?: RoundingOptionsWithLargestUnit<"year" | "month">): Duration;
-  since(other: PlainYearMonthLike, options?: RoundingOptionsWithLargestUnit<"year" | "month">): Duration;
+  until(other: PlainYearMonthLike, options?: RoundingOptionsWithLargestUnit<'year' | 'month'>): Duration;
+  since(other: PlainYearMonthLike, options?: RoundingOptionsWithLargestUnit<'year' | 'month'>): Duration;
   equals(other: PlainYearMonthLike): boolean;
   toString(options?: PlainDateToStringOptions): string;
   toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
   toJSON(): string;
   valueOf(): never;
   toPlainDate(item: PlainYearMonthToPlainDateOptions): PlainDate;
-  readonly [Symbol.toStringTag]: "Temporal.PlainYearMonth";
+  readonly [Symbol.toStringTag]: 'Temporal.PlainYearMonth';
 }
 
 export interface PlainYearMonthConstructor {
@@ -540,7 +546,7 @@ export interface PlainMonthDay {
   toJSON(): string;
   valueOf(): never;
   toPlainDate(item: PlainMonthDayToPlainDateOptions): PlainDate;
-  readonly [Symbol.toStringTag]: "Temporal.PlainMonthDay";
+  readonly [Symbol.toStringTag]: 'Temporal.PlainMonthDay';
 }
 
 export interface PlainMonthDayConstructor {
@@ -561,7 +567,7 @@ export interface TemporalNow {
   zonedDateTimeISO(timeZone?: TimeZoneLike): ZonedDateTime;
   plainDateISO(timeZone?: TimeZoneLike): PlainDate;
   plainTimeISO(timeZone?: TimeZoneLike): PlainTime;
-  readonly [Symbol.toStringTag]: "Temporal.Now";
+  readonly [Symbol.toStringTag]: 'Temporal.Now';
 }
 export declare const Now: TemporalNow;
 
@@ -579,7 +585,7 @@ export interface TemporalNamespace {
   readonly PlainTime: PlainTimeConstructor;
   readonly PlainYearMonth: PlainYearMonthConstructor;
   readonly ZonedDateTime: ZonedDateTimeConstructor;
-  readonly [Symbol.toStringTag]: "Temporal";
+  readonly [Symbol.toStringTag]: 'Temporal';
 }
 export declare const Temporal: TemporalNamespace;
 
